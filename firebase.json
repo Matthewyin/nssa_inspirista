@@ -1,0 +1,23 @@
+
+{
+  "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "id": "nssa_inspirista"
+    }
+  },
+  "apphosting": {
+    "backends": {
+      "nssa_inspirista": {
+        "region": "us-central1",
+        "source": ".",
+        "framework": "nextjs"
+      }
+    }
+  }
+}
