@@ -18,4 +18,3 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_NSSA_INSPIRISTA }}'
           projectId: nssa-inspirista
           channelId: live
-          backendId: nssa_inspirista
