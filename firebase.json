@@ -7,7 +7,17 @@
       "**/node_modules/**"
     ],
     "frameworksBackend": {
-      "region": "us-central1"
+      "id": "nssa-inspirista"
     }
+  },
+  "apphosting": {
+    "backends": {
+      "nssa_inspirista": {
+        "region": "us-central1",
+        "source": ".",
+        "framework": "nextjs"
+      }
+    },
+    "backendId": "nssa-inspirista"
   }
 }
