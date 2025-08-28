@@ -7,29 +7,17 @@
       "**/node_modules/**"
     ],
     "frameworksBackend": {
-      "id": "nssa_inspirista"
+      "id": "nssa-inspirista"
     }
   },
-  "apphosting": [
-    {
-      "backends": {
-        "nssa_inspirista": {
-          "region": "us-central1",
-          "source": ".",
-          "framework": "nextjs"
-        }
+  "apphosting": {
+    "backends": {
+      "nssa_inspirista": {
+        "region": "us-central1",
+        "source": ".",
+        "framework": "nextjs"
       }
     },
-    {
-      "backendId": "nssa-inspirista",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ]
-    }
-  ]
+    "backendId": "nssa-inspirista"
+  }
 }
