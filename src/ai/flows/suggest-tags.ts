@@ -9,14 +9,14 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
-// Define the input schema for the suggestTags function
 const SuggestTagsInputSchema = z.object({
   noteContent: z.string().describe('The content of the note for which tags are to be suggested.'),
+  apiKey: z.string().describe('The user-provided Google Gemini API key.'),
 });
 
-// Define the output schema for the suggestTags function
 const SuggestTagsOutputSchema = z.object({
   tags: z.array(z.string()).describe('An array of suggested tags for the note content.'),
 });
@@ -24,29 +24,30 @@ const SuggestTagsOutputSchema = z.object({
 export type SuggestTagsInput = z.infer<typeof SuggestTagsInputSchema>;
 export type SuggestTagsOutput = z.infer<typeof SuggestTagsOutputSchema>;
 
-// Exported function to suggest tags for a note
 export async function suggestTags(input: SuggestTagsInput): Promise<SuggestTagsOutput> {
-  return suggestTagsFlow(input);
-}
+  const {apiKey, ...promptInput} = input;
 
-const suggestTagsPrompt = ai.definePrompt({
-  name: 'suggestTagsPrompt',
-  input: {schema: SuggestTagsInputSchema},
-  output: {schema: SuggestTagsOutputSchema},
-  prompt: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note.
+  const prompt = ai.definePrompt(
+    {
+      name: 'suggestTagsPrompt',
+      input: {schema: SuggestTagsInputSchema.omit({apiKey: true})},
+      output: {schema: SuggestTagsOutputSchema},
+      prompt: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note.
 
 Note Content:
 {{{noteContent}}}`,
-});
+      model: googleAI({apiKey}),
+    },
+    async input => {
+      const {output} = await ai.generate({
+        prompt: input,
+        model: googleAI({apiKey}),
+        output: {schema: SuggestTagsOutputSchema},
+      });
+      return output;
+    }
+  );
 
-const suggestTagsFlow = ai.defineFlow(
-  {
-    name: 'suggestTagsFlow',
-    inputSchema: SuggestTagsInputSchema,
-    outputSchema: SuggestTagsOutputSchema,
-  },
-  async input => {
-    const {output} = await suggestTagsPrompt(input);
-    return output!;
-  }
-);
+  const {output} = await prompt(promptInput);
+  return output!;
+}

@@ -146,8 +146,8 @@ export function NoteEditor({noteId}: {noteId?: string}) {
     if (!geminiApiKey) {
       toast({
         variant: 'destructive',
-        title: 'API Key Required',
-        description: `Please set your Gemini API key in Settings to use AI features.`,
+        title: t('noteEditor.toast.apiKey.title'),
+        description: t('noteEditor.toast.apiKey.description'),
       });
       return false;
     }
@@ -161,6 +161,7 @@ export function NoteEditor({noteId}: {noteId?: string}) {
       try {
         const result = await suggestTags({
           noteContent: content,
+          apiKey: geminiApiKey!,
         });
         const newTags = result.tags.filter(tag => !currentTags.includes(tag));
         setCurrentTags(prev => [...prev, ...newTags]);
@@ -186,6 +187,7 @@ export function NoteEditor({noteId}: {noteId?: string}) {
       try {
         const result = await refineNote({
           noteContent: content,
+          apiKey: geminiApiKey!,
         });
         setContent(result.refinedNote);
         toast({
