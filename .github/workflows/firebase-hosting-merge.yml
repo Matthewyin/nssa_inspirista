@@ -23,6 +23,6 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_NSSA_INSPIRISTA }}'
           channelId: live
-          args: --force
+          force: true
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
