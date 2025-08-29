@@ -10,7 +10,7 @@ export const NoteSchema = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   category: z.enum(['inspiration', 'checklist']),
-  completed: z.boolean().optional(),
+  // completed: 移除完成状态，因为清单是行为核对清单，不是任务清单
   sortOrder: z.number().optional(),
 });
 
@@ -18,9 +18,10 @@ export type Note = z.infer<typeof NoteSchema>;
 
 
 // AI Provider Schemas
-export type AiProvider = 'gemini';
+export type AiProvider = 'gemini' | 'deepseek';
 export type GeminiModel = 'gemini-2.5-flash' | 'gemini-2.5-pro';
-export type AiModel = GeminiModel;
+export type DeepSeekModel = 'deepseek-chat' | 'deepseek-coder';
+export type AiModel = GeminiModel | DeepSeekModel;
 
 export interface AiConfig {
   provider: AiProvider;
@@ -73,7 +74,7 @@ export type DeleteNoteOutput = z.infer<typeof DeleteNoteOutputSchema>;
 export const RefineNoteInputSchema = z.object({
   noteContent: z.string().describe('The content of the note to be refined.'),
   aiConfig: z.object({
-    provider: z.enum(['gemini']),
+    provider: z.enum(['gemini', 'deepseek']),
     model: z.string(),
   }),
   apiKey: z.string().describe('The user-provided API key for the selected provider.'),
@@ -89,7 +90,7 @@ export type RefineNoteOutput = z.infer<typeof RefineNoteOutputSchema>;
 export const SuggestTagsInputSchema = z.object({
     noteContent: z.string().describe('The content of the note for which tags are to be suggested.'),
     aiConfig: z.object({
-      provider: z.enum(['gemini']),
+      provider: z.enum(['gemini', 'deepseek']),
       model: z.string(),
     }),
     apiKey: z.string().describe('The user-provided API key for the selected provider.'),
@@ -104,7 +105,7 @@ export type SuggestTagsOutput = z.infer<typeof SuggestTagsOutputSchema>;
 
 // Schema for validateApiKey flow
 export const ValidateApiKeyInputSchema = z.object({
-    provider: z.enum(['gemini']),
+    provider: z.enum(['gemini', 'deepseek']),
     apiKey: z.string().describe('The API key to validate.'),
   });
 export type ValidateApiKeyInput = z.infer<typeof ValidateApiKeyInputSchema>;

@@ -104,7 +104,7 @@ export function ClientAuthenticatedChecklist() {
               content: data.content,
               tags: data.tags || [],
               category: data.category,
-              completed: data.completed || false,
+              // 行为核对清单不需要完成状态
               sortOrder: data.sortOrder,
               createdAt: data.createdAt?.toDate() || new Date(),
               updatedAt: data.updatedAt?.toDate() || new Date(),

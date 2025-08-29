@@ -50,6 +50,11 @@ const AI_PROVIDERS: {
     label: 'Google Gemini',
     models: ['gemini-2.5-flash', 'gemini-2.5-pro'],
   },
+  {
+    value: 'deepseek',
+    label: 'DeepSeek',
+    models: ['deepseek-chat', 'deepseek-coder'],
+  },
 ];
 
 export function NoteEditor({note}: {note?: Note}) {
@@ -59,6 +64,7 @@ export function NoteEditor({note}: {note?: Note}) {
   const { user } = useAuth();
   
   const [geminiApiKey] = useLocalStorage<string | null>('gemini-api-key', null);
+  const [deepseekApiKey] = useLocalStorage<string | null>('deepseek-api-key', null);
   const [aiConfig, setAiConfig] = useLocalStorage<AiConfig>('ai-config', {
     provider: 'gemini',
     model: 'gemini-2.5-flash',
@@ -143,7 +149,6 @@ export function NoteEditor({note}: {note?: Note}) {
 
         // Add default values for checklist items
         if (category === 'checklist') {
-          noteData.completed = false;
           noteData.sortOrder = Date.now(); // Use timestamp as default sort order
         }
 
@@ -193,7 +198,8 @@ export function NoteEditor({note}: {note?: Note}) {
   };
 
   const checkApiKey = (provider: AiProvider) => {
-    const key = provider === 'gemini' ? geminiApiKey : null; 
+    const key = provider === 'gemini' ? geminiApiKey :
+                provider === 'deepseek' ? deepseekApiKey : null;
     if (!key) {
       toast({
         variant: 'destructive',
@@ -206,7 +212,8 @@ export function NoteEditor({note}: {note?: Note}) {
   };
 
   const getApiKey = (provider: AiProvider) => {
-    return provider === 'gemini' ? geminiApiKey : null;
+    return provider === 'gemini' ? geminiApiKey :
+           provider === 'deepseek' ? deepseekApiKey : null;
   };
 
   const handleAiAction = async (action: 'refine' | 'suggestTags') => {

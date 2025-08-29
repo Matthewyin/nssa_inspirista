@@ -19,10 +19,13 @@ import type { ValidateApiKeyInput } from '@/lib/types';
 export function ApiKeyManager() {
   const {t, isClient} = useLanguage();
   const [geminiApiKey, setGeminiApiKey] = useLocalStorage<string | null>('gemini-api-key', null);
+  const [deepseekApiKey, setDeepseekApiKey] = useLocalStorage<string | null>('deepseek-api-key', null);
 
   const [geminiKeyInput, setGeminiKeyInput] = useState('');
+  const [deepseekKeyInput, setDeepseekKeyInput] = useState('');
 
   const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showDeepseekKey, setShowDeepseekKey] = useState(false);
   const [isVerifying, startVerificationTransition] = useTransition();
 
   const {toast} = useToast();
@@ -32,6 +35,12 @@ export function ApiKeyManager() {
       setGeminiKeyInput(geminiApiKey);
     }
   }, [geminiApiKey]);
+
+  useEffect(() => {
+    if (deepseekApiKey) {
+      setDeepseekKeyInput(deepseekApiKey);
+    }
+  }, [deepseekApiKey]);
 
   const handleValidate = () => {
     if (!geminiKeyInput.trim()) {
@@ -90,6 +99,69 @@ export function ApiKeyManager() {
   const handleDeleteGemini = () => {
     setGeminiApiKey(null);
     setGeminiKeyInput('');
+    toast({
+        title: t('apiKeyInput.toast.deleted.title'),
+        description: t('apiKeyInput.toast.deleted.description'),
+    });
+  };
+
+  const handleSaveDeepSeek = () => {
+    if (!deepseekKeyInput.trim()) {
+        toast({
+            variant: "destructive",
+            title: t('apiKeyInput.toast.empty.title'),
+            description: t('apiKeyInput.toast.empty.description'),
+        })
+        return;
+    }
+
+    startVerificationTransition(async () => {
+        const result = await validateApiKey({ provider: 'deepseek', apiKey: deepseekKeyInput });
+        if (result.isValid) {
+            setDeepseekApiKey(deepseekKeyInput);
+            toast({
+              title: t('apiKeyInput.toast.title'),
+              description: t('apiKeyInput.toast.deepseek'),
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: t('apiKeyInput.toast.validation.title'),
+                description: result.error || t('apiKeyInput.toast.validation.description'),
+            })
+        }
+    })
+  };
+
+  const handleValidateDeepSeek = () => {
+    if (!deepseekKeyInput.trim()) {
+        toast({
+            variant: "destructive",
+            title: t('apiKeyInput.toast.empty.title'),
+            description: t('apiKeyInput.toast.empty.description'),
+        })
+        return;
+    }
+    startVerificationTransition(async () => {
+        const result = await validateApiKey({ provider: 'deepseek', apiKey: deepseekKeyInput });
+        if (result.isValid) {
+            toast({
+              title: t('apiKeyInput.toast.validation.success_title'),
+              description: t('apiKeyInput.toast.validation.success_description'),
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: t('apiKeyInput.toast.validation.title'),
+                description: result.error || t('apiKeyInput.toast.validation.description'),
+            })
+        }
+    })
+  };
+
+  const handleDeleteDeepSeek = () => {
+    setDeepseekApiKey(null);
+    setDeepseekKeyInput('');
     toast({
         title: t('apiKeyInput.toast.deleted.title'),
         description: t('apiKeyInput.toast.deleted.description'),
@@ -162,6 +234,65 @@ export function ApiKeyManager() {
                 <Button variant="link" asChild className="p-0 h-auto align-baseline ml-1">
                   <Link href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">
                     {t('apiKeyInput.gemini.alert.link')}
+                  </Link>
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          <Separator />
+
+          {/* DeepSeek Key */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="deepseek-api-key">{t('apiKeyInput.deepseek.label')}</Label>
+              <div className="relative">
+                <Input
+                  id="deepseek-api-key"
+                  type={showDeepseekKey ? 'text' : 'password'}
+                  value={deepseekKeyInput}
+                  onChange={e => setDeepseekKeyInput(e.target.value)}
+                  placeholder={t('apiKeyInput.deepseek.placeholder')}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute inset-y-0 right-0 h-full px-3"
+                  onClick={() => setShowDeepseekKey(prev => !prev)}
+                  aria-label={showDeepseekKey ? t('apiKeyInput.aria.hide') : t('apiKeyInput.aria.show')}
+                >
+                  {showDeepseekKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+                <Button onClick={handleSaveDeepSeek} disabled={isVerifying}>
+                    {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {t('apiKeyInput.saveButton')}
+                </Button>
+                <Button onClick={handleValidateDeepSeek} variant="outline" disabled={isVerifying}>
+                    {isVerifying ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                    )}
+                    {t('apiKeyInput.validateButton')}
+                </Button>
+                {deepseekApiKey && (
+                  <Button onClick={handleDeleteDeepSeek} variant="destructive" disabled={isVerifying}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {t('apiKeyInput.deleteButton')}
+                  </Button>
+                )}
+            </div>
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertTitle>{t('apiKeyInput.deepseek.alert.title')}</AlertTitle>
+              <AlertDescription>
+                {t('apiKeyInput.deepseek.alert.description')}
+                <Button variant="link" asChild className="p-0 h-auto align-baseline ml-1">
+                  <Link href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">
+                    {t('apiKeyInput.deepseek.alert.link')}
                   </Link>
                 </Button>
               </AlertDescription>

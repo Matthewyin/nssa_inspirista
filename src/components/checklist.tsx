@@ -6,7 +6,7 @@ import { ChecklistItem } from './checklist-item';
 import { useLanguage } from '@/hooks/use-language';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Filter } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { writeBatch, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -29,12 +29,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+// 移除了筛选功能相关的导入
 
 interface ChecklistProps {
   initialNotes: Note[];
@@ -83,7 +78,7 @@ export function Checklist({ initialNotes, onNotesChange }: ChecklistProps) {
   const { toast } = useToast();
   const [batchMode, setBatchMode] = useState(false);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
-  const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
+  // 移除筛选功能，因为行为核对清单不需要完成状态
   const [notes, setNotes] = useState(initialNotes);
 
   const sensors = useSensors(
@@ -103,12 +98,8 @@ export function Checklist({ initialNotes, onNotesChange }: ChecklistProps) {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  // Filter notes based on completion status
-  const filteredNotes = sortedNotes.filter(note => {
-    if (filter === 'completed') return note.completed;
-    if (filter === 'pending') return !note.completed;
-    return true;
-  });
+  // 行为核对清单不需要筛选，显示所有项目
+  const filteredNotes = sortedNotes;
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -280,29 +271,8 @@ export function Checklist({ initialNotes, onNotesChange }: ChecklistProps) {
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
-                {/* Filter Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4 mr-2" />
-                      {t(`checklist.filter.${filter}`)}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setFilter('all')}>
-                      {t('checklist.filter.all')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilter('pending')}>
-                      {t('checklist.filter.pending')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilter('completed')}>
-                      {t('checklist.filter.completed')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {batchMode && selectedNotes.size > 0 && (
+              {batchMode && selectedNotes.size > 0 && (
+                <div className="flex gap-2">
                   <Button
                     variant="destructive"
                     size="sm"
@@ -311,8 +281,8 @@ export function Checklist({ initialNotes, onNotesChange }: ChecklistProps) {
                     <Trash2 className="h-4 w-4 mr-2" />
                     {t('checklist.batch.delete')} ({selectedNotes.size})
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -346,8 +316,8 @@ export function Checklist({ initialNotes, onNotesChange }: ChecklistProps) {
           ) : (
             <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-12">
               <div className="flex flex-col items-center gap-2 text-center p-8">
-                <h3 className="text-lg font-medium">{t(`checklist.filter.empty.${filter}.title`)}</h3>
-                <p className="text-sm text-muted-foreground">{t(`checklist.filter.empty.${filter}.description`)}</p>
+                <h3 className="text-lg font-medium">{t('checklist.empty.noItems.title')}</h3>
+                <p className="text-sm text-muted-foreground">{t('checklist.empty.noItems.description')}</p>
               </div>
             </div>
           )}

@@ -34,37 +34,7 @@ interface ChecklistItemProps {
 export function ChecklistItem({ note, onUpdate, isDragging, dragHandleProps }: ChecklistItemProps) {
   const { t, language } = useLanguage();
   const { toast } = useToast();
-  const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleToggleComplete = async () => {
-    if (isUpdating) return;
-    
-    setIsUpdating(true);
-    try {
-      const noteRef = doc(db, 'notes', note.id);
-      await updateDoc(noteRef, {
-        completed: !note.completed,
-        updatedAt: serverTimestamp(),
-      });
-      
-      toast({
-        title: note.completed ? t('checklist.item.uncompleted') : t('checklist.item.completed'),
-        description: note.title,
-      });
-      
-      onUpdate?.();
-    } catch (error) {
-      console.error('Error updating checklist item:', error);
-      toast({
-        title: t('checklist.item.error.title'),
-        description: t('checklist.item.error.description'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -97,7 +67,7 @@ export function ChecklistItem({ note, onUpdate, isDragging, dragHandleProps }: C
   });
 
   return (
-    <Card className={`transition-all duration-200 ${isDragging ? 'shadow-lg rotate-1 scale-105' : 'hover:shadow-md'} ${note.completed ? 'opacity-75' : ''}`}>
+    <Card className={`transition-all duration-200 ${isDragging ? 'shadow-lg rotate-1 scale-105' : 'hover:shadow-md'}`}>
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {/* Drag Handle */}
@@ -108,32 +78,15 @@ export function ChecklistItem({ note, onUpdate, isDragging, dragHandleProps }: C
             <GripVertical className="h-4 w-4" />
           </div>
 
-          {/* Status Indicator - 状态指示器 */}
-          <div className="flex items-center justify-center w-6 h-6 mt-1">
-            {note.completed ? (
-              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-            ) : (
-              <div className="w-4 h-4 border-2 border-muted-foreground rounded-full" />
-            )}
-          </div>
-
           {/* Content */}
-          <div
-            className="flex-1 min-w-0 cursor-pointer"
-            onClick={handleToggleComplete}
-            title={note.completed ? t('checklist.item.clickToUncomplete') : t('checklist.item.clickToComplete')}
-          >
+          <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <h3 className={`font-medium text-sm leading-tight ${note.completed ? 'line-through text-muted-foreground' : ''}`}>
+                <h3 className="font-medium text-sm leading-tight">
                   {note.title}
                 </h3>
                 {note.content && (
-                  <p className={`text-xs text-muted-foreground mt-1 line-clamp-2 ${note.completed ? 'line-through' : ''}`}>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                     {note.content}
                   </p>
                 )}
@@ -158,7 +111,7 @@ export function ChecklistItem({ note, onUpdate, isDragging, dragHandleProps }: C
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-1 ml-2">
                 <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <Link href={`/notes/${note.id}`}>
                     <Edit className="h-3 w-3" />

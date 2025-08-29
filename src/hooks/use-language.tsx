@@ -49,29 +49,10 @@ const translations = {
     checklist: {
       empty: {
         title: 'You have no checklists',
-        description: 'Start by creating a new checklist to track your goals.',
-      },
-      progress: {
-        title: 'Progress',
-        completed: 'completed',
-      },
-      filter: {
-        all: 'All',
-        pending: 'Pending',
-        completed: 'Completed',
-        empty: {
-          all: {
-            title: 'No items found',
-            description: 'No checklist items match the current filter.',
-          },
-          pending: {
-            title: 'No pending items',
-            description: 'All your checklist items are completed!',
-          },
-          completed: {
-            title: 'No completed items',
-            description: 'Complete some items to see them here.',
-          },
+        description: 'Start by creating a new behavioral checklist to guide your actions.',
+        noItems: {
+          title: 'No checklist items',
+          description: 'Create some checklist items to see them here.',
         },
       },
       sort: {
@@ -85,14 +66,6 @@ const translations = {
         },
       },
       item: {
-        completed: 'Item completed',
-        uncompleted: 'Item marked as pending',
-        clickToComplete: 'Click to mark as completed',
-        clickToUncomplete: 'Click to mark as pending',
-        error: {
-          title: 'Update Failed',
-          description: 'Failed to update item. Please try again.',
-        },
         deleted: {
           title: 'Item Deleted',
           description: 'Checklist item has been deleted.',
@@ -139,9 +112,19 @@ const translations = {
             link: 'Get your key here.',
         },
       },
+      deepseek: {
+        label: 'DeepSeek API Key',
+        placeholder: 'Enter your DeepSeek API key',
+        alert: {
+            title: 'Where to get a DeepSeek API Key?',
+            description: 'You can get an API key from DeepSeek Platform.',
+            link: 'Get your key here.',
+        },
+      },
       toast: {
         title: 'API Key Saved',
         gemini: 'Your Gemini API key has been successfully validated and saved.',
+        deepseek: 'Your DeepSeek API key has been successfully validated and saved.',
         empty: {
             title: 'API Key is empty',
             description: 'Please enter an API key.',
@@ -154,7 +137,7 @@ const translations = {
         },
         deleted: {
             title: 'API Key Deleted',
-            description: 'Your Gemini API key has been removed.',
+            description: 'The API key has been removed.',
         }
       },
       alert: {
@@ -292,29 +275,10 @@ const translations = {
     checklist: {
       empty: {
         title: '你还没有任何清单',
-        description: '从创建一个新清单开始，追踪你的目标。',
-      },
-      progress: {
-        title: '进度',
-        completed: '已完成',
-      },
-      filter: {
-        all: '全部',
-        pending: '待完成',
-        completed: '已完成',
-        empty: {
-          all: {
-            title: '没有找到项目',
-            description: '没有符合当前筛选条件的清单项目。',
-          },
-          pending: {
-            title: '没有待完成项目',
-            description: '你的所有清单项目都已完成！',
-          },
-          completed: {
-            title: '没有已完成项目',
-            description: '完成一些项目后在这里查看。',
-          },
+        description: '从创建一个新的行为核对清单开始，指导你的行为。',
+        noItems: {
+          title: '没有清单项目',
+          description: '创建一些清单项目后在这里查看。',
         },
       },
       sort: {
@@ -328,14 +292,6 @@ const translations = {
         },
       },
       item: {
-        completed: '项目已完成',
-        uncompleted: '项目标记为待完成',
-        clickToComplete: '点击标记为已完成',
-        clickToUncomplete: '点击标记为待完成',
-        error: {
-          title: '更新失败',
-          description: '更新项目失败，请重试。',
-        },
         deleted: {
           title: '项目已删除',
           description: '清单项目已被删除。',
@@ -382,9 +338,19 @@ const translations = {
             link: '在此处获取您的密钥。',
         },
       },
+      deepseek: {
+        label: 'DeepSeek API 密钥',
+        placeholder: '输入您的 DeepSeek API 密钥',
+        alert: {
+            title: '从哪里获取 DeepSeek API 密钥？',
+            description: '您可以从 DeepSeek 平台获取 API 密钥。',
+            link: '在此处获取您的密钥。',
+        },
+      },
       toast: {
         title: 'API 密钥已保存',
         gemini: '您的 Gemini API 密钥已成功验证并保存。',
+        deepseek: '您的 DeepSeek API 密钥已成功验证并保存。',
         empty: {
             title: 'API 密钥为空',
             description: '请输入您的 API 密钥。',
@@ -397,7 +363,7 @@ const translations = {
         },
         deleted: {
             title: 'API 密钥已删除',
-            description: '您的 Gemini API 密钥已被移除。',
+            description: 'API 密钥已被移除。',
         }
       },
       alert: {

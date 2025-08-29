@@ -141,38 +141,114 @@ export async function deleteNote(input: DeleteNoteInput): Promise<DeleteNoteOutp
 export async function refineNote(input: RefineNoteInput): Promise<RefineNoteOutput> {
   const { apiKey, aiConfig, noteContent } = input;
 
-  // Use new genkit with dynamic model selection
-  const model = googleAI.model(aiConfig.model, { apiKey });
+  if (aiConfig.provider === 'deepseek') {
+    // Handle DeepSeek API call directly
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: aiConfig.model,
+        messages: [
+          {
+            role: 'user',
+            content: `You are an AI assistant designed to refine notes. Please organize, summarize, and categorize the following note content to improve its clarity and structure. Return only the refined note content without any additional formatting or explanation.
 
-  const { output } = await ai.generate({
-    model,
-    prompt: `You are an AI assistant designed to refine notes.
+Note Content:
+${noteContent}`,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const refinedNote = data.choices?.[0]?.message?.content || noteContent;
+
+    return { refinedNote };
+  } else {
+    // Use Genkit for Gemini
+    const model = googleAI.model(aiConfig.model, { apiKey });
+
+    const { output } = await ai.generate({
+      model,
+      prompt: `You are an AI assistant designed to refine notes.
 Please organize, summarize, and categorize the following note content to improve its clarity and structure.
 
 Note Content:
 ${noteContent}`,
-    output: { schema: RefineNoteOutputSchema },
-  });
+      output: { schema: RefineNoteOutputSchema },
+    });
 
-  return output!;
+    return output!;
+  }
 }
 
 export async function suggestTags(input: SuggestTagsInput): Promise<SuggestTagsOutput> {
   const { apiKey, aiConfig, noteContent } = input;
 
-  // Use new genkit with dynamic model selection
-  const model = googleAI.model(aiConfig.model, { apiKey });
-
-  const { output } = await ai.generate({
-    model,
-    prompt: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note.
+  if (aiConfig.provider === 'deepseek') {
+    // Handle DeepSeek API call directly
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: aiConfig.model,
+        messages: [
+          {
+            role: 'user',
+            content: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note. Return only a JSON array of strings, for example: ["tag1", "tag2", "tag3"]
 
 Note Content:
 ${noteContent}`,
-    output: { schema: SuggestTagsOutputSchema },
-  });
+          },
+        ],
+        temperature: 0.3,
+        max_tokens: 200,
+      }),
+    });
 
-  return output!;
+    if (!response.ok) {
+      throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '[]';
+
+    try {
+      const tags = JSON.parse(content);
+      return { tags: Array.isArray(tags) ? tags : [] };
+    } catch (e) {
+      // Fallback: extract tags from text
+      const tagMatches = content.match(/"([^"]+)"/g);
+      const tags = tagMatches ? tagMatches.map((match: string) => match.replace(/"/g, '')) : [];
+      return { tags };
+    }
+  } else {
+    // Use Genkit for Gemini
+    const model = googleAI.model(aiConfig.model, { apiKey });
+
+    const { output } = await ai.generate({
+      model,
+      prompt: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note.
+
+Note Content:
+${noteContent}`,
+      output: { schema: SuggestTagsOutputSchema },
+    });
+
+    return output!;
+  }
 }
 
 export async function validateApiKey(input: ValidateApiKeyInput): Promise<ValidateApiKeyOutput> {
@@ -190,6 +266,28 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
 
       // If the above call does not throw, the key is valid.
       return { isValid: true };
+    } else if (provider === 'deepseek') {
+      // Validate DeepSeek API key
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [{ role: 'user', content: 'Hello' }],
+          max_tokens: 5,
+        }),
+      });
+
+      if (response.ok) {
+        return { isValid: true };
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+        return { isValid: false, error: errorMessage };
+      }
     }
     // Fallback for unknown providers
     return { isValid: false, error: 'Unknown provider.' };
