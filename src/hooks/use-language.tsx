@@ -50,43 +50,39 @@ const translations = {
       },
     },
     apiKeyInput: {
-      title: 'Gemini API Key',
-      description: 'To use AI-powered features like Smart Tagging and Note Refinement, you need to provide your own Google Gemini API key.',
-      label: 'Your API Key',
-      placeholder: 'Enter your Gemini API key',
+      title: 'API Keys',
+      description: 'To use AI-powered features, you need to provide your own API keys. Keys are stored only in your browser\'s local storage.',
       saveButton: 'Save Key',
       aria: {
         show: 'Show API key',
         hide: 'Hide API key',
       },
-      validate: {
-        button: 'Validate Key',
-        empty: {
-            title: 'API Key is empty',
-            description: 'Please enter an API key to validate.',
+      gemini: {
+        label: 'Google Gemini API Key',
+        placeholder: 'Enter your Gemini API key',
+        alert: {
+            title: 'Where to get a Gemini API Key?',
+            description: 'You can get a free Gemini API key from Google AI Studio.',
+            link: 'Get your key here.',
         },
-        success: {
-            title: 'API Key is valid!',
-            description: 'You can now use the AI features.',
-        },
-        failure: {
-            title: 'API Key is invalid',
-            description: 'Please check your key and try again.',
-        },
-        error: {
-            title: 'Validation Error',
-            description: 'An unexpected error occurred while validating the key.',
+      },
+      deepseek: {
+        label: 'DeepSeek API Key',
+        placeholder: 'Enter your DeepSeek API key',
+        alert: {
+            title: 'Where to get a DeepSeek API Key?',
+            description: 'You can get a free DeepSeek API key from the DeepSeek Platform.',
+            link: 'Get your key here.',
         },
       },
       toast: {
         title: 'API Key Saved',
-        description: 'Your Gemini API key has been saved locally.',
+        gemini: 'Your Gemini API key has been saved locally.',
+        deepseek: 'Your DeepSeek API key has been saved locally.',
       },
       alert: {
-        title: 'Where to get an API Key?',
-        description: 'You can get a free Gemini API key from Google AI Studio.',
-        link: 'Get your key here.',
-        footer: 'Your API key is stored only in your browser\'s local storage and is never sent to our servers.',
+        footerTitle: 'Privacy Note',
+        footer: 'Your API keys are stored only in your browser\'s local storage and are never sent to our servers.',
       }
     },
     themeSwitcher: {
@@ -119,6 +115,10 @@ const translations = {
             label: 'Tags',
             placeholder: 'Type a tag and press Enter',
             suggestButton: 'Suggest'
+        },
+        aiTools: {
+            provider: 'Provider',
+            model: 'Model'
         },
         refineButton: 'Refine with AI',
         exportButton: 'Export',
@@ -153,7 +153,7 @@ const translations = {
             },
             apiKey: {
                 title: 'API Key Required',
-                description: 'Please set your Gemini API key in Settings to use AI features.',
+                description: 'Please set the required API key in Settings to use this AI feature.',
             },
             tagsSuggested: {
                 title: 'Tags Suggested',
@@ -216,42 +216,38 @@ const translations = {
       },
     },
     apiKeyInput: {
-      title: 'Gemini API 密钥',
-      description: '要使用智能标签和笔记优化等人工智能功能，您需要提供自己的 Google Gemini API 密钥。',
-      label: '您的 API 密钥',
-      placeholder: '输入您的 Gemini API 密钥',
+      title: 'API 密钥',
+      description: '要使用人工智能功能，您需要提供自己的 API 密钥。密钥仅存储在您浏览器的本地存储中。',
       saveButton: '保存密钥',
       aria: {
         show: '显示 API 密钥',
         hide: '隐藏 API 密钥',
       },
-      validate: {
-        button: '验证密钥',
-        empty: {
-            title: 'API 密钥为空',
-            description: '请输入 API 密钥进行验证。',
+      gemini: {
+        label: 'Google Gemini API 密钥',
+        placeholder: '输入您的 Gemini API 密钥',
+        alert: {
+            title: '从哪里获取 Gemini API 密钥？',
+            description: '您可以从 Google AI Studio 免费获取 Gemini API 密钥。',
+            link: '在此处获取您的密钥。',
         },
-        success: {
-            title: 'API 密钥有效！',
-            description: '您现在可以使用 AI 功能了。',
-        },
-        failure: {
-            title: 'API 密钥无效',
-            description: '请检查您的密钥并重试。',
-        },
-        error: {
-            title: '验证错误',
-            description: '验证密钥时发生意外错误。',
+      },
+      deepseek: {
+        label: 'DeepSeek API 密钥',
+        placeholder: '输入您的 DeepSeek API 密钥',
+        alert: {
+            title: '从哪里获取 DeepSeek API 密钥？',
+            description: '您可以从 DeepSeek 开放平台免费获取 API 密钥。',
+            link: '在此处获取您的密钥。',
         },
       },
       toast: {
         title: 'API 密钥已保存',
-        description: '您的 Gemini API 密钥已保存在本地。',
+        gemini: '您的 Gemini API 密钥已保存在本地。',
+        deepseek: '您的 DeepSeek API 密钥已保存在本地。',
       },
       alert: {
-        title: '从哪里获取 API 密钥？',
-        description: '您可以从 Google AI Studio 免费获取 Gemini API 密钥。',
-        link: '在此处获取您的密钥。',
+        footerTitle: '隐私提示',
         footer: '您的 API 密钥仅存储在您浏览器的本地存储中，绝不会发送到我们的服务器。',
       }
     },
@@ -286,6 +282,10 @@ const translations = {
             placeholder: '输入标签并按 Enter',
             suggestButton: '建议'
         },
+        aiTools: {
+            provider: '服务商',
+            model: '模型'
+        },
         refineButton: '使用 AI 优化',
         exportButton: '导出',
         deleteButton: '删除',
@@ -319,7 +319,7 @@ const translations = {
             },
             apiKey: {
                 title: '需要 API 密钥',
-                description: '请在“设置”中设置您的 Gemini API 密钥以使用 AI 功能。',
+                description: '请在“设置”中设置所需的 API 密钥以使用此 AI 功能。',
             },
             tagsSuggested: {
                 title: '建议的标签',

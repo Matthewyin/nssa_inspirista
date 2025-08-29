@@ -3,7 +3,7 @@
 import {useState, useEffect, useTransition} from 'react';
 import {useRouter} from 'next/navigation';
 import {useSyncedStore} from '@/hooks/use-local-storage';
-import {type Note} from '@/lib/types';
+import {type Note, type AiConfig, type AiProvider, type AiModel, GeminiModel, DeepSeekModel} from '@/lib/types';
 import {refineNote} from '@/ai/flows/refine-note';
 import {suggestTags} from '@/ai/flows/suggest-tags';
 import {useLanguage} from '@/hooks/use-language';
@@ -29,6 +29,25 @@ import {
 import Link from 'next/link';
 import {ToggleGroup, ToggleGroupItem} from '@/components/ui/toggle-group';
 import {useLocalStorage} from '@/hooks/use-local-storage';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import {Separator} from './ui/separator';
+
+const AI_PROVIDERS: {
+  value: AiProvider;
+  label: string;
+  models: AiModel[];
+}[] = [
+  {
+    value: 'gemini',
+    label: 'Google Gemini',
+    models: ['gemini-2.5-pro', 'gemini-2.5-flash'],
+  },
+  {
+    value: 'deepseek',
+    label: 'DeepSeek',
+    models: ['deepseek-chat', 'deepseek-coder'],
+  },
+];
 
 export function NoteEditor({noteId}: {noteId?: string}) {
   const router = useRouter();
@@ -36,6 +55,11 @@ export function NoteEditor({noteId}: {noteId?: string}) {
   const {t} = useLanguage();
   const [notes, setNotes] = useSyncedStore<Note[]>('notes', []);
   const [geminiApiKey] = useLocalStorage<string | null>('gemini-api-key', null);
+  const [deepseekApiKey] = useLocalStorage<string | null>('deepseek-api-key', null);
+  const [aiConfig, setAiConfig] = useLocalStorage<AiConfig>('ai-config', {
+    provider: 'gemini',
+    model: 'gemini-2.5-flash',
+  });
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -142,8 +166,9 @@ export function NoteEditor({noteId}: {noteId?: string}) {
     URL.revokeObjectURL(url);
   };
 
-  const checkApiKey = () => {
-    if (!geminiApiKey) {
+  const checkApiKey = (provider: AiProvider) => {
+    const key = provider === 'gemini' ? geminiApiKey : deepseekApiKey;
+    if (!key) {
       toast({
         variant: 'destructive',
         title: t('noteEditor.toast.apiKey.title'),
@@ -154,55 +179,50 @@ export function NoteEditor({noteId}: {noteId?: string}) {
     return true;
   };
 
-  const handleSuggestTags = async () => {
-    if (!checkApiKey() || !content.trim()) return;
+  const getApiKey = (provider: AiProvider) => {
+    return provider === 'gemini' ? geminiApiKey : deepseekApiKey;
+  };
+
+  const handleAiAction = async (action: 'refine' | 'suggestTags') => {
+    if (!checkApiKey(aiConfig.provider) || !content.trim()) return;
 
     startAiTransition(async () => {
       try {
-        const result = await suggestTags({
-          noteContent: content,
-          apiKey: geminiApiKey!,
-        });
-        const newTags = result.tags.filter(tag => !currentTags.includes(tag));
-        setCurrentTags(prev => [...prev, ...newTags]);
-        toast({
-          title: t('noteEditor.toast.tagsSuggested.title'),
-          description: t('noteEditor.toast.tagsSuggested.description'),
-        });
+        const apiKey = getApiKey(aiConfig.provider);
+        if (action === 'refine') {
+          const result = await refineNote({noteContent: content, aiConfig, apiKey: apiKey!});
+          setContent(result.refinedNote);
+          toast({
+            title: t('noteEditor.toast.noteRefined.title'),
+            description: t('noteEditor.toast.noteRefined.description'),
+          });
+        } else if (action === 'suggestTags') {
+          const result = await suggestTags({noteContent: content, aiConfig, apiKey: apiKey!});
+          const newTags = result.tags.filter(tag => !currentTags.includes(tag));
+          setCurrentTags(prev => [...prev, ...newTags]);
+          toast({
+            title: t('noteEditor.toast.tagsSuggested.title'),
+            description: t('noteEditor.toast.tagsSuggested.description'),
+          });
+        }
       } catch (error) {
         console.error(error);
         toast({
           variant: 'destructive',
           title: t('noteEditor.toast.aiError.title'),
-          description: t('noteEditor.toast.aiError.tags'),
+          description: action === 'refine' ? t('noteEditor.toast.aiError.refine') : t('noteEditor.toast.aiError.tags'),
         });
       }
     });
   };
 
-  const handleRefineNote = async () => {
-    if (!checkApiKey() || !content.trim()) return;
+  const handleProviderChange = (provider: AiProvider) => {
+    const newModel = AI_PROVIDERS.find(p => p.value === provider)!.models[0];
+    setAiConfig({provider, model: newModel});
+  };
 
-    startAiTransition(async () => {
-      try {
-        const result = await refineNote({
-          noteContent: content,
-          apiKey: geminiApiKey!,
-        });
-        setContent(result.refinedNote);
-        toast({
-          title: t('noteEditor.toast.noteRefined.title'),
-          description: t('noteEditor.toast.noteRefined.description'),
-        });
-      } catch (error) {
-        console.error(error);
-        toast({
-          variant: 'destructive',
-          title: t('noteEditor.toast.aiError.title'),
-          description: t('noteEditor.toast.aiError.refine'),
-        });
-      }
-    });
+  const handleModelChange = (model: AiModel) => {
+    setAiConfig(prev => ({...prev, model}));
   };
 
   if (!isLoaded) {
@@ -214,6 +234,7 @@ export function NoteEditor({noteId}: {noteId?: string}) {
   }
 
   const backPath = category === 'checklist' ? '/checklist' : '/';
+  const availableModels = AI_PROVIDERS.find(p => p.value === aiConfig.provider)?.models || [];
 
   return (
     <div className="space-y-4">
@@ -276,23 +297,27 @@ export function NoteEditor({noteId}: {noteId?: string}) {
             <Label htmlFor="tags" className="text-base">
               {t('noteEditor.tags.label')}
             </Label>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
               <Input
                 id="tags"
                 value={tagInput}
                 onChange={e => setTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown}
                 placeholder={t('noteEditor.tags.placeholder')}
+                className="flex-grow"
               />
-              <Button variant="outline" onClick={handleSuggestTags} disabled={isAiLoading || !content.trim()}>
-                {isAiLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Tags className="mr-2 h-4 w-4" />
-                )}
-                {t('noteEditor.tags.suggestButton')}
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button variant="outline" onClick={() => handleAiAction('suggestTags')} disabled={isAiLoading || !content.trim()} className="flex-1">
+                  {isAiLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Tags className="mr-2 h-4 w-4" />
+                  )}
+                  {t('noteEditor.tags.suggestButton')}
+                </Button>
+              </div>
             </div>
+
             <div className="flex flex-wrap gap-2 mt-2">
               {currentTags.map(tag => (
                 <Badge key={tag} variant="secondary" className="flex items-center gap-1">
@@ -305,26 +330,59 @@ export function NoteEditor({noteId}: {noteId?: string}) {
             </div>
           </div>
         </CardContent>
+
+        <Separator />
+
         <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-secondary/50 p-4 rounded-b-lg">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={handleRefineNote} variant="outline" disabled={isAiLoading || !content.trim()}>
-              {isAiLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Wand2 className="mr-2 h-4 w-4" />
-              )}
+          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2 w-full sm:w-auto">
+            {/* AI Tools */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Label className="hidden sm:inline-block">{t('noteEditor.aiTools.provider')}:</Label>
+              <Select value={aiConfig.provider} onValueChange={handleProviderChange}>
+                <SelectTrigger className="w-full sm:w-[150px]">
+                  <SelectValue placeholder={t('noteEditor.aiTools.provider')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {AI_PROVIDERS.map(p => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Label className="hidden sm:inline-block">{t('noteEditor.aiTools.model')}:</Label>
+              <Select value={aiConfig.model} onValueChange={handleModelChange}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder={t('noteEditor.aiTools.model')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableModels.map(m => (
+                    <SelectItem key={m} value={m}>
+                      {m}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button onClick={() => handleAiAction('refine')} variant="outline" disabled={isAiLoading || !content.trim()} className="w-full sm:w-auto">
+              {isAiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
               {t('noteEditor.refineButton')}
             </Button>
-            <Button onClick={handleExport} variant="outline" disabled={!title || !content}>
+            <Button onClick={handleExport} variant="outline" disabled={!title || !content} className="w-full sm:w-auto">
               <Download className="mr-2 h-4 w-4" />
               {t('noteEditor.exportButton')}
             </Button>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex gap-2 w-full sm:w-auto">
             {noteId && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
+                  <Button variant="destructive" className="w-full">
                     <Trash2 className="mr-2 h-4 w-4" />
                     {t('noteEditor.deleteButton')}
                   </Button>
@@ -343,7 +401,7 @@ export function NoteEditor({noteId}: {noteId?: string}) {
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            <Button onClick={handleSave}>{t('noteEditor.saveButton')}</Button>
+            <Button onClick={handleSave} className="w-full">{t('noteEditor.saveButton')}</Button>
           </div>
         </CardFooter>
       </Card>
