@@ -8,10 +8,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    // Optimize package imports for better performance
-    optimizePackageImports: ['@radix-ui/react-icons'],
-  },
   images: {
     remotePatterns: [
       {
