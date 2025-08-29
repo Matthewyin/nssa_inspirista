@@ -1,3 +1,4 @@
+'use server';
 // This file is for SERVER-side firebase initialization
 // For client-side, see firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseApp, cert } from 'firebase-admin/app';
@@ -33,11 +34,12 @@ try {
 // A simple mock for the currentUser to avoid crashes when auth is not initialized.
 const mockAuth = {
   get currentUser(): Promise<User | null> {
+    console.warn("Firebase Admin SDK not initialized. Returning null for currentUser.");
     return Promise.resolve(null);
   }
 };
 
 const app = _app;
-const auth = _auth || mockAuth;
+const auth: Pick<Auth, 'currentUser'> = _auth || mockAuth;
 
 export { app, auth };

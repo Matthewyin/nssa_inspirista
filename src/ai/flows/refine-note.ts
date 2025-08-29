@@ -8,17 +8,8 @@
 
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
-import {AiProvider, GeminiModel, RefineNoteInputSchema, RefineNoteOutputSchema, RefineNoteInput, RefineNoteOutput} from '@/lib/types';
-import {Model} from 'genkit/model';
+import {RefineNoteInputSchema, RefineNoteOutputSchema, RefineNoteInput, RefineNoteOutput} from '@/lib/types';
 
-
-function getModel(provider: AiProvider, modelName: string, apiKey: string): Model<any, any> {
-  if (provider === 'gemini') {
-    return googleAI(modelName as GeminiModel, {apiKey});
-  }
-  throw new Error(`Unsupported AI provider: ${provider}`);
-}
 
 const refineNoteFlow = ai.defineFlow(
   {
@@ -28,7 +19,7 @@ const refineNoteFlow = ai.defineFlow(
   },
   async (input) => {
     const { apiKey, aiConfig, noteContent } = input;
-    const model = getModel(aiConfig.provider, aiConfig.model, apiKey);
+    const model = googleAI(aiConfig.model, {apiKey});
 
     const { output } = await ai.generate({
         prompt: `You are an AI assistant designed to refine notes.
