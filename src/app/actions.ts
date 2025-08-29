@@ -29,7 +29,6 @@ import {
   ValidateApiKeyOutput,
 } from '@/lib/types';
 import { z } from 'genkit';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // --- Note Database Actions ---
 
@@ -158,13 +157,18 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
   const { provider, apiKey } = input;
   try {
     if (provider === 'gemini') {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      // Use a lightweight model for validation to ensure higher availability
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      // Actually generate content to force a network request and validate the key.
-      await model.generateContent("test");
+      // Use the Genkit AI.generate function with the provided key.
+      // This is a more robust way to validate as it uses the app's core AI utility.
+      const model = googleAI('gemini-1.5-flash', { apiKey });
+      await ai.generate({
+        model,
+        prompt: 'test',
+        output: { schema: z.string() },
+      });
+      // If the above call does not throw, the key is valid.
       return { isValid: true };
     }
+    // Fallback for unknown providers
     return { isValid: false, error: 'Unknown provider.' };
   } catch (e: any) {
     console.error(`API key validation failed for ${provider}:`, e);

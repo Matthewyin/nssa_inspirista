@@ -185,7 +185,6 @@ const translations = {
       empty: {
         title: '你的灵感墙是空的',
         description: '从创建新灵感开始，捕捉你的想法。',
-        createButton: '创建第一条灵感',
       },
     },
     noteCard: {
@@ -198,7 +197,6 @@ const translations = {
       empty: {
         title: '你还没有任何清单',
         description: '从创建一个新清单开始，追踪你的目标。',
-        createButton: '创建第一个清单',
       },
     },
     apiKeyInput: {
