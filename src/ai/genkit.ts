@@ -1,9 +1,8 @@
 import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import {googleAI} from '@genkit-ai/google-genai';
 
-// Initialize Genkit without any default plugins.
-// AI providers and models will be configured dynamically within each flow
-// based on the user-provided API key.
+// Initialize Genkit with Google AI plugin
 export const ai = genkit({
+  plugins: [googleAI()],
   enableTracingAndMetrics: true,
 });

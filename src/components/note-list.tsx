@@ -3,8 +3,6 @@
 import { type Note } from '@/lib/types';
 import { NoteCard } from './note-card';
 import { useLanguage } from '@/hooks/use-language';
-import { Button } from './ui/button';
-import Link from 'next/link';
 
 export function NoteList({ initialNotes }: { initialNotes: Note[] }) {
   const { t } = useLanguage();
@@ -22,9 +20,6 @@ export function NoteList({ initialNotes }: { initialNotes: Note[] }) {
           <div className="flex flex-col items-center gap-2 text-center p-8">
             <h3 className="text-2xl font-bold tracking-tight">{t('noteList.empty.title')}</h3>
             <p className="text-sm text-muted-foreground">{t('noteList.empty.description')}</p>
-            <Button className="mt-4" asChild>
-              <Link href="/notes/new">{t('noteList.empty.createButton')}</Link>
-            </Button>
           </div>
         </div>
       )}

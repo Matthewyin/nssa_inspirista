@@ -17,7 +17,7 @@ export type Note = z.infer<typeof NoteSchema>;
 
 // AI Provider Schemas
 export type AiProvider = 'gemini';
-export type GeminiModel = 'gemini-1.5-flash' | 'gemini-1.5-pro';
+export type GeminiModel = 'gemini-2.5-flash' | 'gemini-2.5-pro';
 export type AiModel = GeminiModel;
 
 export interface AiConfig {

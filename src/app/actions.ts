@@ -5,8 +5,9 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { googleAI } from '@genkit-ai/googleai';
+import { app } from '@/lib/firebase-server';
 import {
   Note,
   GetNotesInput,
@@ -33,7 +34,10 @@ import { z } from 'genkit';
 // --- Note Database Actions ---
 
 export async function getNotes(input: GetNotesInput): Promise<GetNotesOutput> {
-  const db = getFirestore();
+  if (!app) {
+    throw new Error('Firebase Admin SDK not initialized. Please check your Firebase configuration.');
+  }
+  const db = getFirestore(app);
   const { uid, category } = input;
   let query: FirebaseFirestore.Query = db
     .collection('notes')
@@ -55,7 +59,10 @@ export async function getNotes(input: GetNotesInput): Promise<GetNotesOutput> {
 }
 
 export async function getNote(input: GetNoteInput): Promise<GetNoteOutput> {
-  const db = getFirestore();
+  if (!app) {
+    throw new Error('Firebase Admin SDK not initialized. Please check your Firebase configuration.');
+  }
+  const db = getFirestore(app);
   const { id, uid } = input;
   const docRef = db.collection('notes').doc(id);
   const docSnap = await docRef.get();
@@ -73,7 +80,10 @@ export async function getNote(input: GetNoteInput): Promise<GetNoteOutput> {
 }
 
 export async function createNote(input: CreateNoteInput): Promise<CreateNoteOutput> {
-  const db = getFirestore();
+  if (!app) {
+    throw new Error('Firebase Admin SDK not initialized. Please check your Firebase configuration.');
+  }
+  const db = getFirestore(app);
   const { uid, title, content, tags, category } = input;
 
   const newNoteData = {
@@ -91,7 +101,10 @@ export async function createNote(input: CreateNoteInput): Promise<CreateNoteOutp
 }
 
 export async function updateNote(input: UpdateNoteInput): Promise<UpdateNoteOutput> {
-  const db = getFirestore();
+  if (!app) {
+    throw new Error('Firebase Admin SDK not initialized. Please check your Firebase configuration.');
+  }
+  const db = getFirestore(app);
   const { id, uid, data } = input;
   const docRef = db.collection('notes').doc(id);
   const docSnap = await docRef.get();
@@ -107,7 +120,10 @@ export async function updateNote(input: UpdateNoteInput): Promise<UpdateNoteOutp
 }
 
 export async function deleteNote(input: DeleteNoteInput): Promise<DeleteNoteOutput> {
-  const db = getFirestore();
+  if (!app) {
+    throw new Error('Firebase Admin SDK not initialized. Please check your Firebase configuration.');
+  }
+  const db = getFirestore(app);
   const { id, uid } = input;
   const docRef = db.collection('notes').doc(id);
   const docSnap = await docRef.get();
@@ -124,32 +140,38 @@ export async function deleteNote(input: DeleteNoteInput): Promise<DeleteNoteOutp
 
 export async function refineNote(input: RefineNoteInput): Promise<RefineNoteOutput> {
   const { apiKey, aiConfig, noteContent } = input;
-  const model = googleAI(aiConfig.model, { apiKey });
+
+  // Use new genkit with dynamic model selection
+  const model = googleAI.model(aiConfig.model, { apiKey });
 
   const { output } = await ai.generate({
+    model,
     prompt: `You are an AI assistant designed to refine notes.
 Please organize, summarize, and categorize the following note content to improve its clarity and structure.
 
 Note Content:
 ${noteContent}`,
-    model,
     output: { schema: RefineNoteOutputSchema },
   });
+
   return output!;
 }
 
 export async function suggestTags(input: SuggestTagsInput): Promise<SuggestTagsOutput> {
   const { apiKey, aiConfig, noteContent } = input;
-  const model = googleAI(aiConfig.model, { apiKey });
+
+  // Use new genkit with dynamic model selection
+  const model = googleAI.model(aiConfig.model, { apiKey });
 
   const { output } = await ai.generate({
+    model,
     prompt: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note.
 
 Note Content:
 ${noteContent}`,
-    model,
     output: { schema: SuggestTagsOutputSchema },
   });
+
   return output!;
 }
 
@@ -157,14 +179,15 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
   const { provider, apiKey } = input;
   try {
     if (provider === 'gemini') {
-      // Use the Genkit AI.generate function with the provided key.
-      // This is a more robust way to validate as it uses the app's core AI utility.
-      const model = googleAI('gemini-1.5-flash', { apiKey });
+      // Use new genkit with a simple validation call
+      const model = googleAI.model('gemini-2.5-flash', { apiKey });
+
       await ai.generate({
         model,
-        prompt: 'test',
+        prompt: 'Hello',
         output: { schema: z.string() },
       });
+
       // If the above call does not throw, the key is valid.
       return { isValid: true };
     }
@@ -173,9 +196,13 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
   } catch (e: any) {
     console.error(`API key validation failed for ${provider}:`, e);
     // Provide a more user-friendly error message
-    const errorMessage = e.message?.includes('API key not valid') || e.message?.includes('permission denied')
+    const errorMessage = e.message?.includes('API key not valid') ||
+                         e.message?.includes('permission denied') ||
+                         e.message?.includes('API_KEY_INVALID') ||
+                         e.message?.includes('invalid') ||
+                         e.status === 400 || e.status === 401 || e.status === 403
       ? 'The API key is invalid. Please check your key and try again.'
-      : 'Validation failed. Please check your network connection and API key.';
+      : `Validation failed: ${e.message || 'Please check your network connection and API key.'}`;
     return { isValid: false, error: errorMessage };
   }
 }
