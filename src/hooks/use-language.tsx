@@ -77,8 +77,16 @@ const translations = {
       },
       toast: {
         title: 'API Key Saved',
-        gemini: 'Your Gemini API key has been saved locally.',
+        gemini: 'Your Gemini API key has been successfully validated and saved.',
         deepseek: 'Your DeepSeek API key has been saved locally.',
+        empty: {
+            title: 'API Key is empty',
+            description: 'Please enter an API key.',
+        },
+        validation: {
+            title: 'API Key Validation Failed',
+            description: 'The API key is invalid. Please check your key and try again.',
+        }
       },
       alert: {
         footerTitle: 'Privacy Note',
@@ -243,8 +251,16 @@ const translations = {
       },
       toast: {
         title: 'API 密钥已保存',
-        gemini: '您的 Gemini API 密钥已保存在本地。',
+        gemini: '您的 Gemini API 密钥已成功验证并保存。',
         deepseek: '您的 DeepSeek API 密钥已保存在本地。',
+        empty: {
+            title: 'API 密钥为空',
+            description: '请输入您的 API 密钥。',
+        },
+        validation: {
+            title: 'API 密钥验证失败',
+            description: '该 API 密钥无效。请检查您的密钥后重试。',
+        }
       },
       alert: {
         footerTitle: '隐私提示',

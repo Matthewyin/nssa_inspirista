@@ -1,17 +1,18 @@
 'use client';
 
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useTransition} from 'react';
 import {useLocalStorage} from '@/hooks/use-local-storage';
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {Label} from '@/components/ui/label';
 import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
 import {useToast} from '@/hooks/use-toast';
-import {KeyRound, Info, Eye, EyeOff} from 'lucide-react';
+import {KeyRound, Info, Eye, EyeOff, Loader2} from 'lucide-react';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import Link from 'next/link';
 import {useLanguage} from '@/hooks/use-language';
 import {Separator} from './ui/separator';
+import { validateApiKey } from '@/ai/flows/validate-api-key';
 
 export function ApiKeyManager() {
   const {t, isClient} = useLanguage();
@@ -23,6 +24,7 @@ export function ApiKeyManager() {
 
   const [showGeminiKey, setShowGeminiKey] = useState(false);
   // const [showDeepseekKey, setShowDeepseekKey] = useState(false);
+  const [isVerifying, startVerificationTransition] = useTransition();
 
   const {toast} = useToast();
 
@@ -36,11 +38,31 @@ export function ApiKeyManager() {
   }, [geminiApiKey]); //, deepseekApiKey]);
 
   const handleSaveGemini = () => {
-    setGeminiApiKey(geminiKeyInput);
-    toast({
-      title: t('apiKeyInput.toast.title'),
-      description: t('apiKeyInput.toast.gemini'),
-    });
+    if (!geminiKeyInput.trim()) {
+        toast({
+            variant: "destructive",
+            title: t('apiKeyInput.toast.empty.title'),
+            description: t('apiKeyInput.toast.empty.description'),
+        })
+        return;
+    }
+
+    startVerificationTransition(async () => {
+        const result = await validateApiKey({ provider: 'gemini', apiKey: geminiKeyInput });
+        if (result.isValid) {
+            setGeminiApiKey(geminiKeyInput);
+            toast({
+              title: t('apiKeyInput.toast.title'),
+              description: t('apiKeyInput.toast.gemini'),
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: t('apiKeyInput.toast.validation.title'),
+                description: t('apiKeyInput.toast.validation.description'),
+            })
+        }
+    })
   };
 
   // const handleSaveDeepseek = () => {
@@ -89,7 +111,10 @@ export function ApiKeyManager() {
                 </Button>
               </div>
             </div>
-            <Button onClick={handleSaveGemini}>{t('apiKeyInput.saveButton')}</Button>
+            <Button onClick={handleSaveGemini} disabled={isVerifying}>
+                {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t('apiKeyInput.saveButton')}
+            </Button>
             <Alert>
               <Info className="h-4 w-4" />
               <AlertTitle>{t('apiKeyInput.gemini.alert.title')}</AlertTitle>
