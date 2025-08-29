@@ -2,22 +2,42 @@
 // For client-side, see firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseApp, cert } from 'firebase-admin/app';
 import { getAuth, type Auth } from 'firebase-admin/auth';
+import type { User } from 'firebase-admin/auth';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-  : undefined;
+let _app: FirebaseApp | undefined;
+let _auth: Auth | undefined;
 
-const appConfig = {
-  credential: cert(serviceAccount!),
-};
+try {
+  const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (serviceAccountString) {
+    const serviceAccount = JSON.parse(serviceAccountString);
+    const appConfig = {
+      credential: cert(serviceAccount),
+    };
 
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(appConfig);
-} else {
-  app = getApp();
+    if (!getApps().length) {
+      _app = initializeApp(appConfig);
+    } else {
+      _app = getApp();
+    }
+    
+    _auth = getAuth(_app);
+  } else {
+    console.warn("FIREBASE_SERVICE_ACCOUNT environment variable not set. Server-side Firebase features will be disabled.");
+  }
+} catch (error) {
+  console.error("Failed to initialize Firebase Admin SDK:", error);
 }
 
-const auth: Auth = getAuth(app);
+
+// A simple mock for the currentUser to avoid crashes when auth is not initialized.
+const mockAuth = {
+  get currentUser(): Promise<User | null> {
+    return Promise.resolve(null);
+  }
+};
+
+const app = _app;
+const auth = _auth || mockAuth;
 
 export { app, auth };
