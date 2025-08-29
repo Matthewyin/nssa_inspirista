@@ -7,35 +7,26 @@
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
-import {ValidateApiKeyInputSchema, ValidateApiKeyOutputSchema, ValidateApiKeyInput, ValidateApiKeyOutput} from '@/lib/types';
+import {ValidateApiKeyInput, ValidateApiKeyOutput} from '@/lib/types';
 
 export async function validateApiKey(input: ValidateApiKeyInput): Promise<ValidateApiKeyOutput> {
-    const validateApiKeyFlow = ai.defineFlow(
-        {
-            name: 'validateApiKeyFlow',
-            inputSchema: ValidateApiKeyInputSchema,
-            outputSchema: ValidateApiKeyOutputSchema,
-        },
-        async ({provider, apiKey}) => {
-            try {
-                if (provider === 'gemini') {
-                    const model = googleAI('gemini-1.5-flash', {apiKey});
-                    const {output} = await ai.generate({
-                        model,
-                        prompt: 'test',
-                        output: {schema: z.string()},
-                    });
-                    // Simple check if output exists and is a string
-                    if (typeof output === 'string') {
-                        return {isValid: true};
-                    }
-                }
-                return {isValid: false, error: 'Unknown error occurred.'};
-            } catch (e: any) {
-                console.error(`API key validation failed for ${provider}:`, e);
-                return {isValid: false, error: e.message || 'Validation failed.'};
+    const {provider, apiKey} = input;
+    try {
+        if (provider === 'gemini') {
+            const model = googleAI('gemini-1.5-flash', {apiKey});
+            const {output} = await ai.generate({
+                model,
+                prompt: 'test',
+                output: {schema: z.string()},
+            });
+            // Simple check if output exists and is a string
+            if (typeof output === 'string') {
+                return {isValid: true};
             }
         }
-    );
-    return validateApiKeyFlow(input);
+        return {isValid: false, error: 'Unknown error occurred.'};
+    } catch (e: any) {
+        console.error(`API key validation failed for ${provider}:`, e);
+        return {isValid: false, error: e.message || 'Validation failed.'};
+    }
 }

@@ -1,6 +1,5 @@
 'use server';
 
-import {ai} from '@/ai/genkit';
 import { getFirestore } from 'firebase-admin/firestore';
 import {
     Note,
