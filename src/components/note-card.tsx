@@ -11,7 +11,24 @@ export function NoteCard({ note }: { note: Note }) {
   const { t, language, isClient } = useLanguage();
 
   if (!isClient) {
-    return null; 
+    // Render a skeleton or basic version on the server
+    return (
+        <Card className="flex flex-col h-full">
+          <CardHeader>
+            <CardTitle className="text-xl">{note.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-grow">
+            <p className="text-sm text-muted-foreground line-clamp-4">{note.content}</p>
+          </CardContent>
+          <CardFooter className="flex justify-end items-center">
+            <Button asChild variant="ghost" size="icon" className="shrink-0">
+              <Link href={`/notes/${note.id}`}>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      );
   }
 
   const description = note.content.length > 150 ? `${note.content.substring(0, 150)}...` : note.content;
@@ -54,5 +71,3 @@ export function NoteCard({ note }: { note: Note }) {
     </Card>
   );
 }
-
-    

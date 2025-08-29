@@ -1,23 +1,16 @@
-'use client';
-
 import { NoteList } from '@/components/note-list';
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { getNotesFlow } from '@/ai/flows/notes';
+import { auth } from '@/lib/firebase-server';
+import { redirect } from 'next/navigation';
 
-export default function HomePage() {
-    const { user, loading } = useAuth();
-    const router = useRouter();
+export default async function HomePage() {
+  const user = await auth.currentUser;
 
-    useEffect(() => {
-        if (!loading && !user) {
-            router.push('/login');
-        }
-    }, [user, loading, router]);
+  if (!user) {
+    redirect('/login');
+  }
 
-    if (loading || !user) {
-        return null; // Or a loading spinner
-    }
+  const inspirationNotes = await getNotesFlow({ uid: user.uid, category: 'inspiration' });
 
-  return <NoteList />;
+  return <NoteList initialNotes={inspirationNotes} />;
 }

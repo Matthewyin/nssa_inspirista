@@ -1,12 +1,10 @@
+// This file is for CLIENT-side firebase initialization
+// For server-side, see firebase-server.ts
 
-// Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -16,20 +14,15 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Conditionally initialize Firebase on the client side
+// Initialize Firebase
 let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-
-if (typeof window !== 'undefined' && !getApps().length) {
+if (!getApps().length) {
   app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-} else if (getApps().length > 0) {
-    app = getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
+} else {
+  app = getApp();
 }
 
-// @ts-ignore
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
+
 export { app, auth, db };

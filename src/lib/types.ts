@@ -1,12 +1,17 @@
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-  category: 'inspiration' | 'checklist';
-}
+import { z } from 'zod';
+
+export const NoteSchema = z.object({
+  id: z.string(),
+  uid: z.string(),
+  title: z.string(),
+  content: z.string(),
+  tags: z.array(z.string()),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  category: z.enum(['inspiration', 'checklist']),
+});
+
+export type Note = z.infer<typeof NoteSchema>;
 
 export interface ChecklistItem {
   id: string;
@@ -14,12 +19,11 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
-export type AiProvider = 'gemini'; // | 'deepseek';
+export type AiProvider = 'gemini';
 
-export type GeminiModel = 'gemini-2.5-pro' | 'gemini-2.5-flash';
-// export type DeepSeekModel = 'deepseek-chat' | 'deepseek-coder';
+export type GeminiModel = 'gemini-1.5-flash' | 'gemini-1.5-pro';
 
-export type AiModel = GeminiModel; // | DeepSeekModel;
+export type AiModel = GeminiModel;
 
 export interface AiConfig {
   provider: AiProvider;

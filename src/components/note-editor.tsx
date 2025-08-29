@@ -2,10 +2,10 @@
 
 import {useState, useEffect, useTransition} from 'react';
 import {useRouter} from 'next/navigation';
-import {useSyncedStore} from '@/hooks/use-local-storage';
 import {type Note, type AiConfig, type AiProvider, type AiModel, GeminiModel} from '@/lib/types';
 import {refineNote} from '@/ai/flows/refine-note';
 import {suggestTags} from '@/ai/flows/suggest-tags';
+import {createNoteFlow, updateNoteFlow, deleteNoteFlow} from '@/ai/flows/notes';
 import {useLanguage} from '@/hooks/use-language';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -31,6 +31,7 @@ import {ToggleGroup, ToggleGroupItem} from '@/components/ui/toggle-group';
 import {useLocalStorage} from '@/hooks/use-local-storage';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import {Separator} from './ui/separator';
+import { useAuth } from '@/hooks/use-auth';
 
 const AI_PROVIDERS: {
   value: AiProvider;
@@ -40,25 +41,20 @@ const AI_PROVIDERS: {
   {
     value: 'gemini',
     label: 'Google Gemini',
-    models: ['gemini-2.5-pro', 'gemini-2.5-flash'],
+    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
   },
-  // {
-  //   value: 'deepseek',
-  //   label: 'DeepSeek',
-  //   models: ['deepseek-chat', 'deepseek-coder'],
-  // },
 ];
 
-export function NoteEditor({noteId}: {noteId?: string}) {
+export function NoteEditor({note}: {note?: Note}) {
   const router = useRouter();
   const {toast} = useToast();
   const {t} = useLanguage();
-  const [notes, setNotes] = useSyncedStore<Note[]>('notes', []);
+  const { user } = useAuth();
+  
   const [geminiApiKey] = useLocalStorage<string | null>('gemini-api-key', null);
-  // const [deepseekApiKey] = useLocalStorage<string | null>('deepseek-api-key', null);
   const [aiConfig, setAiConfig] = useLocalStorage<AiConfig>('ai-config', {
     provider: 'gemini',
-    model: 'gemini-2.5-flash',
+    model: 'gemini-1.5-flash',
   });
 
   const [title, setTitle] = useState('');
@@ -66,30 +62,19 @@ export function NoteEditor({noteId}: {noteId?: string}) {
   const [category, setCategory] = useState<'inspiration' | 'checklist'>('inspiration');
   const [currentTags, setCurrentTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [isAiLoading, startAiTransition] = useTransition();
 
   useEffect(() => {
-    if (noteId) {
-      const noteToEdit = notes.find(note => note.id === noteId);
-      if (noteToEdit) {
-        setTitle(noteToEdit.title);
-        setContent(noteToEdit.content);
-        setCurrentTags(noteToEdit.tags);
-        setCategory(noteToEdit.category || 'inspiration');
-      } else {
-        if (notes.length > 0) {
-          toast({
-            variant: 'destructive',
-            title: t('noteEditor.toast.notFound.title'),
-            description: t('noteEditor.toast.notFound.description'),
-          });
-          router.push('/');
-        }
-      }
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content);
+      setCurrentTags(note.tags);
+      setCategory(note.category || 'inspiration');
     }
-    setIsLoaded(true);
-  }, [noteId, notes, router, toast, t]);
+  }, [note]);
 
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
@@ -106,7 +91,11 @@ export function NoteEditor({noteId}: {noteId?: string}) {
     setCurrentTags(currentTags.filter(tag => tag !== tagToRemove));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to save." });
+      return;
+    }
     if (!title.trim() || !content.trim()) {
       toast({
         variant: 'destructive',
@@ -116,40 +105,57 @@ export function NoteEditor({noteId}: {noteId?: string}) {
       return;
     }
 
-    const now = new Date().toISOString();
-    if (noteId) {
-      const updatedNotes = notes.map(note =>
-        note.id === noteId ? {...note, title, content, tags: currentTags, category, updatedAt: now} : note
-      );
-      setNotes(updatedNotes);
-      toast({title: t('noteEditor.toast.updated.title'), description: t('noteEditor.toast.updated.description')});
-    } else {
-      const newNote: Note = {
-        id: new Date().getTime().toString(),
-        title,
-        content,
-        tags: currentTags,
-        category,
-        createdAt: now,
-        updatedAt: now,
-      };
-      setNotes([...notes, newNote]);
-      toast({title: t('noteEditor.toast.created.title'), description: t('noteEditor.toast.created.description')});
-    }
-
+    setIsSaving(true);
+    const now = Date.now();
     const redirectPath = category === 'checklist' ? '/checklist' : '/';
-    router.push(redirectPath);
-    router.refresh();
+
+    try {
+      if (note) {
+        // Update existing note
+        await updateNoteFlow({
+          id: note.id,
+          uid: user.uid,
+          data: { title, content, tags: currentTags, category, updatedAt: now },
+        });
+        toast({title: t('noteEditor.toast.updated.title'), description: t('noteEditor.toast.updated.description')});
+      } else {
+        // Create new note
+        await createNoteFlow({
+          uid: user.uid,
+          title,
+          content,
+          tags: currentTags,
+          category,
+          createdAt: now,
+          updatedAt: now,
+        });
+        toast({title: t('noteEditor.toast.created.title'), description: t('noteEditor.toast.created.description')});
+      }
+      router.push(redirectPath);
+      router.refresh(); // Refresh server components on the target page
+    } catch (error) {
+        console.error("Failed to save note:", error);
+        toast({ variant: 'destructive', title: "Save failed", description: "Could not save the note. Please try again." });
+    } finally {
+        setIsSaving(false);
+    }
   };
 
-  const handleDelete = () => {
-    if (noteId) {
-      const noteToDelete = notes.find(note => note.id === noteId);
-      const redirectPath = noteToDelete?.category === 'checklist' ? '/checklist' : '/';
-      const updatedNotes = notes.filter(note => note.id !== noteId);
-      setNotes(updatedNotes);
-      toast({title: t('noteEditor.toast.deleted.title'), description: t('noteEditor.toast.deleted.description')});
-      router.push(redirectPath);
+  const handleDelete = async () => {
+    if (note && user) {
+        setIsDeleting(true);
+        const redirectPath = note.category === 'checklist' ? '/checklist' : '/';
+        try {
+            await deleteNoteFlow({ id: note.id, uid: user.uid });
+            toast({title: t('noteEditor.toast.deleted.title'), description: t('noteEditor.toast.deleted.description')});
+            router.push(redirectPath);
+            router.refresh();
+        } catch(error) {
+            console.error("Failed to delete note:", error);
+            toast({ variant: 'destructive', title: "Delete failed", description: "Could not delete the note. Please try again." });
+        } finally {
+            setIsDeleting(false);
+        }
     }
   };
 
@@ -167,7 +173,7 @@ export function NoteEditor({noteId}: {noteId?: string}) {
   };
 
   const checkApiKey = (provider: AiProvider) => {
-    const key = provider === 'gemini' ? geminiApiKey : null; // deepseekApiKey;
+    const key = provider === 'gemini' ? geminiApiKey : null; 
     if (!key) {
       toast({
         variant: 'destructive',
@@ -180,7 +186,7 @@ export function NoteEditor({noteId}: {noteId?: string}) {
   };
 
   const getApiKey = (provider: AiProvider) => {
-    return provider === 'gemini' ? geminiApiKey : null; // deepseekApiKey;
+    return provider === 'gemini' ? geminiApiKey : null;
   };
 
   const handleAiAction = async (action: 'refine' | 'suggestTags') => {
@@ -224,16 +230,17 @@ export function NoteEditor({noteId}: {noteId?: string}) {
   const handleModelChange = (model: AiModel) => {
     setAiConfig(prev => ({...prev, model}));
   };
-
-  if (!isLoaded) {
+  
+  if (!user) {
     return (
       <div className="flex justify-center items-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-4">Authenticating...</p>
       </div>
     );
   }
 
-  const backPath = category === 'checklist' ? '/checklist' : '/';
+  const backPath = note?.category === 'checklist' ? '/checklist' : (category === 'checklist' ? '/checklist' : '/');
   const availableModels = AI_PROVIDERS.find(p => p.value === aiConfig.provider)?.models || [];
 
   return (
@@ -379,10 +386,11 @@ export function NoteEditor({noteId}: {noteId?: string}) {
           </div>
 
           <div className="flex gap-2 w-full sm:w-auto">
-            {noteId && (
+            {note && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full">
+                  <Button variant="destructive" className="w-full" disabled={isDeleting}>
+                    {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <Trash2 className="mr-2 h-4 w-4" />
                     {t('noteEditor.deleteButton')}
                   </Button>
@@ -401,7 +409,10 @@ export function NoteEditor({noteId}: {noteId?: string}) {
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            <Button onClick={handleSave} className="w-full">{t('noteEditor.saveButton')}</Button>
+            <Button onClick={handleSave} className="w-full" disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t('noteEditor.saveButton')}
+            </Button>
           </div>
         </CardFooter>
       </Card>
