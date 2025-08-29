@@ -159,15 +159,16 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
   try {
     if (provider === 'gemini') {
       const genAI = new GoogleGenerativeAI(apiKey);
-      // We don't need to actually use the model, just verify we can access it.
-      await genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      // Actually generate content to force a network request and validate the key.
+      await model.generateContent("test");
       return { isValid: true };
     }
     return { isValid: false, error: 'Unknown provider.' };
   } catch (e: any) {
     console.error(`API key validation failed for ${provider}:`, e);
     // Provide a more user-friendly error message
-    const errorMessage = e.message?.includes('API key not valid')
+    const errorMessage = e.message?.includes('API key not valid') || e.message?.includes('permission denied')
       ? 'The API key is invalid. Please check your key and try again.'
       : 'Validation failed. Please check your network connection and API key.';
     return { isValid: false, error: errorMessage };
