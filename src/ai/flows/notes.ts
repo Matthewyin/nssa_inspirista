@@ -2,7 +2,6 @@
 'use server';
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
 import {
   collection,
   deleteDoc,
@@ -15,20 +14,23 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import {db} from '@/lib/firebase';
-import {Note, NoteSchema} from '@/lib/types';
+import {
+    Note,
+    GetNotesInput, GetNotesOutput, GetNotesInputSchema, GetNotesOutputSchema,
+    GetNoteInput, GetNoteOutput, GetNoteInputSchema, GetNoteOutputSchema,
+    CreateNoteInput, CreateNoteOutput, CreateNoteInputSchema, CreateNoteOutputSchema,
+    UpdateNoteInput, UpdateNoteOutput, UpdateNoteInputSchema, UpdateNoteOutputSchema,
+    DeleteNoteInput, DeleteNoteOutput, DeleteNoteInputSchema, DeleteNoteOutputSchema
+} from '@/lib/types';
 
-// Define Zod schema for the flows for compile time validation and type safety.
 
 const notesCollection = collection(db, 'notes');
 
 const getNotesFlowInternal = ai.defineFlow(
   {
     name: 'getNotesFlow',
-    inputSchema: z.object({
-      uid: z.string(),
-      category: z.string().optional(),
-    }),
-    outputSchema: z.array(NoteSchema),
+    inputSchema: GetNotesInputSchema,
+    outputSchema: GetNotesOutputSchema,
   },
   async ({uid, category}) => {
     if (!db) {
@@ -44,7 +46,7 @@ const getNotesFlowInternal = ai.defineFlow(
     return notes.sort((a, b) => b.updatedAt - a.updatedAt);
   }
 );
-export async function getNotesFlow(input: z.infer<typeof getNotesFlowInternal.inputSchema>): Promise<z.infer<typeof getNotesFlowInternal.outputSchema>> {
+export async function getNotesFlow(input: GetNotesInput): Promise<GetNotesOutput> {
     return getNotesFlowInternal(input);
 }
 
@@ -52,11 +54,8 @@ export async function getNotesFlow(input: z.infer<typeof getNotesFlowInternal.in
 const getNoteFlowInternal = ai.defineFlow(
   {
     name: 'getNoteFlow',
-    inputSchema: z.object({
-      id: z.string(),
-      uid: z.string(),
-    }),
-    outputSchema: NoteSchema.optional(),
+    inputSchema: GetNoteInputSchema,
+    outputSchema: GetNoteOutputSchema,
   },
   async ({id, uid}) => {
     if (!db) {
@@ -74,15 +73,15 @@ const getNoteFlowInternal = ai.defineFlow(
     return undefined;
   }
 );
-export async function getNoteFlow(input: z.infer<typeof getNoteFlowInternal.inputSchema>): Promise<z.infer<typeof getNoteFlowInternal.outputSchema>> {
+export async function getNoteFlow(input: GetNoteInput): Promise<GetNoteOutput> {
     return getNoteFlowInternal(input);
 }
 
 const createNoteFlowInternal = ai.defineFlow(
   {
     name: 'createNoteFlow',
-    inputSchema: NoteSchema.omit({id: true}),
-    outputSchema: z.string(), // Returns the new note ID
+    inputSchema: CreateNoteInputSchema,
+    outputSchema: CreateNoteOutputSchema,
   },
   async (noteData) => {
     if (!db) {
@@ -94,19 +93,15 @@ const createNoteFlowInternal = ai.defineFlow(
     return newNoteRef.id;
   }
 );
-export async function createNoteFlow(input: z.infer<typeof createNoteFlowInternal.inputSchema>): Promise<z.infer<typeof createNoteFlowInternal.outputSchema>> {
+export async function createNoteFlow(input: CreateNoteInput): Promise<CreateNoteOutput> {
     return createNoteFlowInternal(input);
 }
 
 const updateNoteFlowInternal = ai.defineFlow(
   {
     name: 'updateNoteFlow',
-    inputSchema: z.object({
-      id: z.string(),
-      uid: z.string(),
-      data: NoteSchema.partial(),
-    }),
-    outputSchema: z.void(),
+    inputSchema: UpdateNoteInputSchema,
+    outputSchema: UpdateNoteOutputSchema,
   },
   async ({id, uid, data}) => {
     if (!db) {
@@ -122,18 +117,15 @@ const updateNoteFlowInternal = ai.defineFlow(
     }
   }
 );
-export async function updateNoteFlow(input: z.infer<typeof updateNoteFlowInternal.inputSchema>): Promise<z.infer<typeof updateNoteFlowInternal.outputSchema>> {
+export async function updateNoteFlow(input: UpdateNoteInput): Promise<UpdateNoteOutput> {
     return updateNoteFlowInternal(input);
 }
 
 const deleteNoteFlowInternal = ai.defineFlow(
   {
     name: 'deleteNoteFlow',
-    inputSchema: z.object({
-      id: z.string(),
-      uid: z.string(),
-    }),
-    outputSchema: z.void(),
+    inputSchema: DeleteNoteInputSchema,
+    outputSchema: DeleteNoteOutputSchema,
   },
   async ({id, uid}) => {
     if (!db) {
@@ -149,6 +141,6 @@ const deleteNoteFlowInternal = ai.defineFlow(
     }
   }
 );
-export async function deleteNoteFlow(input: z.infer<typeof deleteNoteFlowInternal.inputSchema>): Promise<z.infer<typeof deleteNoteFlowInternal.outputSchema>> {
+export async function deleteNoteFlow(input: DeleteNoteInput): Promise<DeleteNoteOutput> {
     return deleteNoteFlowInternal(input);
 }

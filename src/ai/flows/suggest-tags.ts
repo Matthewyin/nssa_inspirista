@@ -8,7 +8,6 @@
 
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/googleai';
-// import {deepseek} from 'genkitx-deepseek';
 import {z} from 'genkit';
 import {AiProvider, GeminiModel, SuggestTagsInputSchema, SuggestTagsOutputSchema, SuggestTagsInput, SuggestTagsOutput} from '@/lib/types';
 import {Model} from 'genkit/model';
@@ -17,9 +16,6 @@ function getModel(provider: AiProvider, modelName: string, apiKey: string): Mode
     if (provider === 'gemini') {
       return googleAI(modelName as GeminiModel, {apiKey});
     }
-    // if (provider === 'deepseek') {
-    //   return deepseek(modelName as DeepSeekModel, {apiKey});
-    // }
     throw new Error(`Unsupported AI provider: ${provider}`);
   }
 

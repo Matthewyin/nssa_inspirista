@@ -7,7 +7,6 @@ import {
   type AiConfig,
   type AiProvider,
   type AiModel,
-  GeminiModel,
   type RefineNoteInput,
   type SuggestTagsInput,
 } from '@/lib/types';

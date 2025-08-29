@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// Note Schema
 export const NoteSchema = z.object({
   id: z.string(),
   uid: z.string(),
@@ -13,22 +14,58 @@ export const NoteSchema = z.object({
 
 export type Note = z.infer<typeof NoteSchema>;
 
-export interface ChecklistItem {
-  id: string;
-  text: string;
-  completed: boolean;
-}
 
+// AI Provider Schemas
 export type AiProvider = 'gemini';
-
 export type GeminiModel = 'gemini-1.5-flash' | 'gemini-1.5-pro';
-
 export type AiModel = GeminiModel;
 
 export interface AiConfig {
   provider: AiProvider;
   model: AiModel;
 }
+
+// Genkit Flow Schemas
+
+// Notes Flow Schemas
+export const GetNotesInputSchema = z.object({
+  uid: z.string(),
+  category: z.string().optional(),
+});
+export type GetNotesInput = z.infer<typeof GetNotesInputSchema>;
+export const GetNotesOutputSchema = z.array(NoteSchema);
+export type GetNotesOutput = z.infer<typeof GetNotesOutputSchema>;
+
+export const GetNoteInputSchema = z.object({
+  id: z.string(),
+  uid: z.string(),
+});
+export type GetNoteInput = z.infer<typeof GetNoteInputSchema>;
+export const GetNoteOutputSchema = NoteSchema.optional();
+export type GetNoteOutput = z.infer<typeof GetNoteOutputSchema>;
+
+export const CreateNoteInputSchema = NoteSchema.omit({id: true});
+export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>;
+export const CreateNoteOutputSchema = z.string();
+export type CreateNoteOutput = z.infer<typeof CreateNoteOutputSchema>;
+
+export const UpdateNoteInputSchema = z.object({
+  id: z.string(),
+  uid: z.string(),
+  data: NoteSchema.partial(),
+});
+export type UpdateNoteInput = z.infer<typeof UpdateNoteInputSchema>;
+export const UpdateNoteOutputSchema = z.void();
+export type UpdateNoteOutput = z.infer<typeof UpdateNoteOutputSchema>;
+
+export const DeleteNoteInputSchema = z.object({
+  id: z.string(),
+  uid: z.string(),
+});
+export type DeleteNoteInput = z.infer<typeof DeleteNoteInputSchema>;
+export const DeleteNoteOutputSchema = z.void();
+export type DeleteNoteOutput = z.infer<typeof DeleteNoteOutputSchema>;
+
 
 // Schema for refineNote flow
 export const RefineNoteInputSchema = z.object({
