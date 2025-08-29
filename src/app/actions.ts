@@ -33,9 +33,9 @@ import { z } from 'genkit';
 // --- Note Database Actions ---
 
 export async function getNotes(input: GetNotesInput): Promise<GetNotesOutput> {
-  const { uid, category } = input;
   const db = getFirestore();
-  let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db
+  const { uid, category } = input;
+  let query: FirebaseFirestore.Query = db
     .collection('notes')
     .where('uid', '==', uid);
 
@@ -49,8 +49,8 @@ export async function getNotes(input: GetNotesInput): Promise<GetNotesOutput> {
 }
 
 export async function getNote(input: GetNoteInput): Promise<GetNoteOutput> {
-  const { id, uid } = input;
   const db = getFirestore();
+  const { id, uid } = input;
   const docRef = db.collection('notes').doc(id);
   const docSnap = await docRef.get();
 
@@ -70,8 +70,8 @@ export async function createNote(input: CreateNoteInput): Promise<CreateNoteOutp
 }
 
 export async function updateNote(input: UpdateNoteInput): Promise<UpdateNoteOutput> {
-  const { id, uid, data } = input;
   const db = getFirestore();
+  const { id, uid, data } = input;
   const docRef = db.collection('notes').doc(id);
   const docSnap = await docRef.get();
 
@@ -83,8 +83,8 @@ export async function updateNote(input: UpdateNoteInput): Promise<UpdateNoteOutp
 }
 
 export async function deleteNote(input: DeleteNoteInput): Promise<DeleteNoteOutput> {
-  const { id, uid } = input;
   const db = getFirestore();
+  const { id, uid } = input;
   const docRef = db.collection('notes').doc(id);
   const docSnap = await docRef.get();
 

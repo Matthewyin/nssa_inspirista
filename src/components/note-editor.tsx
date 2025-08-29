@@ -10,9 +10,7 @@ import {
   type RefineNoteInput,
   type SuggestTagsInput,
 } from '@/lib/types';
-import {refineNote} from '@/ai/flows/refine-note';
-import {suggestTags} from '@/ai/flows/suggest-tags';
-import {createNoteFlow, updateNoteFlow, deleteNoteFlow} from '@/ai/flows/notes';
+import { refineNote, suggestTags, createNote, updateNote, deleteNote } from '@/app/actions';
 import {useLanguage} from '@/hooks/use-language';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -119,7 +117,7 @@ export function NoteEditor({note}: {note?: Note}) {
     try {
       if (note) {
         // Update existing note
-        await updateNoteFlow({
+        await updateNote({
           id: note.id,
           uid: user.uid,
           data: { title, content, tags: currentTags, category, updatedAt: now },
@@ -127,7 +125,7 @@ export function NoteEditor({note}: {note?: Note}) {
         toast({title: t('noteEditor.toast.updated.title'), description: t('noteEditor.toast.updated.description')});
       } else {
         // Create new note
-        await createNoteFlow({
+        await createNote({
           uid: user.uid,
           title,
           content,
@@ -153,7 +151,7 @@ export function NoteEditor({note}: {note?: Note}) {
         setIsDeleting(true);
         const redirectPath = note.category === 'checklist' ? '/checklist' : '/';
         try {
-            await deleteNoteFlow({ id: note.id, uid: user.uid });
+            await deleteNote({ id: note.id, uid: user.uid });
             toast({title: t('noteEditor.toast.deleted.title'), description: t('noteEditor.toast.deleted.description')});
             router.push(redirectPath);
             router.refresh();
@@ -352,7 +350,7 @@ export function NoteEditor({note}: {note?: Note}) {
             {/* AI Tools */}
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Label className="hidden sm:inline-block">{t('noteEditor.aiTools.provider')}:</Label>
-              <Select value={aiConfig.provider} onValueChange={handleProviderChange}>
+              <Select value={aiConfig.provider} onValueChange={(value) => handleProviderChange(value as AiProvider)}>
                 <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder={t('noteEditor.aiTools.provider')} />
                 </SelectTrigger>
@@ -368,7 +366,7 @@ export function NoteEditor({note}: {note?: Note}) {
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Label className="hidden sm:inline-block">{t('noteEditor.aiTools.model')}:</Label>
-              <Select value={aiConfig.model} onValueChange={handleModelChange}>
+              <Select value={aiConfig.model} onValueChange={(value) => handleModelChange(value as AiModel)}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder={t('noteEditor.aiTools.model')} />
                 </SelectTrigger>

@@ -12,7 +12,7 @@ import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import Link from 'next/link';
 import {useLanguage} from '@/hooks/use-language';
 import {Separator} from './ui/separator';
-import { validateApiKey } from '@/ai/flows/validate-api-key';
+import { validateApiKey } from '@/app/actions';
 import type { ValidateApiKeyInput } from '@/lib/types';
 
 export function ApiKeyManager() {
