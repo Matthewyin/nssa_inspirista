@@ -159,7 +159,8 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
   try {
     if (provider === 'gemini') {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      // Use a lightweight model for validation to ensure higher availability
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       // Actually generate content to force a network request and validate the key.
       await model.generateContent("test");
       return { isValid: true };
