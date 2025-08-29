@@ -11,11 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci && npm run build
+      - run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm i
+          fi
+          npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_NSSA_INSPIRISTA }}'
           channelId: live
+          args: --force
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
