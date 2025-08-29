@@ -26,7 +26,6 @@ const translations = {
       empty: {
         title: 'Your inspiration wall is empty',
         description: 'Start by creating a new inspiration to capture your ideas.',
-        createButton: 'Create First Inspiration',
       },
     },
     noteCard: {

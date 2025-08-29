@@ -5,7 +5,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { googleAI } from '@genkit-ai/googleai';
 import {
   Note,
@@ -45,7 +45,13 @@ export async function getNotes(input: GetNotesInput): Promise<GetNotesOutput> {
   }
 
   const querySnapshot = await query.orderBy('updatedAt', 'desc').get();
-  const notes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Note[];
+  const notes = querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    // Convert Firestore Timestamp to number if it exists
+    const createdAt = data.createdAt?._seconds ? data.createdAt.toMillis() : data.createdAt;
+    const updatedAt = data.updatedAt?._seconds ? data.updatedAt.toMillis() : data.updatedAt;
+    return { id: doc.id, ...data, createdAt, updatedAt } as Note;
+  });
   return notes;
 }
 
@@ -56,9 +62,12 @@ export async function getNote(input: GetNoteInput): Promise<GetNoteOutput> {
   const docSnap = await docRef.get();
 
   if (docSnap.exists) {
-    const note = { id: docSnap.id, ...docSnap.data() } as Note;
-    if (note.uid === uid) {
-      return note;
+    const data = docSnap.data();
+    if (data && data.uid === uid) {
+      // Convert Firestore Timestamp to number if it exists
+      const createdAt = data.createdAt?._seconds ? data.createdAt.toMillis() : data.createdAt;
+      const updatedAt = data.updatedAt?._seconds ? data.updatedAt.toMillis() : data.updatedAt;
+      return { id: docSnap.id, ...data, createdAt, updatedAt } as Note;
     }
   }
   return undefined;
@@ -66,7 +75,19 @@ export async function getNote(input: GetNoteInput): Promise<GetNoteOutput> {
 
 export async function createNote(input: CreateNoteInput): Promise<CreateNoteOutput> {
   const db = getFirestore();
-  const newNoteRef = await db.collection('notes').add(input);
+  const { uid, title, content, tags, category } = input;
+
+  const newNoteData = {
+    uid,
+    title,
+    content,
+    tags,
+    category,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  };
+
+  const newNoteRef = await db.collection('notes').add(newNoteData);
   return newNoteRef.id;
 }
 
@@ -77,7 +98,10 @@ export async function updateNote(input: UpdateNoteInput): Promise<UpdateNoteOutp
   const docSnap = await docRef.get();
 
   if (docSnap.exists && docSnap.data()?.uid === uid) {
-    await docRef.update(data);
+    await docRef.update({
+      ...data,
+      updatedAt: FieldValue.serverTimestamp(), // Always update with server timestamp
+    });
   } else {
     throw new Error('Note not found or permission denied');
   }
@@ -135,7 +159,6 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
   try {
     if (provider === 'gemini') {
       const genAI = new GoogleGenerativeAI(apiKey);
-      // Try to get a model, which will throw an error for invalid keys.
       // We don't need to actually use the model, just verify we can access it.
       await genAI.getGenerativeModel({ model: "gemini-pro" });
       return { isValid: true };
@@ -144,7 +167,7 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
   } catch (e: any) {
     console.error(`API key validation failed for ${provider}:`, e);
     // Provide a more user-friendly error message
-    const errorMessage = e.message?.includes('API key not valid') 
+    const errorMessage = e.message?.includes('API key not valid')
       ? 'The API key is invalid. Please check your key and try again.'
       : 'Validation failed. Please check your network connection and API key.';
     return { isValid: false, error: errorMessage };
