@@ -2,7 +2,15 @@
 
 import {useState, useEffect, useTransition} from 'react';
 import {useRouter} from 'next/navigation';
-import {type Note, type AiConfig, type AiProvider, type AiModel, GeminiModel} from '@/lib/types';
+import {
+  type Note,
+  type AiConfig,
+  type AiProvider,
+  type AiModel,
+  GeminiModel,
+  type RefineNoteInput,
+  type SuggestTagsInput,
+} from '@/lib/types';
 import {refineNote} from '@/ai/flows/refine-note';
 import {suggestTags} from '@/ai/flows/suggest-tags';
 import {createNoteFlow, updateNoteFlow, deleteNoteFlow} from '@/ai/flows/notes';

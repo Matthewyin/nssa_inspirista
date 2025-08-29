@@ -13,6 +13,7 @@ import Link from 'next/link';
 import {useLanguage} from '@/hooks/use-language';
 import {Separator} from './ui/separator';
 import { validateApiKey } from '@/ai/flows/validate-api-key';
+import type { ValidateApiKeyInput } from '@/lib/types';
 
 export function ApiKeyManager() {
   const {t, isClient} = useLanguage();
