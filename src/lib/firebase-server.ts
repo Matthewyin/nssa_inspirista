@@ -1,4 +1,3 @@
-'use server';
 // This file is for SERVER-side firebase initialization
 // For client-side, see firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseApp, cert } from 'firebase-admin/app';
