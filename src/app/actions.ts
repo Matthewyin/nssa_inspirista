@@ -29,6 +29,7 @@ import {
   ValidateApiKeyOutput,
 } from '@/lib/types';
 import { z } from 'genkit';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // --- Note Database Actions ---
 
@@ -133,20 +134,19 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
   const { provider, apiKey } = input;
   try {
     if (provider === 'gemini') {
-      const model = googleAI('gemini-1.5-flash', { apiKey });
-      const { output } = await ai.generate({
-        model,
-        prompt: 'test',
-        output: { schema: z.string() },
-      });
-      // Simple check if output exists and is a string
-      if (typeof output === 'string') {
-        return { isValid: true };
-      }
+      const genAI = new GoogleGenerativeAI(apiKey);
+      // Try to get a model, which will throw an error for invalid keys.
+      // We don't need to actually use the model, just verify we can access it.
+      await genAI.getGenerativeModel({ model: "gemini-pro" });
+      return { isValid: true };
     }
-    return { isValid: false, error: 'Unknown error occurred.' };
+    return { isValid: false, error: 'Unknown provider.' };
   } catch (e: any) {
     console.error(`API key validation failed for ${provider}:`, e);
-    return { isValid: false, error: e.message || 'Validation failed.' };
+    // Provide a more user-friendly error message
+    const errorMessage = e.message?.includes('API key not valid') 
+      ? 'The API key is invalid. Please check your key and try again.'
+      : 'Validation failed. Please check your network connection and API key.';
+    return { isValid: false, error: errorMessage };
   }
 }
