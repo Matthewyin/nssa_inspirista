@@ -108,16 +108,25 @@ export function ChecklistItem({ note, onUpdate, isDragging, dragHandleProps }: C
             <GripVertical className="h-4 w-4" />
           </div>
 
-          {/* Checkbox */}
-          <Checkbox
-            checked={note.completed || false}
-            onCheckedChange={handleToggleComplete}
-            disabled={isUpdating}
-            className="mt-1"
-          />
+          {/* Status Indicator - 状态指示器 */}
+          <div className="flex items-center justify-center w-6 h-6 mt-1">
+            {note.completed ? (
+              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            ) : (
+              <div className="w-4 h-4 border-2 border-muted-foreground rounded-full" />
+            )}
+          </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0">
+          <div
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={handleToggleComplete}
+            title={note.completed ? t('checklist.item.clickToUncomplete') : t('checklist.item.clickToComplete')}
+          >
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <h3 className={`font-medium text-sm leading-tight ${note.completed ? 'line-through text-muted-foreground' : ''}`}>
@@ -149,13 +158,13 @@ export function ChecklistItem({ note, onUpdate, isDragging, dragHandleProps }: C
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-1 ml-2">
+              <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
                 <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <Link href={`/notes/${note.id}`}>
                     <Edit className="h-3 w-3" />
                   </Link>
                 </Button>
-                
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive">

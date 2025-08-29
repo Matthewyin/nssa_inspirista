@@ -31,6 +31,7 @@ export function ClientAuthenticatedChecklist() {
             notesRef,
             where('uid', '==', user.uid),
             where('category', '==', 'checklist'),
+            orderBy('sortOrder', 'asc'),
             orderBy('createdAt', 'desc')
           );
 
@@ -77,7 +78,8 @@ export function ClientAuthenticatedChecklist() {
   }
 
   const handleNotesChange = () => {
-    // Refetch notes when they change
+    // Only refetch notes when explicitly needed (e.g., after delete operations)
+    // For sort operations, we rely on local state updates
     if (user) {
       const fetchNotes = async () => {
         try {
@@ -86,6 +88,7 @@ export function ClientAuthenticatedChecklist() {
             notesRef,
             where('uid', '==', user.uid),
             where('category', '==', 'checklist'),
+            orderBy('sortOrder', 'asc'),
             orderBy('createdAt', 'desc')
           );
 
@@ -101,6 +104,8 @@ export function ClientAuthenticatedChecklist() {
               content: data.content,
               tags: data.tags || [],
               category: data.category,
+              completed: data.completed || false,
+              sortOrder: data.sortOrder,
               createdAt: data.createdAt?.toDate() || new Date(),
               updatedAt: data.updatedAt?.toDate() || new Date(),
             });

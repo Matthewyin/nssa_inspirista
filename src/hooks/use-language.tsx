@@ -75,6 +75,10 @@ const translations = {
         },
       },
       sort: {
+        success: {
+          title: 'Order Updated',
+          description: 'Item order has been saved.',
+        },
         error: {
           title: 'Sort Failed',
           description: 'Failed to update item order. Please try again.',
@@ -83,6 +87,8 @@ const translations = {
       item: {
         completed: 'Item completed',
         uncompleted: 'Item marked as pending',
+        clickToComplete: 'Click to mark as completed',
+        clickToUncomplete: 'Click to mark as pending',
         error: {
           title: 'Update Failed',
           description: 'Failed to update item. Please try again.',
@@ -312,6 +318,10 @@ const translations = {
         },
       },
       sort: {
+        success: {
+          title: '顺序已更新',
+          description: '项目顺序已保存。',
+        },
         error: {
           title: '排序失败',
           description: '更新项目顺序失败，请重试。',
@@ -320,6 +330,8 @@ const translations = {
       item: {
         completed: '项目已完成',
         uncompleted: '项目标记为待完成',
+        clickToComplete: '点击标记为已完成',
+        clickToUncomplete: '点击标记为待完成',
         error: {
           title: '更新失败',
           description: '更新项目失败，请重试。',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { type Note } from '@/lib/types';
 import { ChecklistItem } from './checklist-item';
 import { useLanguage } from '@/hooks/use-language';
@@ -42,7 +42,10 @@ interface ChecklistProps {
 }
 
 // Sortable wrapper for ChecklistItem
-function SortableChecklistItem({ note, onUpdate }: { note: Note; onUpdate?: () => void }) {
+function SortableChecklistItem({ note, onUpdate }: {
+  note: Note;
+  onUpdate?: () => void;
+}) {
   const {
     attributes,
     listeners,
@@ -57,11 +60,17 @@ function SortableChecklistItem({ note, onUpdate }: { note: Note; onUpdate?: () =
     transition,
   };
 
+  const handleUpdate = () => {
+    // For completion status changes, we want to refetch
+    // For sort operations, we don't call onUpdate to avoid refetch
+    onUpdate?.();
+  };
+
   return (
     <div ref={setNodeRef} style={style}>
       <ChecklistItem
         note={note}
-        onUpdate={onUpdate}
+        onUpdate={handleUpdate}
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
       />
@@ -108,37 +117,45 @@ export function Checklist({ initialNotes, onNotesChange }: ChecklistProps) {
       const oldIndex = filteredNotes.findIndex(note => note.id === active.id);
       const newIndex = filteredNotes.findIndex(note => note.id === over.id);
 
-      const newOrder = arrayMove(filteredNotes, oldIndex, newIndex);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reorderedFiltered = arrayMove(filteredNotes, oldIndex, newIndex);
 
       // Update local state immediately for smooth UX
       setNotes(prevNotes => {
         const updatedNotes = [...prevNotes];
-        const reorderedFiltered = arrayMove(filteredNotes, oldIndex, newIndex);
 
-        // Update sortOrder for all affected notes
+        // Update sortOrder for all reordered notes
         reorderedFiltered.forEach((note, index) => {
           const noteIndex = updatedNotes.findIndex(n => n.id === note.id);
           if (noteIndex !== -1) {
-            updatedNotes[noteIndex] = { ...note, sortOrder: index };
+            updatedNotes[noteIndex] = {
+              ...updatedNotes[noteIndex],
+              sortOrder: index * 10 // Use increments of 10 to allow future insertions
+            };
           }
         });
 
         return updatedNotes;
       });
 
-      // Update in Firebase
+      // Update in Firebase (don't call onNotesChange to avoid refetch)
       try {
         const batch = writeBatch(db);
-        newOrder.forEach((note, index) => {
+        reorderedFiltered.forEach((note, index) => {
           const noteRef = doc(db, 'notes', note.id);
           batch.update(noteRef, {
-            sortOrder: index,
+            sortOrder: index * 10,
             updatedAt: serverTimestamp(),
           });
         });
 
         await batch.commit();
-        onNotesChange?.();
+
+        toast({
+          title: t('checklist.sort.success.title'),
+          description: t('checklist.sort.success.description'),
+        });
       } catch (error) {
         console.error('Error updating sort order:', error);
         toast({
@@ -200,10 +217,40 @@ export function Checklist({ initialNotes, onNotesChange }: ChecklistProps) {
     }
   };
 
-  // Update local notes when initialNotes changes
-  useState(() => {
-    setNotes(initialNotes);
-  });
+  // Update local notes when initialNotes changes, but preserve local sorting
+  useEffect(() => {
+    // Only update if the number of notes changed (added/deleted)
+    // or if this is the initial load
+    if (notes.length === 0 || notes.length !== initialNotes.length) {
+      setNotes(initialNotes);
+    } else {
+      // Merge updates while preserving local sortOrder changes
+      setNotes(prevNotes => {
+        const updatedNotes = [...prevNotes];
+
+        // Update existing notes with new data (except sortOrder)
+        initialNotes.forEach(newNote => {
+          const existingIndex = updatedNotes.findIndex(n => n.id === newNote.id);
+          if (existingIndex !== -1) {
+            // Preserve the local sortOrder if it exists
+            const localSortOrder = updatedNotes[existingIndex].sortOrder;
+            updatedNotes[existingIndex] = {
+              ...newNote,
+              sortOrder: localSortOrder !== undefined ? localSortOrder : newNote.sortOrder
+            };
+          } else {
+            // New note, add it
+            updatedNotes.push(newNote);
+          }
+        });
+
+        // Remove notes that no longer exist
+        return updatedNotes.filter(note =>
+          initialNotes.some(newNote => newNote.id === note.id)
+        );
+      });
+    }
+  }, [initialNotes, notes.length]);
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto">
