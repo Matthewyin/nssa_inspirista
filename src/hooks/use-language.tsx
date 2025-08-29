@@ -53,6 +53,7 @@ const translations = {
       title: 'API Keys',
       description: 'To use AI-powered features, you need to provide your own API keys. Keys are stored only in your browser\'s local storage.',
       saveButton: 'Save Key',
+      validateButton: 'Validate Key',
       aria: {
         show: 'Show API key',
         hide: 'Hide API key',
@@ -86,6 +87,8 @@ const translations = {
         validation: {
             title: 'API Key Validation Failed',
             description: 'The API key is invalid. Please check your key and try again.',
+            success_title: 'API Key Validated',
+            success_description: 'The API key is valid and ready to use.',
         }
       },
       alert: {
@@ -227,6 +230,7 @@ const translations = {
       title: 'API 密钥',
       description: '要使用人工智能功能，您需要提供自己的 API 密钥。密钥仅存储在您浏览器的本地存储中。',
       saveButton: '保存密钥',
+      validateButton: '验证密钥',
       aria: {
         show: '显示 API 密钥',
         hide: '隐藏 API 密钥',
@@ -260,6 +264,8 @@ const translations = {
         validation: {
             title: 'API 密钥验证失败',
             description: '该 API 密钥无效。请检查您的密钥后重试。',
+            success_title: 'API 密钥已验证',
+            success_description: '该 API 密钥有效，随时可以使用。',
         }
       },
       alert: {

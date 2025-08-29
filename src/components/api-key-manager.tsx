@@ -1,3 +1,4 @@
+
 'use client';
 
 import {useState, useEffect, useTransition} from 'react';
@@ -7,7 +8,7 @@ import {Label} from '@/components/ui/label';
 import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
 import {useToast} from '@/hooks/use-toast';
-import {KeyRound, Info, Eye, EyeOff, Loader2} from 'lucide-react';
+import {KeyRound, Info, Eye, EyeOff, Loader2, ShieldCheck} from 'lucide-react';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import Link from 'next/link';
 import {useLanguage} from '@/hooks/use-language';
@@ -31,6 +32,32 @@ export function ApiKeyManager() {
       setGeminiKeyInput(geminiApiKey);
     }
   }, [geminiApiKey]);
+
+  const handleValidate = () => {
+    if (!geminiKeyInput.trim()) {
+        toast({
+            variant: "destructive",
+            title: t('apiKeyInput.toast.empty.title'),
+            description: t('apiKeyInput.toast.empty.description'),
+        })
+        return;
+    }
+    startVerificationTransition(async () => {
+        const result = await validateApiKey({ provider: 'gemini', apiKey: geminiKeyInput });
+        if (result.isValid) {
+            toast({
+              title: t('apiKeyInput.toast.validation.success_title'),
+              description: t('apiKeyInput.toast.validation.success_description'),
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: t('apiKeyInput.toast.validation.title'),
+                description: result.error || t('apiKeyInput.toast.validation.description'),
+            })
+        }
+    })
+  }
 
   const handleSaveGemini = () => {
     if (!geminiKeyInput.trim()) {
@@ -98,10 +125,20 @@ export function ApiKeyManager() {
                 </Button>
               </div>
             </div>
-            <Button onClick={handleSaveGemini} disabled={isVerifying}>
-                {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t('apiKeyInput.saveButton')}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+                <Button onClick={handleSaveGemini} disabled={isVerifying}>
+                    {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {t('apiKeyInput.saveButton')}
+                </Button>
+                <Button onClick={handleValidate} variant="outline" disabled={isVerifying}>
+                    {isVerifying ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                    )}
+                    {t('apiKeyInput.validateButton')}
+                </Button>
+            </div>
             <Alert>
               <Info className="h-4 w-4" />
               <AlertTitle>{t('apiKeyInput.gemini.alert.title')}</AlertTitle>
