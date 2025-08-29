@@ -10,7 +10,9 @@ import {
   type RefineNoteInput,
   type SuggestTagsInput,
 } from '@/lib/types';
-import { refineNote, suggestTags, createNote, updateNote, deleteNote } from '@/app/actions';
+import { refineNote, suggestTags } from '@/app/actions';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import {useLanguage} from '@/hooks/use-language';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -117,23 +119,35 @@ export function NoteEditor({note}: {note?: Note}) {
     try {
       if (note) {
         // Update existing note
-        await updateNote({
-          id: note.id,
-          uid: user.uid,
-          data: { title, content, tags: currentTags, category, updatedAt: now },
+        const noteRef = doc(db, 'notes', note.id);
+        await updateDoc(noteRef, {
+          title,
+          content,
+          tags: currentTags,
+          category,
+          updatedAt: serverTimestamp(),
         });
         toast({title: t('noteEditor.toast.updated.title'), description: t('noteEditor.toast.updated.description')});
       } else {
         // Create new note
-        await createNote({
+        const notesRef = collection(db, 'notes');
+        const noteData: any = {
           uid: user.uid,
           title,
           content,
           tags: currentTags,
           category,
-          createdAt: now,
-          updatedAt: now,
-        });
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+
+        // Add default values for checklist items
+        if (category === 'checklist') {
+          noteData.completed = false;
+          noteData.sortOrder = Date.now(); // Use timestamp as default sort order
+        }
+
+        await addDoc(notesRef, noteData);
         toast({title: t('noteEditor.toast.created.title'), description: t('noteEditor.toast.created.description')});
       }
       router.push(redirectPath);
@@ -151,7 +165,8 @@ export function NoteEditor({note}: {note?: Note}) {
         setIsDeleting(true);
         const redirectPath = note.category === 'checklist' ? '/checklist' : '/';
         try {
-            await deleteNote({ id: note.id, uid: user.uid });
+            const noteRef = doc(db, 'notes', note.id);
+            await deleteDoc(noteRef);
             toast({title: t('noteEditor.toast.deleted.title'), description: t('noteEditor.toast.deleted.description')});
             router.push(redirectPath);
             router.refresh();

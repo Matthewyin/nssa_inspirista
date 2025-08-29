@@ -10,6 +10,8 @@ export const NoteSchema = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   category: z.enum(['inspiration', 'checklist']),
+  completed: z.boolean().optional(),
+  sortOrder: z.number().optional(),
 });
 
 export type Note = z.infer<typeof NoteSchema>;

@@ -25,6 +25,20 @@ const translations = {
         title: 'Your inspiration wall is empty',
         description: 'Start by creating a new inspiration to capture your ideas.',
       },
+      batch: {
+        select: 'Select',
+        exit: 'Exit Selection',
+        selectAll: 'Select All',
+        delete: 'Delete',
+        deleted: {
+          title: 'Notes Deleted',
+          description: 'Successfully deleted {count} notes.',
+        },
+        error: {
+          title: 'Delete Failed',
+          description: 'Failed to delete notes. Please try again.',
+        },
+      },
     },
     noteCard: {
         updatedOn: 'Updated on',
@@ -36,6 +50,68 @@ const translations = {
       empty: {
         title: 'You have no checklists',
         description: 'Start by creating a new checklist to track your goals.',
+      },
+      progress: {
+        title: 'Progress',
+        completed: 'completed',
+      },
+      filter: {
+        all: 'All',
+        pending: 'Pending',
+        completed: 'Completed',
+        empty: {
+          all: {
+            title: 'No items found',
+            description: 'No checklist items match the current filter.',
+          },
+          pending: {
+            title: 'No pending items',
+            description: 'All your checklist items are completed!',
+          },
+          completed: {
+            title: 'No completed items',
+            description: 'Complete some items to see them here.',
+          },
+        },
+      },
+      sort: {
+        error: {
+          title: 'Sort Failed',
+          description: 'Failed to update item order. Please try again.',
+        },
+      },
+      item: {
+        completed: 'Item completed',
+        uncompleted: 'Item marked as pending',
+        error: {
+          title: 'Update Failed',
+          description: 'Failed to update item. Please try again.',
+        },
+        deleted: {
+          title: 'Item Deleted',
+          description: 'Checklist item has been deleted.',
+        },
+        delete: {
+          title: 'Delete Item',
+          description: 'Are you sure you want to delete this checklist item?',
+          cancel: 'Cancel',
+          confirm: 'Delete',
+        },
+        deleting: 'Deleting...',
+      },
+      batch: {
+        select: 'Select',
+        exit: 'Exit Selection',
+        selectAll: 'Select All',
+        delete: 'Delete',
+        deleted: {
+          title: 'Checklists Deleted',
+          description: 'Successfully deleted {count} checklists.',
+        },
+        error: {
+          title: 'Delete Failed',
+          description: 'Failed to delete checklists. Please try again.',
+        },
       },
     },
     apiKeyInput: {
@@ -186,6 +262,20 @@ const translations = {
         title: '你的灵感墙是空的',
         description: '从创建新灵感开始，捕捉你的想法。',
       },
+      batch: {
+        select: '选择',
+        exit: '退出选择',
+        selectAll: '全选',
+        delete: '删除',
+        deleted: {
+          title: '笔记已删除',
+          description: '成功删除了 {count} 条笔记。',
+        },
+        error: {
+          title: '删除失败',
+          description: '删除笔记失败，请重试。',
+        },
+      },
     },
     noteCard: {
         updatedOn: '更新于',
@@ -197,6 +287,68 @@ const translations = {
       empty: {
         title: '你还没有任何清单',
         description: '从创建一个新清单开始，追踪你的目标。',
+      },
+      progress: {
+        title: '进度',
+        completed: '已完成',
+      },
+      filter: {
+        all: '全部',
+        pending: '待完成',
+        completed: '已完成',
+        empty: {
+          all: {
+            title: '没有找到项目',
+            description: '没有符合当前筛选条件的清单项目。',
+          },
+          pending: {
+            title: '没有待完成项目',
+            description: '你的所有清单项目都已完成！',
+          },
+          completed: {
+            title: '没有已完成项目',
+            description: '完成一些项目后在这里查看。',
+          },
+        },
+      },
+      sort: {
+        error: {
+          title: '排序失败',
+          description: '更新项目顺序失败，请重试。',
+        },
+      },
+      item: {
+        completed: '项目已完成',
+        uncompleted: '项目标记为待完成',
+        error: {
+          title: '更新失败',
+          description: '更新项目失败，请重试。',
+        },
+        deleted: {
+          title: '项目已删除',
+          description: '清单项目已被删除。',
+        },
+        delete: {
+          title: '删除项目',
+          description: '确定要删除这个清单项目吗？',
+          cancel: '取消',
+          confirm: '删除',
+        },
+        deleting: '删除中...',
+      },
+      batch: {
+        select: '选择',
+        exit: '退出选择',
+        selectAll: '全选',
+        delete: '删除',
+        deleted: {
+          title: '清单已删除',
+          description: '成功删除了 {count} 个清单。',
+        },
+        error: {
+          title: '删除失败',
+          description: '删除清单失败，请重试。',
+        },
       },
     },
     apiKeyInput: {
@@ -334,7 +486,7 @@ type Language = 'en' | 'zh';
 type LanguageContextType = {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, any>) => string;
   isClient: boolean;
 };
 
@@ -348,7 +500,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     setIsClient(true);
   }, []);
 
-  const t = (key: string) => {
+  const t = (key: string, params?: Record<string, any>) => {
     const keys = key.split('.');
     let result: any = translations[language];
     for (const k of keys) {
@@ -360,10 +512,21 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
             fallbackResult = fallbackResult[fk];
             if (!fallbackResult) return key;
         }
-        return fallbackResult;
+        result = fallbackResult;
+        break;
       }
     }
-    return result || key;
+
+    let finalResult = result || key;
+
+    // Replace parameters in the string
+    if (params && typeof finalResult === 'string') {
+      Object.keys(params).forEach(param => {
+        finalResult = finalResult.replace(`{${param}}`, params[param]);
+      });
+    }
+
+    return finalResult;
   };
 
   return (
