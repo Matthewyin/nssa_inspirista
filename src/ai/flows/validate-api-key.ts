@@ -7,7 +7,7 @@
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
-import {AiProvider, GeminiModel, ValidateApiKeyInputSchema, ValidateApiKeyOutputSchema, ValidateApiKeyInput, ValidateApiKeyOutput} from '@/lib/types';
+import {ValidateApiKeyInputSchema, ValidateApiKeyOutputSchema, ValidateApiKeyInput, ValidateApiKeyOutput} from '@/lib/types';
 
 const validateApiKeyFlow = ai.defineFlow(
     {
