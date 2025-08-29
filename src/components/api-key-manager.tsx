@@ -8,7 +8,7 @@ import {Label} from '@/components/ui/label';
 import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
 import {useToast} from '@/hooks/use-toast';
-import {KeyRound, Info, Eye, EyeOff, Loader2, ShieldCheck} from 'lucide-react';
+import {KeyRound, Info, Eye, EyeOff, Loader2, ShieldCheck, Trash2} from 'lucide-react';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import Link from 'next/link';
 import {useLanguage} from '@/hooks/use-language';
@@ -87,6 +87,15 @@ export function ApiKeyManager() {
     })
   };
 
+  const handleDeleteGemini = () => {
+    setGeminiApiKey(null);
+    setGeminiKeyInput('');
+    toast({
+        title: t('apiKeyInput.toast.deleted.title'),
+        description: t('apiKeyInput.toast.deleted.description'),
+    });
+  };
+
   if (!isClient) {
     return null;
   }
@@ -138,6 +147,12 @@ export function ApiKeyManager() {
                     )}
                     {t('apiKeyInput.validateButton')}
                 </Button>
+                {geminiApiKey && (
+                  <Button onClick={handleDeleteGemini} variant="destructive" disabled={isVerifying}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {t('apiKeyInput.deleteButton')}
+                  </Button>
+                )}
             </div>
             <Alert>
               <Info className="h-4 w-4" />

@@ -21,11 +21,10 @@ const translations = {
         settings: 'Settings',
     },
     noteList: {
-      title: 'Inspiration Wall',
-      newNoteButton: 'New Note',
       empty: {
         title: 'Your inspiration wall is empty',
         description: 'Start by creating a new inspiration to capture your ideas.',
+        createButton: 'Create First Inspiration',
       },
     },
     noteCard: {
@@ -35,13 +34,6 @@ const translations = {
         }
     },
     checklist: {
-      title: 'Behavior Checklist',
-      description: 'Use this checklist to reflect on your actions and decisions before acting.',
-      placeholder: 'Add a new checklist item...',
-      aria: {
-        addItem: 'Add item',
-        deleteItem: 'Delete item',
-      },
       empty: {
         title: 'You have no checklists',
         description: 'Start by creating a new checklist to track your goals.',
@@ -53,6 +45,7 @@ const translations = {
       description: 'To use AI-powered features, you need to provide your own API keys. Keys are stored only in your browser\'s local storage.',
       saveButton: 'Save Key',
       validateButton: 'Validate Key',
+      deleteButton: 'Delete Key',
       aria: {
         show: 'Show API key',
         hide: 'Hide API key',
@@ -66,19 +59,9 @@ const translations = {
             link: 'Get your key here.',
         },
       },
-      deepseek: {
-        label: 'DeepSeek API Key',
-        placeholder: 'Enter your DeepSeek API key',
-        alert: {
-            title: 'Where to get a DeepSeek API Key?',
-            description: 'You can get a free DeepSeek API key from the DeepSeek Platform.',
-            link: 'Get your key here.',
-        },
-      },
       toast: {
         title: 'API Key Saved',
         gemini: 'Your Gemini API key has been successfully validated and saved.',
-        deepseek: 'Your DeepSeek API key has been saved locally.',
         empty: {
             title: 'API Key is empty',
             description: 'Please enter an API key.',
@@ -88,6 +71,10 @@ const translations = {
             description: 'The API key is invalid. Please check your key and try again.',
             success_title: 'API Key Validated',
             success_description: 'The API key is valid and ready to use.',
+        },
+        deleted: {
+            title: 'API Key Deleted',
+            description: 'Your Gemini API key has been removed.',
         }
       },
       alert: {
@@ -197,8 +184,6 @@ const translations = {
         settings: '设置',
     },
     noteList: {
-      title: '灵感墙',
-      newNoteButton: '新笔记',
       empty: {
         title: '你的灵感墙是空的',
         description: '从创建新灵感开始，捕捉你的想法。',
@@ -212,13 +197,6 @@ const translations = {
         }
     },
     checklist: {
-      title: '行为核对清单',
-      description: '在行动前，使用此清单反思您的行为和决定。',
-      placeholder: '添加新的清单项目...',
-      aria: {
-        addItem: '添加项目',
-        deleteItem: '删除项目',
-      },
       empty: {
         title: '你还没有任何清单',
         description: '从创建一个新清单开始，追踪你的目标。',
@@ -230,6 +208,7 @@ const translations = {
       description: '要使用人工智能功能，您需要提供自己的 API 密钥。密钥仅存储在您浏览器的本地存储中。',
       saveButton: '保存密钥',
       validateButton: '验证密钥',
+      deleteButton: '删除密钥',
       aria: {
         show: '显示 API 密钥',
         hide: '隐藏 API 密钥',
@@ -243,19 +222,9 @@ const translations = {
             link: '在此处获取您的密钥。',
         },
       },
-      deepseek: {
-        label: 'DeepSeek API 密钥',
-        placeholder: '输入您的 DeepSeek API 密钥',
-        alert: {
-            title: '从哪里获取 DeepSeek API 密钥？',
-            description: '您可以从 DeepSeek 开放平台免费获取 API 密钥。',
-            link: '在此处获取您的密钥。',
-        },
-      },
       toast: {
         title: 'API 密钥已保存',
         gemini: '您的 Gemini API 密钥已成功验证并保存。',
-        deepseek: '您的 DeepSeek API 密钥已保存在本地。',
         empty: {
             title: 'API 密钥为空',
             description: '请输入您的 API 密钥。',
@@ -265,6 +234,10 @@ const translations = {
             description: '该 API 密钥无效。请检查您的密钥后重试。',
             success_title: 'API 密钥已验证',
             success_description: '该 API 密钥有效，随时可以使用。',
+        },
+        deleted: {
+            title: 'API 密钥已删除',
+            description: '您的 Gemini API 密钥已被移除。',
         }
       },
       alert: {
