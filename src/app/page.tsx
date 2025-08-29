@@ -5,6 +5,10 @@ import { redirect } from 'next/navigation';
 import { User } from 'firebase-admin/auth';
 
 export default async function HomePage() {
+  if (!auth) {
+    redirect('/login');
+  }
+
   let user: User | null = null;
   try {
     user = await auth.currentUser;

@@ -5,8 +5,8 @@ import { initializeApp, getApps, getApp, type FirebaseApp, cert } from 'firebase
 import { getAuth, type Auth } from 'firebase-admin/auth';
 import type { User } from 'firebase-admin/auth';
 
-let _app: FirebaseApp | undefined;
-let _auth: Auth | undefined;
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
 
 try {
   const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT;
@@ -17,29 +17,17 @@ try {
     };
 
     if (!getApps().length) {
-      _app = initializeApp(appConfig);
+      app = initializeApp(appConfig);
     } else {
-      _app = getApp();
+      app = getApp();
     }
     
-    _auth = getAuth(_app);
+    auth = getAuth(app);
   } else {
     console.warn("FIREBASE_SERVICE_ACCOUNT environment variable not set. Server-side Firebase features will be disabled.");
   }
 } catch (error) {
   console.error("Failed to initialize Firebase Admin SDK:", error);
 }
-
-
-// A simple mock for the currentUser to avoid crashes when auth is not initialized.
-const mockAuth = {
-  get currentUser(): Promise<User | null> {
-    console.warn("Firebase Admin SDK not initialized. Returning null for currentUser.");
-    return Promise.resolve(null);
-  }
-};
-
-const app = _app;
-const auth: Pick<Auth, 'currentUser'> = _auth || mockAuth;
 
 export { app, auth };
