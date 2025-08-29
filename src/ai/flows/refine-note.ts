@@ -8,15 +8,15 @@
 
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {deepseek} from 'genkitx-deepseek';
+// import {deepseek} from 'genkitx-deepseek';
 import {z} from 'genkit';
-import {AiConfig, AiProvider, GeminiModel, DeepSeekModel} from '@/lib/types';
+import {AiConfig, AiProvider, GeminiModel} from '@/lib/types';
 import {Model} from 'genkit/model';
 
 const RefineNoteInputSchema = z.object({
   noteContent: z.string().describe('The content of the note to be refined.'),
   aiConfig: z.object({
-    provider: z.enum(['gemini', 'deepseek']),
+    provider: z.enum(['gemini']), //, 'deepseek']),
     model: z.string(),
   }),
   apiKey: z.string().describe('The user-provided API key for the selected provider.'),
@@ -32,9 +32,9 @@ function getModel(provider: AiProvider, modelName: string, apiKey: string): Mode
   if (provider === 'gemini') {
     return googleAI(modelName as GeminiModel, {apiKey});
   }
-  if (provider === 'deepseek') {
-    return deepseek(modelName as DeepSeekModel, {apiKey});
-  }
+  // if (provider === 'deepseek') {
+  //   return deepseek(modelName as DeepSeekModel, {apiKey});
+  // }
   throw new Error(`Unsupported AI provider: ${provider}`);
 }
 

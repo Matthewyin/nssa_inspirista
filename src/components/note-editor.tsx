@@ -3,7 +3,7 @@
 import {useState, useEffect, useTransition} from 'react';
 import {useRouter} from 'next/navigation';
 import {useSyncedStore} from '@/hooks/use-local-storage';
-import {type Note, type AiConfig, type AiProvider, type AiModel, GeminiModel, DeepSeekModel} from '@/lib/types';
+import {type Note, type AiConfig, type AiProvider, type AiModel, GeminiModel} from '@/lib/types';
 import {refineNote} from '@/ai/flows/refine-note';
 import {suggestTags} from '@/ai/flows/suggest-tags';
 import {useLanguage} from '@/hooks/use-language';
@@ -42,11 +42,11 @@ const AI_PROVIDERS: {
     label: 'Google Gemini',
     models: ['gemini-2.5-pro', 'gemini-2.5-flash'],
   },
-  {
-    value: 'deepseek',
-    label: 'DeepSeek',
-    models: ['deepseek-chat', 'deepseek-coder'],
-  },
+  // {
+  //   value: 'deepseek',
+  //   label: 'DeepSeek',
+  //   models: ['deepseek-chat', 'deepseek-coder'],
+  // },
 ];
 
 export function NoteEditor({noteId}: {noteId?: string}) {
@@ -55,7 +55,7 @@ export function NoteEditor({noteId}: {noteId?: string}) {
   const {t} = useLanguage();
   const [notes, setNotes] = useSyncedStore<Note[]>('notes', []);
   const [geminiApiKey] = useLocalStorage<string | null>('gemini-api-key', null);
-  const [deepseekApiKey] = useLocalStorage<string | null>('deepseek-api-key', null);
+  // const [deepseekApiKey] = useLocalStorage<string | null>('deepseek-api-key', null);
   const [aiConfig, setAiConfig] = useLocalStorage<AiConfig>('ai-config', {
     provider: 'gemini',
     model: 'gemini-2.5-flash',
@@ -167,7 +167,7 @@ export function NoteEditor({noteId}: {noteId?: string}) {
   };
 
   const checkApiKey = (provider: AiProvider) => {
-    const key = provider === 'gemini' ? geminiApiKey : deepseekApiKey;
+    const key = provider === 'gemini' ? geminiApiKey : null; // deepseekApiKey;
     if (!key) {
       toast({
         variant: 'destructive',
@@ -180,7 +180,7 @@ export function NoteEditor({noteId}: {noteId?: string}) {
   };
 
   const getApiKey = (provider: AiProvider) => {
-    return provider === 'gemini' ? geminiApiKey : deepseekApiKey;
+    return provider === 'gemini' ? geminiApiKey : null; // deepseekApiKey;
   };
 
   const handleAiAction = async (action: 'refine' | 'suggestTags') => {

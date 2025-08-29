@@ -16,13 +16,13 @@ import {Separator} from './ui/separator';
 export function ApiKeyManager() {
   const {t, isClient} = useLanguage();
   const [geminiApiKey, setGeminiApiKey] = useLocalStorage<string | null>('gemini-api-key', null);
-  const [deepseekApiKey, setDeepseekApiKey] = useLocalStorage<string | null>('deepseek-api-key', null);
+  // const [deepseekApiKey, setDeepseekApiKey] = useLocalStorage<string | null>('deepseek-api-key', null);
 
   const [geminiKeyInput, setGeminiKeyInput] = useState('');
-  const [deepseekKeyInput, setDeepseekKeyInput] = useState('');
+  // const [deepseekKeyInput, setDeepseekKeyInput] = useState('');
 
   const [showGeminiKey, setShowGeminiKey] = useState(false);
-  const [showDeepseekKey, setShowDeepseekKey] = useState(false);
+  // const [showDeepseekKey, setShowDeepseekKey] = useState(false);
 
   const {toast} = useToast();
 
@@ -30,10 +30,10 @@ export function ApiKeyManager() {
     if (geminiApiKey) {
       setGeminiKeyInput(geminiApiKey);
     }
-    if (deepseekApiKey) {
-      setDeepseekKeyInput(deepseekApiKey);
-    }
-  }, [geminiApiKey, deepseekApiKey]);
+    // if (deepseekApiKey) {
+    //   setDeepseekKeyInput(deepseekApiKey);
+    // }
+  }, [geminiApiKey]); //, deepseekApiKey]);
 
   const handleSaveGemini = () => {
     setGeminiApiKey(geminiKeyInput);
@@ -43,13 +43,13 @@ export function ApiKeyManager() {
     });
   };
 
-  const handleSaveDeepseek = () => {
-    setDeepseekApiKey(deepseekKeyInput);
-    toast({
-      title: t('apiKeyInput.toast.title'),
-      description: t('apiKeyInput.toast.deepseek'),
-    });
-  };
+  // const handleSaveDeepseek = () => {
+  //   setDeepseekApiKey(deepseekKeyInput);
+  //   toast({
+  //     title: t('apiKeyInput.toast.title'),
+  //     description: t('apiKeyInput.toast.deepseek'),
+  //   });
+  // };
 
   if (!isClient) {
     return null;
@@ -104,9 +104,10 @@ export function ApiKeyManager() {
             </Alert>
           </div>
 
-          <Separator />
+          {/* <Separator /> */}
 
           {/* DeepSeek Key */}
+          {/*
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="deepseek-api-key">{t('apiKeyInput.deepseek.label')}</Label>
@@ -143,6 +144,7 @@ export function ApiKeyManager() {
               </AlertDescription>
             </Alert>
           </div>
+          */}
         </CardContent>
       </Card>
       <Alert>
