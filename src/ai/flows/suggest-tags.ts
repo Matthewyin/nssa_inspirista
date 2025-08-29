@@ -11,29 +11,27 @@ import {googleAI} from '@genkit-ai/googleai';
 import {SuggestTagsInputSchema, SuggestTagsOutputSchema, SuggestTagsInput, SuggestTagsOutput} from '@/lib/types';
 
 
-const suggestTagsFlow = ai.defineFlow(
-    {
-        name: 'suggestTagsFlow',
-        inputSchema: SuggestTagsInputSchema,
-        outputSchema: SuggestTagsOutputSchema,
-    },
-    async (input) => {
-        const { apiKey, aiConfig, noteContent } = input;
-        const model = googleAI(aiConfig.model, {apiKey});
+export async function suggestTags(input: SuggestTagsInput): Promise<SuggestTagsOutput> {
+    const suggestTagsFlow = ai.defineFlow(
+        {
+            name: 'suggestTagsFlow',
+            inputSchema: SuggestTagsInputSchema,
+            outputSchema: SuggestTagsOutputSchema,
+        },
+        async (input) => {
+            const { apiKey, aiConfig, noteContent } = input;
+            const model = googleAI(aiConfig.model, {apiKey});
 
-        const { output } = await ai.generate({
-            prompt: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note.
+            const { output } = await ai.generate({
+                prompt: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note.
 
 Note Content:
 ${noteContent}`,
-            model,
-            output: { schema: SuggestTagsOutputSchema },
-        });
-        return output!;
-    }
-);
-
-
-export async function suggestTags(input: SuggestTagsInput): Promise<SuggestTagsOutput> {
+                model,
+                output: { schema: SuggestTagsOutputSchema },
+            });
+            return output!;
+        }
+    );
   return suggestTagsFlow(input);
 }
