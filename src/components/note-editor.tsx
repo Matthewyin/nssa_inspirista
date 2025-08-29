@@ -46,7 +46,7 @@ const AI_PROVIDERS: {
   {
     value: 'gemini',
     label: 'Google Gemini',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+    models: ['gemini-2.5-flash', 'gemini-2.5-pro'],
   },
 ];
 
@@ -59,7 +59,7 @@ export function NoteEditor({note}: {note?: Note}) {
   const [geminiApiKey] = useLocalStorage<string | null>('gemini-api-key', null);
   const [aiConfig, setAiConfig] = useLocalStorage<AiConfig>('ai-config', {
     provider: 'gemini',
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
   });
 
   const [title, setTitle] = useState('');
