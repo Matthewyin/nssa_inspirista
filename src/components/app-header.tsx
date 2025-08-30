@@ -21,7 +21,9 @@ export function AppHeader() {
       return t('titles.editNote');
     }
     const titles: { [key: string]: string } = {
-        '/': t('titles.myNotes'),
+        '/': t('titles.dashboard'),
+        '/tasks': t('titles.tasks'),
+        '/notes': t('titles.myNotes'),
         '/notes/new': t('titles.newNote'),
         '/checklist': t('titles.checklist'),
         '/settings': t('titles.settings'),

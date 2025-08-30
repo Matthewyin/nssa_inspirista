@@ -7,13 +7,17 @@ import { useLocalStorage } from './use-local-storage';
 const translations = {
   en: {
     nav: {
-      myNotes: 'My Inspirations',
+      dashboard: 'Dashboard',
+      tasks: 'Tasks',
+      notes: 'Inspirations',
       checklist: 'Checklist',
       settings: 'Settings',
       newInspiration: 'New Inspiration',
       newChecklist: 'New Checklist',
     },
     titles: {
+        dashboard: 'Dashboard',
+        tasks: 'Tasks',
         myNotes: 'My Inspirations',
         newNote: 'New Note',
         editNote: 'Edit Note',
@@ -233,13 +237,17 @@ const translations = {
   },
   zh: {
     nav: {
-      myNotes: '我的灵感',
+      dashboard: '仪表板',
+      tasks: '任务',
+      notes: '灵感',
       checklist: '核对清单',
       settings: '设置',
       newInspiration: '新灵感',
       newChecklist: '新清单',
     },
     titles: {
+        dashboard: '仪表板',
+        tasks: '任务',
         myNotes: '我的灵感',
         newNote: '新笔记',
         editNote: '编辑笔记',

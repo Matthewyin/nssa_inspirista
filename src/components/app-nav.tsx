@@ -1,7 +1,7 @@
 
 'use client';
 import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarContent, SidebarFooter } from '@/components/ui/sidebar';
-import { Notebook, ListChecks, Settings, Star, Plus } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Lightbulb, List, Settings, Star, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
@@ -13,8 +13,10 @@ export function AppNav() {
   const { t, isClient } = useLanguage();
 
   const menuItems = [
-    { href: '/', label: t('nav.myNotes'), icon: Notebook },
-    { href: '/checklist', label: t('nav.checklist'), icon: ListChecks },
+    { href: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { href: '/tasks', label: t('nav.tasks'), icon: CheckSquare },
+    { href: '/notes', label: t('nav.notes'), icon: Lightbulb },
+    { href: '/checklist', label: t('nav.checklist'), icon: List },
     { href: '/settings', label: t('nav.settings'), icon: Settings },
   ];
 
