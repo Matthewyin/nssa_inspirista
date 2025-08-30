@@ -18,6 +18,24 @@ import { cn } from '@/lib/utils';
 export function QuickActions() {
   const quickActions = [
     {
+      title: '记录灵感',
+      description: '捕捉创意想法和笔记',
+      icon: Lightbulb,
+      href: '/notes/new',
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50 hover:bg-yellow-100',
+      borderColor: 'border-yellow-200'
+    },
+    {
+      title: '新建清单',
+      description: '创建行为核对清单',
+      icon: List,
+      href: '/checklist?action=create',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50 hover:bg-green-100',
+      borderColor: 'border-green-200'
+    },
+    {
       title: '创建任务',
       description: '添加新的任务计划',
       icon: CheckSquare,
@@ -35,48 +53,30 @@ export function QuickActions() {
       bgColor: 'bg-purple-50 hover:bg-purple-100',
       borderColor: 'border-purple-200',
       featured: true
-    },
-    {
-      title: '记录灵感',
-      description: '捕捉创意想法',
-      icon: Lightbulb,
-      href: '/notes/new',
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50 hover:bg-yellow-100',
-      borderColor: 'border-yellow-200'
-    },
-    {
-      title: '新建清单',
-      description: '创建行为核对清单',
-      icon: List,
-      href: '/checklist?action=create',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50 hover:bg-green-100',
-      borderColor: 'border-green-200'
     }
   ];
 
-  const timeBasedActions = [
+  const viewActions = [
     {
-      title: '今日计划',
-      description: '查看今天的任务',
-      icon: Calendar,
-      href: '/tasks?filter=today',
-      color: 'text-orange-600'
+      title: '我的灵感',
+      description: '查看所有笔记',
+      icon: Lightbulb,
+      href: '/notes',
+      color: 'text-yellow-600'
     },
     {
-      title: '本周目标',
-      description: '管理周目标',
-      icon: Target,
-      href: '/tasks?filter=week',
-      color: 'text-indigo-600'
+      title: '我的清单',
+      description: '管理核对清单',
+      icon: List,
+      href: '/checklist',
+      color: 'text-green-600'
     },
     {
-      title: '时间跟踪',
-      description: '记录工作时间',
-      icon: Clock,
-      href: '/tasks?view=time-tracking',
-      color: 'text-teal-600'
+      title: '我的任务',
+      description: '查看任务看板',
+      icon: CheckSquare,
+      href: '/tasks',
+      color: 'text-blue-600'
     }
   ];
 
@@ -131,16 +131,16 @@ export function QuickActions() {
         </CardContent>
       </Card>
 
-      {/* 时间相关操作 */}
+      {/* 快速查看 */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Calendar className="h-5 w-5" />
-            时间管理
+            快速查看
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {timeBasedActions.map((action, index) => (
+          {viewActions.map((action, index) => (
             <Button
               key={index}
               variant="ghost"
@@ -163,29 +163,29 @@ export function QuickActions() {
         </CardContent>
       </Card>
 
-      {/* 统计快览 */}
+      {/* 项目概览 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">本周进展</CardTitle>
+          <CardTitle className="text-lg">项目概览</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">任务完成</span>
-              <span className="font-medium">8/12</span>
+              <span className="text-muted-foreground">总笔记数</span>
+              <span className="font-medium">--</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">工作时间</span>
-              <span className="font-medium">24h</span>
+              <span className="text-muted-foreground">总清单数</span>
+              <span className="font-medium">--</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">效率评分</span>
-              <span className="font-medium text-green-600">85%</span>
+              <span className="text-muted-foreground">总任务数</span>
+              <span className="font-medium">--</span>
             </div>
-            
+
             <Button variant="outline" size="sm" className="w-full mt-4" asChild>
-              <Link href="/tasks?view=analytics">
-                查看详细统计
+              <Link href="/settings">
+                项目设置
               </Link>
             </Button>
           </div>

@@ -1,28 +1,23 @@
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
-import { useTaskStats, useTodayTasks } from '@/hooks/use-tasks';
 import { useLanguage } from '@/hooks/use-language';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  CheckSquare, 
-  Clock, 
-  TrendingUp, 
-  AlertCircle,
-  Plus,
+import {
+  CheckSquare,
   Lightbulb,
   List,
-  Calendar
+  Calendar,
+  Plus,
+  ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
-import { OverviewCards } from './overview-cards';
-import { TodayTasksCard } from './today-tasks-card';
-import { RecentActivities } from './recent-activities';
+import { ProjectOverviewCards } from './project-overview-cards';
 import { QuickActions } from './quick-actions';
+import { RecentActivities } from './recent-activities';
 
 export function DashboardContent() {
   const { user, loading: authLoading } = useAuth();
@@ -74,24 +69,21 @@ export function DashboardContent() {
         </div>
       </div>
 
-      {/* 概览卡片 */}
-      <OverviewCards />
+      {/* 项目概览卡片 */}
+      <ProjectOverviewCards />
 
       {/* 主要内容区域 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 今日任务 */}
-        <div className="lg:col-span-2">
-          <TodayTasksCard />
-        </div>
-
         {/* 快速操作 */}
-        <div>
+        <div className="lg:col-span-2">
           <QuickActions />
         </div>
-      </div>
 
-      {/* 最近活动 */}
-      <RecentActivities />
+        {/* 最近活动 */}
+        <div>
+          <RecentActivities />
+        </div>
+      </div>
     </div>
   );
 }

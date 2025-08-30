@@ -85,7 +85,7 @@ interface Activity {
 }
 
 export function RecentActivities() {
-  const activities = mockActivities; // 在实际项目中，这里应该使用Hook获取数据
+  const activities = mockActivities.slice(0, 4); // 只显示最近4条活动
   const loading = false; // 在实际项目中，这里应该来自Hook
 
   if (loading) {
@@ -106,12 +106,12 @@ export function RecentActivities() {
           </Link>
         </Button>
       </CardHeader>
-      
+
       <CardContent>
         {activities.length === 0 ? (
           <EmptyActivities />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {activities.map((activity) => (
               <ActivityItem key={activity.id} activity={activity} />
             ))}
