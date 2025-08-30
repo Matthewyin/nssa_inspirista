@@ -6,6 +6,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function AppNav() {
   const pathname = usePathname();
@@ -33,11 +39,39 @@ export function AppNav() {
                 </div>
                 <h2 className="text-lg font-semibold text-sidebar-foreground">Inspirista</h2>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                <Link href="/notes/new">
-                    <Plus className="h-4 w-4" />
-                </Link>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/notes/new" className="flex items-center gap-3 w-full cursor-pointer">
+                    <div className="p-1 rounded bg-yellow-100">
+                      <Lightbulb className="h-4 w-4 text-yellow-600" />
+                    </div>
+                    <span>创建灵感</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/checklist?action=create" className="flex items-center gap-3 w-full cursor-pointer">
+                    <div className="p-1 rounded bg-green-100">
+                      <List className="h-4 w-4 text-green-600" />
+                    </div>
+                    <span>创建清单</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/tasks?action=create" className="flex items-center gap-3 w-full cursor-pointer">
+                    <div className="p-1 rounded bg-blue-100">
+                      <CheckSquare className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <span>创建任务</span>
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </SidebarHeader>
       <SidebarContent>

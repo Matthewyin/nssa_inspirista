@@ -1,7 +1,7 @@
 'use client';
 
 import {useState, useEffect, useTransition} from 'react';
-import {useRouter} from 'next/navigation';
+import {useRouter, useSearchParams} from 'next/navigation';
 import {
   type Note,
   type AiConfig,
@@ -59,6 +59,7 @@ const AI_PROVIDERS: {
 
 export function NoteEditor({note}: {note?: Note}) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {toast} = useToast();
   const {t} = useLanguage();
   const { user } = useAuth();
@@ -86,8 +87,14 @@ export function NoteEditor({note}: {note?: Note}) {
       setContent(note.content);
       setCurrentTags(note.tags);
       setCategory(note.category || 'inspiration');
+    } else {
+      // 处理URL参数预设分类
+      const categoryParam = searchParams.get('category');
+      if (categoryParam === 'checklist') {
+        setCategory('checklist');
+      }
     }
-  }, [note]);
+  }, [note, searchParams]);
 
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {

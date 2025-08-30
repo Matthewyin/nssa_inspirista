@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Checklist } from '@/components/checklist';
 import { type Note } from '@/lib/types';
@@ -12,8 +12,18 @@ import { db } from '@/lib/firebase';
 export function ClientAuthenticatedChecklist() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [notes, setNotes] = useState<Note[]>([]);
   const [notesLoading, setNotesLoading] = useState(true);
+
+  // 处理URL参数触发的操作
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'create' && user) {
+      // 跳转到创建新清单页面
+      router.push('/notes/new?category=checklist');
+    }
+  }, [searchParams, user, router]);
 
   useEffect(() => {
     if (!loading && !user) {
