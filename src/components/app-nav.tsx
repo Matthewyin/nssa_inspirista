@@ -1,11 +1,10 @@
 
 'use client';
-import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarContent, SidebarFooter } from '@/components/ui/sidebar';
-import { LayoutDashboard, CheckSquare, Lightbulb, List, Settings, Star, Plus } from 'lucide-react';
+import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarContent } from '@/components/ui/sidebar';
+import { LayoutDashboard, Lightbulb, List, Settings, Star, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 
 export function AppNav() {
