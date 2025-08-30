@@ -8,38 +8,25 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 // Environment detection
 const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_APP_ENV === 'development';
 const isProduction = process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_APP_ENV === 'production';
-const isBuild = process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_APP_ENV;
 
-// Check if we have valid Firebase configuration
-const hasValidFirebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-                               process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
-                               process.env.NEXT_PUBLIC_FIREBASE_API_KEY.trim() !== '' &&
-                               process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID.trim() !== '';
-
-// Firebase configuration with fallbacks for build environment
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'build-placeholder-api-key',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'build-placeholder.firebaseapp.com',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'build-placeholder-project',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'build-placeholder-project.appspot.com',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:placeholder'
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Validate configuration (skip validation during build or when secrets are empty)
-if (!isBuild && !hasValidFirebaseConfig) {
+// Validate configuration
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   throw new Error(`Firebase configuration is incomplete. Environment: ${isDevelopment ? 'development' : isProduction ? 'production' : 'unknown'}`);
 }
 
-// Log environment info
+// Log environment info (only in development)
 if (isDevelopment) {
   console.log('🔧 Firebase Environment: Development');
-  console.log('📊 Project ID:', firebaseConfig.projectId);
-} else if (isBuild) {
-  console.log('🏗️ Firebase Environment: Build');
-  console.log('🔑 Using placeholders:', !hasValidFirebaseConfig);
-} else if (isProduction) {
-  console.log('🚀 Firebase Environment: Production');
   console.log('📊 Project ID:', firebaseConfig.projectId);
 }
 
