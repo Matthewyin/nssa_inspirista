@@ -60,11 +60,15 @@ export function ProjectOverviewCards() {
         );
 
         const unsubscribeNotes = onSnapshot(notesQuery, (snapshot) => {
-          const notes = snapshot.docs.map(doc => doc.data());
+          const allNotes = snapshot.docs.map(doc => doc.data());
           const now = new Date();
           const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          
-          const recentNotes = notes.filter(note => {
+
+          // 分离灵感笔记和清单
+          const inspirationNotes = allNotes.filter(note => note.category === 'inspiration' || !note.category);
+          const checklistNotes = allNotes.filter(note => note.category === 'checklist');
+
+          const recentInspirationNotes = inspirationNotes.filter(note => {
             const createdAt = note.createdAt?.toDate();
             return createdAt && createdAt >= sevenDaysAgo;
           });
@@ -73,41 +77,17 @@ export function ProjectOverviewCards() {
           setProjectStats(prev => ({
             ...prev!,
             notes: {
-              total: notes.length,
-              recent: recentNotes.length
+              total: inspirationNotes.length,
+              recent: recentInspirationNotes.length
+            },
+            checklists: {
+              total: checklistNotes.length,
+              completed: 0 // 清单没有完成状态，因为是行为核对清单
             }
           }));
         });
 
-        // 获取清单统计 (假设清单数据结构)
-        // 注意：这里需要根据实际的清单数据结构调整
-        const checklistsQuery = query(
-          collection(db, 'checklists'),
-          where('userId', '==', user.uid)
-        );
-
-        const unsubscribeChecklists = onSnapshot(checklistsQuery, (snapshot) => {
-          const checklists = snapshot.docs.map(doc => doc.data());
-          const completedChecklists = checklists.filter(checklist => checklist.completed === true);
-
-          setProjectStats(prev => ({
-            ...prev!,
-            checklists: {
-              total: checklists.length,
-              completed: completedChecklists.length
-            }
-          }));
-        }, (error) => {
-          // 如果清单集合不存在或没有权限，设置默认值
-          console.warn('无法获取清单数据:', error);
-          setProjectStats(prev => ({
-            ...prev!,
-            checklists: {
-              total: 0,
-              completed: 0
-            }
-          }));
-        });
+        // 清单数据已经在上面的notes查询中一起获取了
 
         // 初始化统计数据
         setProjectStats({
@@ -120,7 +100,6 @@ export function ProjectOverviewCards() {
 
         return () => {
           unsubscribeNotes();
-          unsubscribeChecklists();
         };
       } catch (error) {
         console.error('获取项目统计失败:', error);
@@ -202,17 +181,17 @@ export function ProjectOverviewCards() {
             card.borderColor
           )}
         >
-          <Link href={card.href}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {card.title}
-              </CardTitle>
-              <div className={cn("p-3 rounded-lg", card.bgColor)}>
-                <card.icon className={cn("h-6 w-6", card.color)} />
-              </div>
-            </CardHeader>
-            
-            <CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {card.title}
+            </CardTitle>
+            <div className={cn("p-3 rounded-lg", card.bgColor)}>
+              <card.icon className={cn("h-6 w-6", card.color)} />
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <Link href={card.href} className="block">
               <div className="flex items-center justify-between mb-3">
                 <div className={cn("text-3xl font-bold", card.color)}>
                   {card.total}
@@ -223,24 +202,28 @@ export function ProjectOverviewCards() {
                   </Badge>
                 )}
               </div>
-              
+
               <p className="text-sm text-muted-foreground mb-4">
                 {card.subtitle}
               </p>
-              
-              <div className="flex items-center justify-between">
-                <Button variant="ghost" size="sm" className="p-0 h-auto text-sm">
+            </Link>
+
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm" asChild>
+                <Link href={card.href}>
                   {card.actionText}
                   <ArrowRight className="ml-2 h-3 w-3" />
-                </Button>
-                
-                <Button variant="outline" size="sm">
+                </Link>
+              </Button>
+
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`${card.href}?action=create`}>
                   <Plus className="h-3 w-3 mr-1" />
                   新建
-                </Button>
-              </div>
-            </CardContent>
-          </Link>
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       ))}
     </div>
@@ -257,29 +240,29 @@ function EmptyProjectOverview() {
         { title: '任务管理', icon: CheckSquare, href: '/tasks', color: 'text-blue-600', bgColor: 'bg-blue-50' }
       ].map((card, index) => (
         <Card key={index} className="transition-all duration-200 hover:shadow-md">
-          <Link href={card.href}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {card.title}
-              </CardTitle>
-              <div className={cn("p-3 rounded-lg", card.bgColor)}>
-                <card.icon className={cn("h-6 w-6", card.color)} />
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              <div className={cn("text-3xl font-bold mb-3", card.color)}>
-                0
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                开始创建您的第一个{card.title}
-              </p>
-              <Button variant="outline" size="sm" className="w-full">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {card.title}
+            </CardTitle>
+            <div className={cn("p-3 rounded-lg", card.bgColor)}>
+              <card.icon className={cn("h-6 w-6", card.color)} />
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <div className={cn("text-3xl font-bold mb-3", card.color)}>
+              0
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              开始创建您的第一个{card.title}
+            </p>
+            <Button variant="outline" size="sm" className="w-full" asChild>
+              <Link href={card.href}>
                 <Plus className="h-3 w-3 mr-1" />
                 立即开始
-              </Button>
-            </CardContent>
-          </Link>
+              </Link>
+            </Button>
+          </CardContent>
         </Card>
       ))}
     </div>

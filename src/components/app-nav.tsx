@@ -14,7 +14,6 @@ export function AppNav() {
 
   const menuItems = [
     { href: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
-    { href: '/tasks', label: t('nav.tasks'), icon: CheckSquare },
     { href: '/notes', label: t('nav.notes'), icon: Lightbulb },
     { href: '/checklist', label: t('nav.checklist'), icon: List },
     { href: '/settings', label: t('nav.settings'), icon: Settings },
