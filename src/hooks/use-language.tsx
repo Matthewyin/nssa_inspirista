@@ -14,6 +14,9 @@ const translations = {
       settings: 'Settings',
       newInspiration: 'New Inspiration',
       newChecklist: 'New Checklist',
+      createInspiration: 'Create Inspiration',
+      createChecklist: 'Create Checklist',
+      createTask: 'Create Task',
     },
     titles: {
         dashboard: 'Dashboard',
@@ -235,6 +238,37 @@ const translations = {
         actions: 'Actions'
       }
     },
+    dashboard: {
+      title: 'Dashboard',
+      welcome: 'Welcome back!',
+      overview: 'Project Overview',
+      recentActivities: 'Recent Activities',
+      viewAll: 'View All',
+      noActivities: 'No activities yet',
+      noActivitiesDesc: 'Start creating tasks, recording inspirations, or completing checklists to see activity history',
+      createTask: 'Create Task',
+      recordInspiration: 'Record Inspiration',
+      projectStats: {
+        totalNotes: 'Total Notes',
+        totalTasks: 'Total Tasks',
+        completedTasks: 'Completed Tasks',
+        activeProjects: 'Active Projects'
+      },
+      activities: {
+        taskCompleted: 'Task Completed',
+        taskCreated: 'Task Created',
+        noteCreated: 'Inspiration Recorded',
+        checklistCompleted: 'Checklist Completed',
+        aiGenerated: 'AI Generated',
+        timeAgo: {
+          justNow: 'Just now',
+          minutesAgo: '{minutes} minutes ago',
+          hoursAgo: '{hours} hours ago',
+          daysAgo: '{days} days ago',
+          weeksAgo: '{weeks} weeks ago'
+        }
+      }
+    },
     categories: {
         inspiration: 'Inspiration',
         checklist: 'Checklist'
@@ -321,6 +355,9 @@ const translations = {
       settings: '设置',
       newInspiration: '新灵感',
       newChecklist: '新清单',
+      createInspiration: '创建灵感',
+      createChecklist: '创建清单',
+      createTask: '创建任务',
     },
     titles: {
         dashboard: '仪表板',
@@ -464,6 +501,37 @@ const translations = {
     languageSwitcher: {
         label: '语言',
         placeholder: '选择语言'
+    },
+    dashboard: {
+      title: '仪表板',
+      welcome: '欢迎回来！',
+      overview: '项目概览',
+      recentActivities: '最近活动',
+      viewAll: '查看全部',
+      noActivities: '暂无活动记录',
+      noActivitiesDesc: '开始创建任务、记录灵感或完成清单来查看活动历史',
+      createTask: '创建任务',
+      recordInspiration: '记录灵感',
+      projectStats: {
+        totalNotes: '总笔记数',
+        totalTasks: '总任务数',
+        completedTasks: '已完成任务',
+        activeProjects: '活跃项目'
+      },
+      activities: {
+        taskCompleted: '任务完成',
+        taskCreated: '任务创建',
+        noteCreated: '灵感记录',
+        checklistCompleted: '清单完成',
+        aiGenerated: 'AI生成',
+        timeAgo: {
+          justNow: '刚刚',
+          minutesAgo: '{minutes}分钟前',
+          hoursAgo: '{hours}小时前',
+          daysAgo: '{days}天前',
+          weeksAgo: '{weeks}周前'
+        }
+      }
     },
     categories: {
         inspiration: '灵感',

@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useLanguage } from '@/hooks/use-language';
 
 interface ProjectStats {
   notes: {
@@ -39,6 +40,7 @@ interface ProjectStats {
 
 export function ProjectOverviewCards() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { stats: taskStats, loading: taskStatsLoading } = useTaskStats();
   const [projectStats, setProjectStats] = useState<ProjectStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -135,38 +137,38 @@ export function ProjectOverviewCards() {
 
   const cards = [
     {
-      title: '灵感笔记',
+      title: t('nav.notes'),
       icon: Lightbulb,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-50',
       borderColor: 'border-yellow-200',
       total: projectStats.notes.total,
-      subtitle: `${projectStats.notes.recent} 条最近创建`,
+      subtitle: `${projectStats.notes.recent} ${t('dashboard.projectStats.totalNotes')}`,
       href: '/notes',
-      actionText: '查看笔记'
+      actionText: t('nav.notes')
     },
     {
-      title: '核对清单',
+      title: t('nav.checklist'),
       icon: List,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
       total: projectStats.checklists.total,
-      subtitle: `${projectStats.checklists.completed} 条已完成`,
+      subtitle: `${projectStats.checklists.completed} ${t('dashboard.projectStats.completedTasks')}`,
       href: '/checklist',
-      actionText: '查看清单'
+      actionText: t('nav.checklist')
     },
     {
-      title: '任务管理',
+      title: t('nav.tasks'),
       icon: CheckSquare,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
       total: projectStats.tasks.total,
-      subtitle: `${projectStats.tasks.completed} 个已完成`,
+      subtitle: `${projectStats.tasks.completed} ${t('dashboard.projectStats.completedTasks')}`,
       href: '/tasks',
-      actionText: '查看任务',
-      badge: projectStats.tasks.overdue > 0 ? `${projectStats.tasks.overdue} 逾期` : undefined,
+      actionText: t('nav.tasks'),
+      badge: projectStats.tasks.overdue > 0 ? `${projectStats.tasks.overdue} ${t('tasks.dateFilters.overdue')}` : undefined,
       badgeVariant: 'destructive' as const
     }
   ];
@@ -230,14 +232,16 @@ export function ProjectOverviewCards() {
   );
 }
 
-// 空状态组件
+// Empty state component
 function EmptyProjectOverview() {
+  const { t } = useLanguage();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {[
-        { title: '灵感笔记', icon: Lightbulb, href: '/notes', color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
-        { title: '核对清单', icon: List, href: '/checklist', color: 'text-green-600', bgColor: 'bg-green-50' },
-        { title: '任务管理', icon: CheckSquare, href: '/tasks', color: 'text-blue-600', bgColor: 'bg-blue-50' }
+        { title: t('nav.notes'), icon: Lightbulb, href: '/notes', color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
+        { title: t('nav.checklist'), icon: List, href: '/checklist', color: 'text-green-600', bgColor: 'bg-green-50' },
+        { title: t('nav.tasks'), icon: CheckSquare, href: '/tasks', color: 'text-blue-600', bgColor: 'bg-blue-50' }
       ].map((card, index) => (
         <Card key={index} className="transition-all duration-200 hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -254,12 +258,12 @@ function EmptyProjectOverview() {
               0
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              开始创建您的第一个{card.title}
+              Start creating your first {card.title.toLowerCase()}
             </p>
             <Button variant="outline" size="sm" className="w-full" asChild>
               <Link href={card.href}>
                 <Plus className="h-3 w-3 mr-1" />
-                立即开始
+                Get Started
               </Link>
             </Button>
           </CardContent>

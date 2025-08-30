@@ -51,7 +51,7 @@ export function AppNav() {
                     <div className="p-1 rounded bg-yellow-100">
                       <Lightbulb className="h-4 w-4 text-yellow-600" />
                     </div>
-                    <span>创建灵感</span>
+                    <span>{t('nav.createInspiration')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -59,7 +59,7 @@ export function AppNav() {
                     <div className="p-1 rounded bg-green-100">
                       <List className="h-4 w-4 text-green-600" />
                     </div>
-                    <span>创建清单</span>
+                    <span>{t('nav.createChecklist')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -67,7 +67,7 @@ export function AppNav() {
                     <div className="p-1 rounded bg-blue-100">
                       <CheckSquare className="h-4 w-4 text-blue-600" />
                     </div>
-                    <span>创建任务</span>
+                    <span>{t('nav.createTask')}</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>

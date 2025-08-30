@@ -20,7 +20,7 @@ import { RecentActivities } from './recent-activities';
 
 export function DashboardContent() {
   const { user, loading: authLoading } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // 如果用户未登录，显示登录提示
   if (authLoading) {
@@ -53,14 +53,14 @@ export function DashboardContent() {
             {t('titles.dashboard')}
           </h1>
           <p className="text-muted-foreground">
-            欢迎回来，{user.displayName || user.email}！
+            {t('dashboard.welcome')} {user.displayName || user.email}！
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            {new Date().toLocaleDateString('zh-CN', { 
-              month: 'long', 
+            {new Date().toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-US', {
+              month: 'long',
               day: 'numeric',
               weekday: 'long'
             })}
@@ -68,12 +68,12 @@ export function DashboardContent() {
         </div>
       </div>
 
-      {/* 项目概览卡片 */}
+      {/* Project Overview Cards */}
       <ProjectOverviewCards />
 
-      {/* 主要内容区域 */}
+      {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 最近活动 */}
+        {/* Recent Activities */}
         <div className="lg:col-span-2">
           <RecentActivities />
         </div>

@@ -16,9 +16,11 @@ import {
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useActivities, type Activity as ActivityType, type ActivityType as ActivityTypeEnum } from '@/hooks/use-activities';
+import { useLanguage } from '@/hooks/use-language';
 
 export function RecentActivities() {
-  const { activities, loading } = useActivities(4); // 获取最近4条活动
+  const { t } = useLanguage();
+  const { activities, loading } = useActivities(4); // Get recent 4 activities
 
   if (loading) {
     return <RecentActivitiesSkeleton />;
@@ -29,11 +31,11 @@ export function RecentActivities() {
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Activity className="h-5 w-5" />
-          最近活动
+          {t('dashboard.recentActivities')}
         </CardTitle>
         <Button variant="ghost" size="sm" asChild>
           <Link href="/tasks">
-            查看全部
+            {t('dashboard.viewAll')}
             <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
         </Button>
@@ -54,33 +56,35 @@ export function RecentActivities() {
   );
 }
 
-// 活动项组件
+// Activity item component
 function ActivityItem({ activity }: { activity: ActivityType }) {
+  const { t } = useLanguage();
+
   const getActivityConfig = (type: ActivityTypeEnum) => {
     const configs = {
       task_completed: {
         icon: CheckSquare,
         color: 'text-green-600',
         bgColor: 'bg-green-50',
-        label: '任务完成'
+        label: t('dashboard.activities.taskCompleted')
       },
       task_created: {
         icon: CheckSquare,
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
-        label: '任务创建'
+        label: t('dashboard.activities.taskCreated')
       },
       note_created: {
         icon: Lightbulb,
         color: 'text-yellow-600',
         bgColor: 'bg-yellow-50',
-        label: '灵感记录'
+        label: t('dashboard.activities.noteCreated')
       },
       checklist_completed: {
         icon: List,
         color: 'text-purple-600',
         bgColor: 'bg-purple-50',
-        label: '清单完成'
+        label: t('dashboard.activities.checklistCompleted')
       }
     };
     return configs[type];
@@ -104,7 +108,7 @@ function ActivityItem({ activity }: { activity: ActivityType }) {
           </Badge>
           {activity.metadata?.isAIGenerated && (
             <Badge variant="secondary" className="text-xs">
-              AI生成
+              {t('dashboard.activities.aiGenerated')}
             </Badge>
           )}
         </div>
@@ -163,21 +167,23 @@ function ActivityItem({ activity }: { activity: ActivityType }) {
   );
 }
 
-// 空状态组件
+// Empty state component
 function EmptyActivities() {
+  const { t } = useLanguage();
+
   return (
     <div className="text-center py-8">
       <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-      <h3 className="text-lg font-medium mb-2">暂无活动记录</h3>
+      <h3 className="text-lg font-medium mb-2">{t('dashboard.noActivities')}</h3>
       <p className="text-muted-foreground mb-4">
-        开始创建任务、记录灵感或完成清单来查看活动历史
+        {t('dashboard.noActivitiesDesc')}
       </p>
       <div className="flex justify-center gap-2">
         <Button size="sm" asChild>
-          <Link href="/tasks">创建任务</Link>
+          <Link href="/tasks">{t('dashboard.createTask')}</Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/notes/new">记录灵感</Link>
+          <Link href="/notes/new">{t('dashboard.recordInspiration')}</Link>
         </Button>
       </div>
     </div>
