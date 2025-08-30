@@ -1,7 +1,9 @@
-import { ClientAuthenticatedNoteList } from '@/components/client-authenticated-note-list';
+import { DashboardContent } from '@/components/dashboard/dashboard-content';
 
-export default function HomePage() {
-  // Use client-side authentication for both development and production
-  // This ensures consistent behavior and avoids server/client auth conflicts
-  return <ClientAuthenticatedNoteList />;
+export default function DashboardPage() {
+  return (
+    <div className="container mx-auto p-6">
+      <DashboardContent />
+    </div>
+  );
 }
