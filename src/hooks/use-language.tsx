@@ -321,7 +321,7 @@ const translations = {
           category: 'Category',
           dueDate: 'Due Date',
           selectDate: 'Select date',
-          estimatedHours: 'Estimated Time (Hours)',
+          estimatedHours: 'Estimated Time (Days)',
           tags: 'Tags',
           tagsPlaceholder: 'Add tags...'
         },
@@ -673,11 +673,62 @@ const translations = {
         description: '请先登录以查看和管理您的任务。',
         loginButton: '立即登录'
       },
+      views: {
+        board: '看板',
+        list: '列表'
+      },
+      filters: {
+        status: '状态',
+        priority: '优先级',
+        category: '分类',
+        date: '日期',
+        filtered: '已筛选',
+        quickFilter: '快速筛选',
+        customDate: '自定义日期',
+        clearFilters: '清除筛选',
+        filterConditions: '筛选条件'
+      },
       status: {
         todo: '待办',
         in_progress: '进行中',
         completed: '已完成',
         cancelled: '已取消'
+      },
+      priority: {
+        high: '高优先级',
+        medium: '中优先级',
+        low: '低优先级'
+      },
+      category: {
+        work: '工作',
+        study: '学习',
+        personal: '个人',
+        health: '健康',
+        other: '其他'
+      },
+      dateFilters: {
+        today: '今天',
+        thisWeek: '本周',
+        thisMonth: '本月',
+        overdue: '逾期'
+      },
+      stats: {
+        totalTasks: '总任务数',
+        inProgress: '进行中',
+        completionRate: '完成率',
+        overdueTasks: '逾期任务',
+        completed: '已完成',
+        currentActive: '当前活跃任务',
+        performingWell: '表现良好',
+        needsImprovement: '需要改进',
+        needsAttention: '需要关注',
+        onTrack: '进展正常',
+        busy: '繁忙',
+        normal: '正常',
+        idle: '空闲',
+        urgent: '紧急',
+        good: '良好',
+        needsWork: '需要努力'
       },
       board: {
         noTasks: '暂无{status}任务'
@@ -727,7 +778,7 @@ const translations = {
           category: '分类',
           dueDate: '截止日期',
           selectDate: '选择日期',
-          estimatedHours: '预估时间 (小时)',
+          estimatedHours: '预估时间 (天)',
           tags: '标签',
           tagsPlaceholder: '添加标签...'
         },
