@@ -1,7 +1,7 @@
 
 'use client';
 
-import {useState, useEffect, useTransition} from 'react';
+import {useState, useEffect} from 'react';
 import {useLocalStorage} from '@/hooks/use-local-storage';
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {Label} from '@/components/ui/label';
@@ -26,7 +26,12 @@ export function ApiKeyManager() {
 
   const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [showDeepseekKey, setShowDeepseekKey] = useState(false);
-  const [isVerifying, startVerificationTransition] = useTransition();
+
+  // 为每个API Key创建独立的loading状态
+  const [isGeminiSaving, setIsGeminiSaving] = useState(false);
+  const [isGeminiValidating, setIsGeminiValidating] = useState(false);
+  const [isDeepseekSaving, setIsDeepseekSaving] = useState(false);
+  const [isDeepseekValidating, setIsDeepseekValidating] = useState(false);
 
   const {toast} = useToast();
 
@@ -42,7 +47,7 @@ export function ApiKeyManager() {
     }
   }, [deepseekApiKey]);
 
-  const handleValidate = () => {
+  const handleValidate = async () => {
     if (!geminiKeyInput.trim()) {
         toast({
             variant: "destructive",
@@ -51,7 +56,9 @@ export function ApiKeyManager() {
         })
         return;
     }
-    startVerificationTransition(async () => {
+
+    setIsGeminiValidating(true);
+    try {
         const result = await validateApiKey({ provider: 'gemini', apiKey: geminiKeyInput });
         if (result.isValid) {
             toast({
@@ -65,10 +72,12 @@ export function ApiKeyManager() {
                 description: result.error || t('apiKeyInput.toast.validation.description'),
             })
         }
-    })
+    } finally {
+        setIsGeminiValidating(false);
+    }
   }
 
-  const handleSaveGemini = () => {
+  const handleSaveGemini = async () => {
     if (!geminiKeyInput.trim()) {
         toast({
             variant: "destructive",
@@ -78,7 +87,8 @@ export function ApiKeyManager() {
         return;
     }
 
-    startVerificationTransition(async () => {
+    setIsGeminiSaving(true);
+    try {
         const result = await validateApiKey({ provider: 'gemini', apiKey: geminiKeyInput });
         if (result.isValid) {
             setGeminiApiKey(geminiKeyInput);
@@ -93,7 +103,9 @@ export function ApiKeyManager() {
                 description: t('apiKeyInput.toast.validation.description'),
             })
         }
-    })
+    } finally {
+        setIsGeminiSaving(false);
+    }
   };
 
   const handleDeleteGemini = () => {
@@ -105,7 +117,7 @@ export function ApiKeyManager() {
     });
   };
 
-  const handleSaveDeepSeek = () => {
+  const handleSaveDeepSeek = async () => {
     if (!deepseekKeyInput.trim()) {
         toast({
             variant: "destructive",
@@ -115,7 +127,8 @@ export function ApiKeyManager() {
         return;
     }
 
-    startVerificationTransition(async () => {
+    setIsDeepseekSaving(true);
+    try {
         const result = await validateApiKey({ provider: 'deepseek', apiKey: deepseekKeyInput });
         if (result.isValid) {
             setDeepseekApiKey(deepseekKeyInput);
@@ -130,10 +143,12 @@ export function ApiKeyManager() {
                 description: result.error || t('apiKeyInput.toast.validation.description'),
             })
         }
-    })
+    } finally {
+        setIsDeepseekSaving(false);
+    }
   };
 
-  const handleValidateDeepSeek = () => {
+  const handleValidateDeepSeek = async () => {
     if (!deepseekKeyInput.trim()) {
         toast({
             variant: "destructive",
@@ -142,7 +157,9 @@ export function ApiKeyManager() {
         })
         return;
     }
-    startVerificationTransition(async () => {
+
+    setIsDeepseekValidating(true);
+    try {
         const result = await validateApiKey({ provider: 'deepseek', apiKey: deepseekKeyInput });
         if (result.isValid) {
             toast({
@@ -156,7 +173,9 @@ export function ApiKeyManager() {
                 description: result.error || t('apiKeyInput.toast.validation.description'),
             })
         }
-    })
+    } finally {
+        setIsDeepseekValidating(false);
+    }
   };
 
   const handleDeleteDeepSeek = () => {
@@ -207,12 +226,12 @@ export function ApiKeyManager() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-                <Button onClick={handleSaveGemini} disabled={isVerifying}>
-                    {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button onClick={handleSaveGemini} disabled={isGeminiSaving || isGeminiValidating}>
+                    {isGeminiSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {t('apiKeyInput.saveButton')}
                 </Button>
-                <Button onClick={handleValidate} variant="outline" disabled={isVerifying}>
-                    {isVerifying ? (
+                <Button onClick={handleValidate} variant="outline" disabled={isGeminiSaving || isGeminiValidating}>
+                    {isGeminiValidating ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                         <ShieldCheck className="mr-2 h-4 w-4" />
@@ -220,7 +239,7 @@ export function ApiKeyManager() {
                     {t('apiKeyInput.validateButton')}
                 </Button>
                 {geminiApiKey && (
-                  <Button onClick={handleDeleteGemini} variant="destructive" disabled={isVerifying}>
+                  <Button onClick={handleDeleteGemini} variant="destructive" disabled={isGeminiSaving || isGeminiValidating}>
                       <Trash2 className="mr-2 h-4 w-4" />
                       {t('apiKeyInput.deleteButton')}
                   </Button>
@@ -266,12 +285,12 @@ export function ApiKeyManager() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-                <Button onClick={handleSaveDeepSeek} disabled={isVerifying}>
-                    {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button onClick={handleSaveDeepSeek} disabled={isDeepseekSaving || isDeepseekValidating}>
+                    {isDeepseekSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {t('apiKeyInput.saveButton')}
                 </Button>
-                <Button onClick={handleValidateDeepSeek} variant="outline" disabled={isVerifying}>
-                    {isVerifying ? (
+                <Button onClick={handleValidateDeepSeek} variant="outline" disabled={isDeepseekSaving || isDeepseekValidating}>
+                    {isDeepseekValidating ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                         <ShieldCheck className="mr-2 h-4 w-4" />
@@ -279,7 +298,7 @@ export function ApiKeyManager() {
                     {t('apiKeyInput.validateButton')}
                 </Button>
                 {deepseekApiKey && (
-                  <Button onClick={handleDeleteDeepSeek} variant="destructive" disabled={isVerifying}>
+                  <Button onClick={handleDeleteDeepSeek} variant="destructive" disabled={isDeepseekSaving || isDeepseekValidating}>
                       <Trash2 className="mr-2 h-4 w-4" />
                       {t('apiKeyInput.deleteButton')}
                   </Button>
