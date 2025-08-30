@@ -4,13 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Plus,
-  CheckSquare,
   Lightbulb,
   List,
-  Sparkles,
-  Calendar,
-  Target,
-  Clock,
   Settings
 } from 'lucide-react';
 import Link from 'next/link';
@@ -35,25 +30,6 @@ export function QuickActions() {
       color: 'text-green-600',
       bgColor: 'bg-green-50 hover:bg-green-100',
       borderColor: 'border-green-200'
-    },
-    {
-      title: '创建任务',
-      description: '添加新的任务计划',
-      icon: CheckSquare,
-      href: '/tasks?action=create',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 hover:bg-blue-100',
-      borderColor: 'border-blue-200'
-    },
-    {
-      title: 'AI 任务规划',
-      description: '智能生成任务计划',
-      icon: Sparkles,
-      href: '/tasks?action=ai-generate',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50 hover:bg-purple-100',
-      borderColor: 'border-purple-200',
-      featured: true
     }
   ];
 
@@ -77,27 +53,18 @@ export function QuickActions() {
               className={cn(
                 "w-full justify-start h-auto p-4 border transition-all duration-200",
                 action.bgColor,
-                action.borderColor,
-                action.featured && "ring-2 ring-purple-200 shadow-sm"
+                action.borderColor
               )}
               asChild
             >
               <Link href={action.href}>
                 <div className="flex items-center gap-3 w-full">
-                  <div className={cn(
-                    "p-2 rounded-lg bg-white/80",
-                    action.featured && "bg-white shadow-sm"
-                  )}>
+                  <div className="p-2 rounded-lg bg-white/80">
                     <action.icon className={cn("h-5 w-5", action.color)} />
                   </div>
                   <div className="flex-1 text-left">
                     <div className="font-medium text-sm">
                       {action.title}
-                      {action.featured && (
-                        <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
-                          AI
-                        </span>
-                      )}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {action.description}

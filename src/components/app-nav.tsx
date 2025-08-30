@@ -1,7 +1,7 @@
 
 'use client';
 import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarContent } from '@/components/ui/sidebar';
-import { LayoutDashboard, Lightbulb, List, Settings, Star, Plus } from 'lucide-react';
+import { LayoutDashboard, Lightbulb, List, CheckSquare, Settings, Star, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
@@ -15,6 +15,7 @@ export function AppNav() {
     { href: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
     { href: '/notes', label: t('nav.notes'), icon: Lightbulb },
     { href: '/checklist', label: t('nav.checklist'), icon: List },
+    { href: '/tasks', label: t('nav.tasks'), icon: CheckSquare },
     { href: '/settings', label: t('nav.settings'), icon: Settings },
   ];
 
