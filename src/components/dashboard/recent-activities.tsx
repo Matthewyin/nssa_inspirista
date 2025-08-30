@@ -10,7 +10,6 @@ import {
   List,
   Clock,
   Calendar,
-  ArrowRight,
   Activity
 } from 'lucide-react';
 import Link from 'next/link';
@@ -28,17 +27,11 @@ export function RecentActivities() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Activity className="h-5 w-5" />
           {t('dashboard.recentActivities')}
         </CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/tasks">
-            {t('dashboard.viewAll')}
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </Link>
-        </Button>
       </CardHeader>
 
       <CardContent>

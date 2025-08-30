@@ -167,6 +167,11 @@ const translations = {
       loading: 'Loading tasks...',
       error: 'Error loading tasks',
       retry: 'Retry',
+      loginRequired: {
+        title: 'Task Management',
+        description: 'Please log in to view and manage your tasks.',
+        loginButton: 'Log In Now'
+      },
       views: {
         board: 'Board',
         list: 'List'
@@ -229,8 +234,36 @@ const translations = {
         statsCards: 'Stats Cards',
         noTasks: 'No {status} tasks'
       },
+      empty: {
+        title: 'Start Your Task Management Journey',
+        description: 'Create your first task or let AI help you plan intelligently. Focus on short-term goals of 3-30 days to make every day more productive.',
+        createFirst: 'Create First Task',
+        createFirstDesc: 'Manually create a simple task to get started',
+        aiGenerate: 'AI Smart Generation',
+        aiGenerateDesc: 'Let AI help you plan your task schedule',
+        suggestions: 'Task Management Suggestions',
+        suggestionsDesc: 'Here are some common task types to help you get started quickly',
+        examples: {
+          learning: {
+            title: 'Learn New Skills',
+            desc: 'Such as learning React, preparing for exams, practicing English'
+          },
+          work: {
+            title: 'Work Projects',
+            desc: 'Complete project features, code reviews, documentation writing'
+          },
+          personal: {
+            title: 'Personal Goals',
+            desc: 'Fitness plans, reading books, organizing rooms'
+          }
+        }
+      },
       list: {
-        title: 'Title',
+        title: 'Task List',
+        tasksCount: 'tasks',
+        selected: 'Selected {count} tasks',
+        batchActions: 'Batch Actions',
+        taskTitle: 'Title',
         status: 'Status',
         priority: 'Priority',
         dueDate: 'Due Date',
@@ -244,6 +277,13 @@ const translations = {
       welcome: 'Welcome back!',
       overview: 'Project Overview',
       recentActivities: 'Recent Activities',
+      todayTasks: {
+        empty: {
+          title: 'No tasks scheduled for today',
+          description: 'Create a new task to start your productive day',
+          createButton: 'Create Task'
+        }
+      },
       viewAll: 'View All',
       noActivities: 'No activities yet',
       noActivitiesDesc: 'Start creating tasks, recording inspirations, or completing checklists to see activity history',
@@ -267,6 +307,87 @@ const translations = {
           hoursAgo: '{hours} hours ago',
           daysAgo: '{days} days ago',
           weeksAgo: '{weeks} weeks ago'
+        }
+      },
+      create: {
+        title: 'Create New Task',
+        description: 'Create a new task to manage your goals and plans',
+        fields: {
+          title: 'Task Title',
+          titlePlaceholder: 'Enter task title...',
+          description: 'Task Description',
+          descriptionPlaceholder: 'Describe the task content and requirements in detail...',
+          priority: 'Priority',
+          category: 'Category',
+          dueDate: 'Due Date',
+          selectDate: 'Select date',
+          estimatedHours: 'Estimated Time (Hours)',
+          tags: 'Tags',
+          tagsPlaceholder: 'Add tags...'
+        },
+        buttons: {
+          cancel: 'Cancel',
+          create: 'Create Task'
+        }
+      },
+      priority: {
+        high: 'High Priority',
+        medium: 'Medium Priority',
+        low: 'Low Priority'
+      },
+      category: {
+        work: 'Work',
+        study: 'Study',
+        personal: 'Personal',
+        health: 'Health',
+        other: 'Other'
+      },
+      ai: {
+        title: 'AI Task Planning Assistant',
+        description: 'Describe your goals, and AI will generate detailed task plans and schedules for you',
+        fields: {
+          goal: 'Describe Your Goal',
+          goalPlaceholder: 'For example: prepare for CET-4 exam, learn React framework, complete graduation thesis...',
+          quickSelect: 'Quick Select',
+          timeframe: 'Time Range (Days)',
+          minDays: '3 days',
+          maxDays: '30 days',
+          days: 'days'
+        },
+        tip: {
+          title: 'AI Smart Suggestions',
+          description: 'For better planning results, please describe your goals in detail. AI will generate specific task breakdown, time arrangements, and priority suggestions based on your description.'
+        },
+        buttons: {
+          cancel: 'Cancel',
+          generate: 'Generate Task Plan',
+          generating: 'AI is generating...',
+          regenerate: 'Regenerate',
+          createTask: 'Create Task'
+        },
+        examples: {
+          exam: 'Prepare for CET-4 exam',
+          react: 'Learn React framework development',
+          thesis: 'Complete graduation thesis writing',
+          fitness: 'Create fitness and weight loss plan',
+          interview: 'Prepare for job interviews',
+          python: 'Learn Python programming'
+        },
+        preview: {
+          title: 'AI Generated Task Plan',
+          description: 'Please review the task plan generated by AI, and create it after confirmation',
+          dueDate: 'Due',
+          estimated: 'Estimated',
+          hours: ' hours',
+          subtasks: 'Subtask Breakdown',
+          subtasksCount: ' items',
+          estimatedTime: 'Estimated time',
+          minutes: ' minutes'
+        },
+        success: {
+          title: 'Task Created Successfully!',
+          subtitle: 'AI Task Created',
+          description: 'Your task plan has been successfully created, you can start executing now!'
         }
       }
     },
@@ -508,6 +629,13 @@ const translations = {
       welcome: '欢迎回来！',
       overview: '项目概览',
       recentActivities: '最近活动',
+      todayTasks: {
+        empty: {
+          title: '今天没有安排任务',
+          description: '创建一个新任务来开始您的高效一天',
+          createButton: '创建任务'
+        }
+      },
       viewAll: '查看全部',
       noActivities: '暂无活动记录',
       noActivitiesDesc: '开始创建任务、记录灵感或完成清单来查看活动历史',
@@ -535,8 +663,138 @@ const translations = {
       }
     },
     tasks: {
+      title: '任务管理',
+      description: '管理您的短期任务和目标',
+      loading: '加载任务中...',
+      error: '加载任务出错',
+      retry: '重试',
+      loginRequired: {
+        title: '任务管理',
+        description: '请先登录以查看和管理您的任务。',
+        loginButton: '立即登录'
+      },
+      status: {
+        todo: '待办',
+        in_progress: '进行中',
+        completed: '已完成',
+        cancelled: '已取消'
+      },
       board: {
         noTasks: '暂无{status}任务'
+      },
+      list: {
+        title: '任务列表',
+        tasksCount: '个任务',
+        selected: '已选择 {count} 个任务',
+        batchActions: '批量操作',
+        taskTitle: '标题',
+        status: '状态',
+        priority: '优先级'
+      },
+      empty: {
+        title: '开始您的任务管理之旅',
+        description: '创建您的第一个任务，或让AI帮您智能规划。专注于3-30天的短期目标，让每一天都更有成效。',
+        createFirst: '创建第一个任务',
+        createFirstDesc: '手动创建一个简单的任务开始',
+        aiGenerate: 'AI 智能生成',
+        aiGenerateDesc: '让AI帮你规划任务计划',
+        suggestions: '任务管理建议',
+        suggestionsDesc: '以下是一些常见的任务类型，帮助您快速开始',
+        examples: {
+          learning: {
+            title: '学习新技能',
+            desc: '比如学习React、准备考试、练习英语'
+          },
+          work: {
+            title: '工作项目',
+            desc: '完成项目功能、代码审查、文档编写'
+          },
+          personal: {
+            title: '个人目标',
+            desc: '健身计划、阅读书籍、整理房间'
+          }
+        }
+      },
+      create: {
+        title: '创建新任务',
+        description: '创建一个新的任务来管理您的目标和计划',
+        fields: {
+          title: '任务标题',
+          titlePlaceholder: '输入任务标题...',
+          description: '任务描述',
+          descriptionPlaceholder: '详细描述任务内容和要求...',
+          priority: '优先级',
+          category: '分类',
+          dueDate: '截止日期',
+          selectDate: '选择日期',
+          estimatedHours: '预估时间 (小时)',
+          tags: '标签',
+          tagsPlaceholder: '添加标签...'
+        },
+        buttons: {
+          cancel: '取消',
+          create: '创建任务'
+        }
+      },
+      priority: {
+        high: '高优先级',
+        medium: '中优先级',
+        low: '低优先级'
+      },
+      category: {
+        work: '工作',
+        study: '学习',
+        personal: '个人',
+        health: '健康',
+        other: '其他'
+      },
+      ai: {
+        title: 'AI 任务规划助手',
+        description: '描述您的目标，AI将为您生成详细的任务计划和时间安排',
+        fields: {
+          goal: '描述您的目标',
+          goalPlaceholder: '例如：准备英语四级考试、学习React框架、完成毕业论文...',
+          quickSelect: '快速选择',
+          timeframe: '时间范围（天）',
+          minDays: '3天',
+          maxDays: '30天',
+          days: '天'
+        },
+        tip: {
+          title: 'AI 智能建议',
+          description: '为了获得更好的规划效果，请尽量详细描述您的目标。AI会根据您的描述生成具体的任务分解、时间安排和优先级建议。'
+        },
+        buttons: {
+          cancel: '取消',
+          generate: '生成任务计划',
+          generating: 'AI正在生成...',
+          regenerate: '重新生成',
+          createTask: '创建任务'
+        },
+        examples: {
+          exam: '准备英语四级考试',
+          react: '学习React框架开发',
+          thesis: '完成毕业论文写作',
+          fitness: '制定健身减肥计划',
+          interview: '准备求职面试',
+          python: '学习Python编程'
+        },
+        preview: {
+          title: 'AI 生成的任务计划',
+          description: '请查看AI为您生成的任务计划，确认后即可创建',
+          dueDate: '截止',
+          estimated: '预估',
+          hours: '小时',
+          subtasks: '子任务分解',
+          subtasksCount: '个',
+          estimatedTime: '预估时间',
+          minutes: '分钟'
+        },
+        success: {
+          title: '任务创建成功！',
+          subtitle: 'AI任务已创建',
+          description: '您的任务计划已成功创建，现在可以开始执行了！'
+        }
       }
     },
     categories: {

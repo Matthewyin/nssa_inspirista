@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAITaskGenerator } from '@/hooks/use-tasks';
+import { useLanguage } from '@/hooks/use-language';
 import {
   Dialog,
   DialogContent,
@@ -16,18 +17,15 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
+import {
   Sparkles,
   Loader2,
   CheckCircle2,
   Clock,
   Target,
   Calendar,
-  ArrowRight,
   RefreshCw
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import type { TaskPlan } from '@/lib/types/tasks';
 
 interface AITaskGeneratorDialogProps {
@@ -37,6 +35,7 @@ interface AITaskGeneratorDialogProps {
 
 export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDialogProps) {
   const { isGenerating, generateTaskPlan, createAITask } = useAITaskGenerator();
+  const { t } = useLanguage();
   const [step, setStep] = useState<'input' | 'preview' | 'created'>('input');
   const [prompt, setPrompt] = useState('');
   const [timeframe, setTimeframe] = useState(7);
@@ -44,12 +43,12 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
 
   // 示例提示词
   const examplePrompts = [
-    '准备英语四级考试',
-    '学习React框架开发',
-    '完成毕业论文写作',
-    '制定健身减肥计划',
-    '准备求职面试',
-    '学习Python编程'
+    t('tasks.ai.examples.exam'),
+    t('tasks.ai.examples.react'),
+    t('tasks.ai.examples.thesis'),
+    t('tasks.ai.examples.fitness'),
+    t('tasks.ai.examples.interview'),
+    t('tasks.ai.examples.python')
   ];
 
   // 重置对话框状态
@@ -99,28 +98,32 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         {step === 'input' && (
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-purple-600" />
-                AI 任务规划助手
+                {t('tasks.ai.title')}
               </DialogTitle>
               <DialogDescription>
-                描述您的目标，AI将为您生成详细的任务计划和时间安排
+                {t('tasks.ai.description')}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-6">
               {/* 目标描述 */}
               <div className="space-y-2">
-                <Label htmlFor="prompt">描述您的目标 *</Label>
+                <Label htmlFor="prompt">{t('tasks.ai.fields.goal')} *</Label>
                 <Textarea
                   id="prompt"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="例如：准备英语四级考试、学习React框架、完成毕业论文..."
+                  placeholder={t('tasks.ai.fields.goalPlaceholder')}
                   rows={4}
                   className="resize-none"
                 />
@@ -128,7 +131,7 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
 
               {/* 示例提示词 */}
               <div className="space-y-2">
-                <Label>快速选择</Label>
+                <Label>{t('tasks.ai.fields.quickSelect')}</Label>
                 <div className="flex flex-wrap gap-2">
                   {examplePrompts.map((example, index) => (
                     <Button
@@ -146,7 +149,7 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
 
               {/* 时间范围 */}
               <div className="space-y-4">
-                <Label>时间范围（天）</Label>
+                <Label>{t('tasks.ai.fields.timeframe')}</Label>
                 <div className="space-y-2">
                   <Slider
                     value={[timeframe]}
@@ -157,9 +160,9 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
                     className="w-full"
                   />
                   <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>3天</span>
-                    <span className="font-medium text-foreground">{timeframe} 天</span>
-                    <span>30天</span>
+                    <span>{t('tasks.ai.fields.minDays')}</span>
+                    <span className="font-medium text-foreground">{timeframe} {t('tasks.ai.fields.days')}</span>
+                    <span>{t('tasks.ai.fields.maxDays')}</span>
                   </div>
                 </div>
               </div>
@@ -169,10 +172,9 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
                 <div className="flex items-start gap-3">
                   <Sparkles className="h-5 w-5 text-purple-600 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-purple-900 mb-1">AI 智能建议</h4>
+                    <h4 className="font-medium text-purple-900 mb-1">{t('tasks.ai.tip.title')}</h4>
                     <p className="text-sm text-purple-700">
-                      为了获得更好的规划效果，请尽量详细描述您的目标。
-                      AI会根据您的描述生成具体的任务分解、时间安排和优先级建议。
+                      {t('tasks.ai.tip.description')}
                     </p>
                   </div>
                 </div>
@@ -181,22 +183,22 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
 
             <DialogFooter>
               <Button variant="outline" onClick={handleClose}>
-                取消
+                {t('tasks.ai.buttons.cancel')}
               </Button>
-              <Button 
-                onClick={handleGenerate} 
+              <Button
+                onClick={handleGenerate}
                 disabled={!prompt.trim() || isGenerating}
                 className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
               >
                 {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    AI正在生成...
+                    {t('tasks.ai.buttons.generating')}
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    生成任务计划
+                    {t('tasks.ai.buttons.generate')}
                   </>
                 )}
               </Button>
@@ -209,10 +211,10 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-green-600" />
-                AI 生成的任务计划
+                {t('tasks.ai.preview.title')}
               </DialogTitle>
               <DialogDescription>
-                请查看AI为您生成的任务计划，确认后即可创建
+                {t('tasks.ai.preview.description')}
               </DialogDescription>
             </DialogHeader>
 
@@ -228,17 +230,17 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-blue-600" />
-                      <span>截止：{generatedPlan.dueDate.toLocaleDateString()}</span>
+                      <span>{t('tasks.ai.preview.dueDate')}: {generatedPlan.dueDate.toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-orange-600" />
-                      <span>预估：{generatedPlan.estimatedHours}小时</span>
+                      <span>{t('tasks.ai.preview.estimated')}: {generatedPlan.estimatedHours}{t('tasks.ai.preview.hours')}</span>
                     </div>
                     <Badge variant="outline" className="capitalize">
-                      {generatedPlan.priority}优先级
+                      {t(`tasks.priority.${generatedPlan.priority}`)}
                     </Badge>
                     <Badge variant="secondary" className="capitalize">
-                      {generatedPlan.category}
+                      {t(`tasks.category.${generatedPlan.category}`)}
                     </Badge>
                   </div>
 
@@ -260,7 +262,7 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      子任务分解 ({generatedPlan.subtasks.length}个)
+                      {t('tasks.ai.preview.subtasks')} ({generatedPlan.subtasks.length}{t('tasks.ai.preview.subtasksCount')})
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -274,7 +276,7 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
                             <h4 className="font-medium">{subtask.title}</h4>
                             {subtask.estimatedMinutes && (
                               <p className="text-sm text-muted-foreground">
-                                预估时间：{subtask.estimatedMinutes}分钟
+                                {t('tasks.ai.preview.estimatedTime')}: {subtask.estimatedMinutes}{t('tasks.ai.preview.minutes')}
                               </p>
                             )}
                           </div>
@@ -289,11 +291,11 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
             <DialogFooter>
               <Button variant="outline" onClick={handleRegenerate}>
                 <RefreshCw className="mr-2 h-4 w-4" />
-                重新生成
+                {t('tasks.ai.buttons.regenerate')}
               </Button>
               <Button onClick={handleCreateTask}>
                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                创建任务
+                {t('tasks.ai.buttons.createTask')}
               </Button>
             </DialogFooter>
           </>
@@ -304,7 +306,7 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-green-600">
                 <CheckCircle2 className="h-5 w-5" />
-                任务创建成功！
+                {t('tasks.ai.success.title')}
               </DialogTitle>
             </DialogHeader>
 
@@ -314,9 +316,9 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
                   <CheckCircle2 className="h-8 w-8 text-green-600" />
                 </div>
               </div>
-              <h3 className="text-lg font-medium mb-2">AI任务已创建</h3>
+              <h3 className="text-lg font-medium mb-2">{t('tasks.ai.success.subtitle')}</h3>
               <p className="text-muted-foreground">
-                您的任务计划已成功创建，现在可以开始执行了！
+                {t('tasks.ai.success.description')}
               </p>
             </div>
           </>

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import { useLanguage } from '@/hooks/use-language';
 import { TasksContent } from '@/components/tasks/tasks-content';
 import { TaskCreateDialog } from '@/components/tasks/task-create-dialog';
 import { AITaskGeneratorDialog } from '@/components/tasks/ai-task-generator-dialog';
@@ -12,9 +13,32 @@ import Link from 'next/link';
 
 export default function TasksPage() {
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+
+  // 清除URL参数的函数
+  const clearUrlParams = () => {
+    router.replace('/tasks', { scroll: false });
+  };
+
+  // 处理创建对话框关闭
+  const handleCreateDialogClose = (open: boolean) => {
+    setCreateDialogOpen(open);
+    if (!open) {
+      clearUrlParams();
+    }
+  };
+
+  // 处理AI对话框关闭
+  const handleAiDialogClose = (open: boolean) => {
+    setAiDialogOpen(open);
+    if (!open) {
+      clearUrlParams();
+    }
+  };
 
   // 处理URL参数触发的操作
   useEffect(() => {
@@ -37,13 +61,13 @@ export default function TasksPage() {
         <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
           <div className="mb-6">
             <CheckSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">任务管理</h2>
+            <h2 className="text-2xl font-semibold mb-2">{t('tasks.loginRequired.title')}</h2>
             <p className="text-muted-foreground max-w-md">
-              请先登录以查看和管理您的任务。
+              {t('tasks.loginRequired.description')}
             </p>
           </div>
           <Button asChild>
-            <Link href="/login">立即登录</Link>
+            <Link href="/login">{t('tasks.loginRequired.loginButton')}</Link>
           </Button>
         </div>
       </div>
@@ -55,15 +79,15 @@ export default function TasksPage() {
       <TasksContent />
       
       {/* 创建任务对话框 */}
-      <TaskCreateDialog 
-        open={createDialogOpen} 
-        onOpenChange={setCreateDialogOpen}
+      <TaskCreateDialog
+        open={createDialogOpen}
+        onOpenChange={handleCreateDialogClose}
       />
-      
+
       {/* AI任务生成对话框 */}
-      <AITaskGeneratorDialog 
-        open={aiDialogOpen} 
-        onOpenChange={setAiDialogOpen}
+      <AITaskGeneratorDialog
+        open={aiDialogOpen}
+        onOpenChange={handleAiDialogClose}
       />
     </div>
   );

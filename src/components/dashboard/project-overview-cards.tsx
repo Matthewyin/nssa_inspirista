@@ -184,7 +184,7 @@ export function ProjectOverviewCards() {
           )}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-lg font-semibold text-foreground">
               {card.title}
             </CardTitle>
             <div className={cn("p-3 rounded-lg", card.bgColor)}>
@@ -210,21 +210,12 @@ export function ProjectOverviewCards() {
               </p>
             </Link>
 
-            <div className="flex items-center justify-between">
-              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm" asChild>
-                <Link href={card.href}>
-                  {card.actionText}
-                  <ArrowRight className="ml-2 h-3 w-3" />
-                </Link>
-              </Button>
-
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`${card.href}?action=create`}>
-                  <Plus className="h-3 w-3 mr-1" />
-                  新建
-                </Link>
-              </Button>
-            </div>
+            <Button variant="ghost" size="sm" className="p-0 h-auto text-sm" asChild>
+              <Link href={card.href}>
+                {card.actionText}
+                <ArrowRight className="ml-2 h-3 w-3" />
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       ))}
@@ -245,7 +236,7 @@ function EmptyProjectOverview() {
       ].map((card, index) => (
         <Card key={index} className="transition-all duration-200 hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-lg font-semibold text-foreground">
               {card.title}
             </CardTitle>
             <div className={cn("p-3 rounded-lg", card.bgColor)}>
@@ -257,15 +248,9 @@ function EmptyProjectOverview() {
             <div className={cn("text-3xl font-bold mb-3", card.color)}>
               0
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-muted-foreground">
               Start creating your first {card.title.toLowerCase()}
             </p>
-            <Button variant="outline" size="sm" className="w-full" asChild>
-              <Link href={card.href}>
-                <Plus className="h-3 w-3 mr-1" />
-                Get Started
-              </Link>
-            </Button>
           </CardContent>
         </Card>
       ))}

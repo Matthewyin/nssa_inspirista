@@ -2,7 +2,8 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
+import { useLanguage } from '@/hooks/use-language';
+import {
   CheckSquare,
   Plus,
   Sparkles,
@@ -17,10 +18,12 @@ interface EmptyTasksProps {
 }
 
 export function EmptyTasks({ onCreateTask, onAIGenerate }: EmptyTasksProps) {
+  const { t } = useLanguage();
+
   const quickStartActions = [
     {
-      title: '创建第一个任务',
-      description: '手动创建一个简单的任务开始',
+      title: t('tasks.empty.createFirst'),
+      description: t('tasks.empty.createFirstDesc'),
       icon: Plus,
       action: onCreateTask,
       variant: 'default' as const,
@@ -28,8 +31,8 @@ export function EmptyTasks({ onCreateTask, onAIGenerate }: EmptyTasksProps) {
       bgColor: 'bg-blue-50'
     },
     {
-      title: 'AI 智能生成',
-      description: '让AI帮你规划任务计划',
+      title: t('tasks.empty.aiGenerate'),
+      description: t('tasks.empty.aiGenerateDesc'),
       icon: Sparkles,
       action: onAIGenerate,
       variant: 'secondary' as const,
@@ -41,20 +44,20 @@ export function EmptyTasks({ onCreateTask, onAIGenerate }: EmptyTasksProps) {
 
   const examples = [
     {
-      title: '学习新技能',
-      description: '比如学习React、准备考试、练习英语',
+      title: t('tasks.empty.examples.learning.title'),
+      description: t('tasks.empty.examples.learning.desc'),
       icon: Target,
       color: 'text-green-600'
     },
     {
-      title: '工作项目',
-      description: '完成项目功能、代码审查、文档编写',
+      title: t('tasks.empty.examples.work.title'),
+      description: t('tasks.empty.examples.work.desc'),
       icon: CheckSquare,
       color: 'text-blue-600'
     },
     {
-      title: '个人目标',
-      description: '健身计划、阅读书籍、整理房间',
+      title: t('tasks.empty.examples.personal.title'),
+      description: t('tasks.empty.examples.personal.desc'),
       icon: Calendar,
       color: 'text-orange-600'
     }
@@ -69,11 +72,10 @@ export function EmptyTasks({ onCreateTask, onAIGenerate }: EmptyTasksProps) {
             <CheckSquare className="h-10 w-10 text-blue-600" />
           </div>
           <h2 className="text-2xl font-semibold text-foreground mb-2">
-            开始您的任务管理之旅
+            {t('tasks.empty.title')}
           </h2>
           <p className="text-muted-foreground max-w-md mx-auto">
-            创建您的第一个任务，或让AI帮您智能规划。
-            专注于3-30天的短期目标，让每一天都更有成效。
+            {t('tasks.empty.description')}
           </p>
         </div>
 
@@ -101,10 +103,10 @@ export function EmptyTasks({ onCreateTask, onAIGenerate }: EmptyTasksProps) {
       <div className="w-full max-w-4xl">
         <div className="text-center mb-6">
           <h3 className="text-lg font-medium text-foreground mb-2">
-            任务管理建议
+            {t('tasks.empty.suggestions')}
           </h3>
           <p className="text-sm text-muted-foreground">
-            以下是一些常见的任务类型，帮助您快速开始
+            {t('tasks.empty.suggestionsDesc')}
           </p>
         </div>
 

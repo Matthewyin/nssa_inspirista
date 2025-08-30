@@ -190,17 +190,19 @@ function TaskItem({ task }: { task: Task }) {
 
 // 空状态组件
 function EmptyTodayTasks() {
+  const { t } = useLanguage();
+
   return (
     <div className="text-center py-8">
       <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-      <h3 className="text-lg font-medium mb-2">今天没有安排任务</h3>
+      <h3 className="text-lg font-medium mb-2">{t('dashboard.todayTasks.empty.title')}</h3>
       <p className="text-muted-foreground mb-4">
-        创建一个新任务来开始您的高效一天
+        {t('dashboard.todayTasks.empty.description')}
       </p>
       <Button asChild>
         <Link href="/tasks">
           <Plus className="h-4 w-4 mr-2" />
-          创建任务
+          {t('dashboard.todayTasks.empty.createButton')}
         </Link>
       </Button>
     </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTasks } from '@/hooks/use-tasks';
+import { useLanguage } from '@/hooks/use-language';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,7 @@ interface TaskCreateDialogProps {
 
 export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) {
   const { createTask } = useTasks();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   
   // 表单状态
@@ -105,7 +107,7 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
       resetForm();
       onOpenChange(false);
     } catch (error) {
-      console.error('创建任务失败:', error);
+      console.error('Failed to create task:', error);
     } finally {
       setLoading(false);
     }
@@ -141,35 +143,39 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
-          <DialogTitle>创建新任务</DialogTitle>
+          <DialogTitle>{t('tasks.create.title')}</DialogTitle>
           <DialogDescription>
-            创建一个新的任务来管理您的目标和计划
+            {t('tasks.create.description')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 任务标题 */}
           <div className="space-y-2">
-            <Label htmlFor="title">任务标题 *</Label>
+            <Label htmlFor="title">{t('tasks.create.fields.title')} *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="输入任务标题..."
+              placeholder={t('tasks.create.fields.titlePlaceholder')}
               required
             />
           </div>
 
           {/* 任务描述 */}
           <div className="space-y-2">
-            <Label htmlFor="description">任务描述</Label>
+            <Label htmlFor="description">{t('tasks.create.fields.description')}</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="详细描述任务内容和要求..."
+              placeholder={t('tasks.create.fields.descriptionPlaceholder')}
               rows={3}
             />
           </div>
@@ -177,7 +183,7 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
           {/* 优先级和分类 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>优先级</Label>
+              <Label>{t('tasks.create.fields.priority')}</Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as TaskPriority }))}
@@ -186,15 +192,15 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="high">高优先级</SelectItem>
-                  <SelectItem value="medium">中优先级</SelectItem>
-                  <SelectItem value="low">低优先级</SelectItem>
+                  <SelectItem value="high">{t('tasks.priority.high')}</SelectItem>
+                  <SelectItem value="medium">{t('tasks.priority.medium')}</SelectItem>
+                  <SelectItem value="low">{t('tasks.priority.low')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>分类</Label>
+              <Label>{t('tasks.create.fields.category')}</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as TaskCategory }))}
@@ -203,11 +209,11 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="work">工作</SelectItem>
-                  <SelectItem value="study">学习</SelectItem>
-                  <SelectItem value="personal">个人</SelectItem>
-                  <SelectItem value="health">健康</SelectItem>
-                  <SelectItem value="other">其他</SelectItem>
+                  <SelectItem value="work">{t('tasks.category.work')}</SelectItem>
+                  <SelectItem value="study">{t('tasks.category.study')}</SelectItem>
+                  <SelectItem value="personal">{t('tasks.category.personal')}</SelectItem>
+                  <SelectItem value="health">{t('tasks.category.health')}</SelectItem>
+                  <SelectItem value="other">{t('tasks.category.other')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -216,7 +222,7 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
           {/* 截止日期和预估时间 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>截止日期</Label>
+              <Label>{t('tasks.create.fields.dueDate')}</Label>
               <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -230,7 +236,7 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
                     {formData.dueDate ? (
                       format(formData.dueDate, "PPP", { locale: zhCN })
                     ) : (
-                      "选择日期"
+                      t('tasks.create.fields.selectDate')
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -252,7 +258,7 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="estimatedHours">预估时间 (小时)</Label>
+              <Label htmlFor="estimatedHours">{t('tasks.create.fields.estimatedHours')}</Label>
               <div className="relative">
                 <Input
                   id="estimatedHours"
@@ -270,14 +276,14 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
 
           {/* 标签 */}
           <div className="space-y-2">
-            <Label>标签</Label>
+            <Label>{t('tasks.create.fields.tags')}</Label>
             <div className="space-y-2">
               <div className="flex gap-2">
                 <Input
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyPress={handleTagKeyPress}
-                  placeholder="添加标签..."
+                  placeholder={t('tasks.create.fields.tagsPlaceholder')}
                   className="flex-1"
                 />
                 <Button
@@ -319,11 +325,11 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              取消
+              {t('tasks.create.buttons.cancel')}
             </Button>
             <Button type="submit" disabled={loading || !formData.title.trim()}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              创建任务
+              {t('tasks.create.buttons.create')}
             </Button>
           </DialogFooter>
         </form>

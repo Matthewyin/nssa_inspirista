@@ -126,17 +126,17 @@ export function TaskList({ tasks }: TaskListProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            任务列表
-            <Badge variant="outline">{tasks.length} 个任务</Badge>
+            {t('tasks.list.title')}
+            <Badge variant="outline">{tasks.length} {t('tasks.list.tasksCount')}</Badge>
           </CardTitle>
           
           {selectedTasks.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                已选择 {selectedTasks.length} 个任务
+                {t('tasks.list.selected', { count: selectedTasks.length })}
               </span>
               <Button variant="outline" size="sm">
-                批量操作
+                {t('tasks.list.batchActions')}
               </Button>
             </div>
           )}
@@ -162,11 +162,11 @@ export function TaskList({ tasks }: TaskListProps) {
                     className="h-auto p-0 font-medium"
                     onClick={() => handleSort('title')}
                   >
-                    {t('tasks.list.title')}
+                    {t('tasks.list.taskTitle')}
                     <ArrowUpDown className="ml-2 h-3 w-3" />
                   </Button>
                 </TableHead>
-                
+
                 <TableHead>
                   <Button
                     variant="ghost"
