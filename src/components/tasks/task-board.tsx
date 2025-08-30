@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTasks } from '@/hooks/use-tasks';
+import { useLanguage } from '@/hooks/use-language';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,27 +25,28 @@ interface TaskBoardProps {
 }
 
 export function TaskBoard({ tasks }: TaskBoardProps) {
+  const { t } = useLanguage();
   const { updateTaskStatus } = useTasks();
 
-  // 定义看板列
+  // Define board columns
   const columns = [
     {
       id: 'todo' as TaskStatus,
-      title: '待办',
+      title: t('tasks.status.todo'),
       color: 'border-gray-200 bg-gray-50',
       headerColor: 'text-gray-700',
       count: tasks.filter(task => task.status === 'todo').length
     },
     {
       id: 'in_progress' as TaskStatus,
-      title: '进行中',
+      title: t('tasks.status.in_progress'),
       color: 'border-blue-200 bg-blue-50',
       headerColor: 'text-blue-700',
       count: tasks.filter(task => task.status === 'in_progress').length
     },
     {
       id: 'completed' as TaskStatus,
-      title: '已完成',
+      title: t('tasks.status.completed'),
       color: 'border-green-200 bg-green-50',
       headerColor: 'text-green-700',
       count: tasks.filter(task => task.status === 'completed').length

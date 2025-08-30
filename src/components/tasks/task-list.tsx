@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLanguage } from '@/hooks/use-language';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -36,29 +37,30 @@ type SortField = 'title' | 'dueDate' | 'priority' | 'status' | 'progress' | 'cre
 type SortDirection = 'asc' | 'desc';
 
 export function TaskList({ tasks }: TaskListProps) {
+  const { t } = useLanguage();
   const [sortField, setSortField] = useState<SortField>('dueDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
 
-  // 排序任务
+  // Sort tasks
   const sortedTasks = [...tasks].sort((a, b) => {
     let aValue: any = a[sortField];
     let bValue: any = b[sortField];
 
-    // 特殊处理日期类型
+    // Special handling for date types
     if (sortField === 'dueDate' || sortField === 'createdAt') {
       aValue = aValue.toDate().getTime();
       bValue = bValue.toDate().getTime();
     }
 
-    // 特殊处理优先级
+    // Special handling for priority
     if (sortField === 'priority') {
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       aValue = priorityOrder[aValue];
       bValue = priorityOrder[bValue];
     }
 
-    // 特殊处理状态
+    // Special handling for status
     if (sortField === 'status') {
       const statusOrder = { todo: 1, in_progress: 2, completed: 3, cancelled: 4 };
       aValue = statusOrder[aValue];
@@ -70,7 +72,7 @@ export function TaskList({ tasks }: TaskListProps) {
     return 0;
   });
 
-  // 处理排序
+  // Handle sorting
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -98,23 +100,23 @@ export function TaskList({ tasks }: TaskListProps) {
     }
   };
 
-  // 获取状态显示
+  // Get status display
   const getStatusDisplay = (status: TaskStatus) => {
     const statusConfig = {
-      todo: { label: '待办', color: 'bg-gray-100 text-gray-800', icon: Circle },
-      in_progress: { label: '进行中', color: 'bg-blue-100 text-blue-800', icon: Clock },
-      completed: { label: '已完成', color: 'bg-green-100 text-green-800', icon: CheckCircle2 },
-      cancelled: { label: '已取消', color: 'bg-red-100 text-red-800', icon: Circle }
+      todo: { label: t('tasks.status.todo'), color: 'bg-gray-100 text-gray-800', icon: Circle },
+      in_progress: { label: t('tasks.status.in_progress'), color: 'bg-blue-100 text-blue-800', icon: Clock },
+      completed: { label: t('tasks.status.completed'), color: 'bg-green-100 text-green-800', icon: CheckCircle2 },
+      cancelled: { label: t('tasks.status.cancelled'), color: 'bg-red-100 text-red-800', icon: Circle }
     };
     return statusConfig[status];
   };
 
-  // 获取优先级显示
+  // Get priority display
   const getPriorityDisplay = (priority: Task['priority']) => {
     const priorityConfig = {
-      high: { label: '高', color: 'text-red-600', dotColor: 'bg-red-500' },
-      medium: { label: '中', color: 'text-yellow-600', dotColor: 'bg-yellow-500' },
-      low: { label: '低', color: 'text-green-600', dotColor: 'bg-green-500' }
+      high: { label: 'High', color: 'text-red-600', dotColor: 'bg-red-500' },
+      medium: { label: 'Medium', color: 'text-yellow-600', dotColor: 'bg-yellow-500' },
+      low: { label: 'Low', color: 'text-green-600', dotColor: 'bg-green-500' }
     };
     return priorityConfig[priority];
   };
@@ -160,7 +162,7 @@ export function TaskList({ tasks }: TaskListProps) {
                     className="h-auto p-0 font-medium"
                     onClick={() => handleSort('title')}
                   >
-                    任务名称
+                    {t('tasks.list.title')}
                     <ArrowUpDown className="ml-2 h-3 w-3" />
                   </Button>
                 </TableHead>
@@ -172,7 +174,7 @@ export function TaskList({ tasks }: TaskListProps) {
                     className="h-auto p-0 font-medium"
                     onClick={() => handleSort('status')}
                   >
-                    状态
+                    {t('tasks.list.status')}
                     <ArrowUpDown className="ml-2 h-3 w-3" />
                   </Button>
                 </TableHead>
@@ -184,7 +186,7 @@ export function TaskList({ tasks }: TaskListProps) {
                     className="h-auto p-0 font-medium"
                     onClick={() => handleSort('priority')}
                   >
-                    优先级
+                    {t('tasks.list.priority')}
                     <ArrowUpDown className="ml-2 h-3 w-3" />
                   </Button>
                 </TableHead>
@@ -196,7 +198,7 @@ export function TaskList({ tasks }: TaskListProps) {
                     className="h-auto p-0 font-medium"
                     onClick={() => handleSort('dueDate')}
                   >
-                    截止时间
+                    {t('tasks.list.dueDate')}
                     <ArrowUpDown className="ml-2 h-3 w-3" />
                   </Button>
                 </TableHead>
@@ -208,7 +210,7 @@ export function TaskList({ tasks }: TaskListProps) {
                     className="h-auto p-0 font-medium"
                     onClick={() => handleSort('progress')}
                   >
-                    进度
+                    {t('tasks.list.progress')}
                     <ArrowUpDown className="ml-2 h-3 w-3" />
                   </Button>
                 </TableHead>

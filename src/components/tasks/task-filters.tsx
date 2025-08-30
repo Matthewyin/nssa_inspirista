@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/hooks/use-language';
 import { Badge } from '@/components/ui/badge';
 import { 
   Select,
@@ -33,36 +34,37 @@ interface TaskFiltersProps {
 }
 
 export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
+  const { t } = useLanguage();
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
-  // 状态选项
+  // Status options
   const statusOptions = [
-    { value: 'todo', label: '待办' },
-    { value: 'in_progress', label: '进行中' },
-    { value: 'completed', label: '已完成' },
-    { value: 'cancelled', label: '已取消' }
+    { value: 'todo', label: t('tasks.status.todo') },
+    { value: 'in_progress', label: t('tasks.status.in_progress') },
+    { value: 'completed', label: t('tasks.status.completed') },
+    { value: 'cancelled', label: t('tasks.status.cancelled') }
   ];
 
-  // 优先级选项
+  // Priority options
   const priorityOptions = [
-    { value: 'high', label: '高优先级' },
-    { value: 'medium', label: '中优先级' },
-    { value: 'low', label: '低优先级' }
+    { value: 'high', label: t('tasks.priority.high') },
+    { value: 'medium', label: t('tasks.priority.medium') },
+    { value: 'low', label: t('tasks.priority.low') }
   ];
 
-  // 分类选项
+  // Category options
   const categoryOptions = [
-    { value: 'work', label: '工作' },
-    { value: 'study', label: '学习' },
-    { value: 'personal', label: '个人' },
-    { value: 'health', label: '健康' },
-    { value: 'other', label: '其他' }
+    { value: 'work', label: t('tasks.category.work') },
+    { value: 'study', label: t('tasks.category.study') },
+    { value: 'personal', label: t('tasks.category.personal') },
+    { value: 'health', label: t('tasks.category.health') },
+    { value: 'other', label: t('tasks.category.other') }
   ];
 
-  // 快速日期筛选
+  // Quick date filters
   const quickDateFilters = [
     {
-      label: '今天',
+      label: t('tasks.dateFilters.today'),
       getValue: () => {
         const today = new Date();
         const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -71,7 +73,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
       }
     },
     {
-      label: '本周',
+      label: t('tasks.dateFilters.thisWeek'),
       getValue: () => {
         const today = new Date();
         const startOfWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
@@ -80,7 +82,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
       }
     },
     {
-      label: '本月',
+      label: t('tasks.dateFilters.thisMonth'),
       getValue: () => {
         const today = new Date();
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -89,16 +91,16 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
       }
     },
     {
-      label: '逾期',
+      label: t('tasks.dateFilters.overdue'),
       getValue: () => {
         const today = new Date();
-        const pastDate = new Date(2020, 0, 1); // 很久以前的日期
+        const pastDate = new Date(2020, 0, 1); // Long ago date
         return { start: pastDate, end: today };
       }
     }
   ];
 
-  // 更新筛选器
+  // Update filter
   const updateFilter = (key: keyof TaskFiltersType, value: any) => {
     onFiltersChange({
       ...filters,
@@ -106,26 +108,26 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
     });
   };
 
-  // 清除筛选器
+  // Clear filter
   const clearFilter = (key: keyof TaskFiltersType) => {
     const newFilters = { ...filters };
     delete newFilters[key];
     onFiltersChange(newFilters);
   };
 
-  // 清除所有筛选器
+  // Clear all filters
   const clearAllFilters = () => {
     onFiltersChange({});
   };
 
-  // 计算活跃筛选器数量
+  // Calculate active filters count
   const activeFiltersCount = Object.keys(filters).length;
 
   return (
     <div className="space-y-4">
-      {/* 筛选器控件 */}
+      {/* Filter controls */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* 状态筛选 */}
+        {/* Status filter */}
         <Select
           value={filters.status || ''}
           onValueChange={(value) => updateFilter('status', value as TaskStatus)}
@@ -133,7 +135,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
           <SelectTrigger className="w-32">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4" />
-              <SelectValue placeholder="状态" />
+              <SelectValue placeholder={t('tasks.filters.status')} />
             </div>
           </SelectTrigger>
           <SelectContent>
@@ -145,7 +147,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
           </SelectContent>
         </Select>
 
-        {/* 优先级筛选 */}
+        {/* Priority filter */}
         <Select
           value={filters.priority || ''}
           onValueChange={(value) => updateFilter('priority', value as TaskPriority)}
@@ -153,7 +155,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
           <SelectTrigger className="w-32">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <SelectValue placeholder="优先级" />
+              <SelectValue placeholder={t('tasks.filters.priority')} />
             </div>
           </SelectTrigger>
           <SelectContent>
@@ -165,7 +167,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
           </SelectContent>
         </Select>
 
-        {/* 分类筛选 */}
+        {/* Category filter */}
         <Select
           value={filters.category || ''}
           onValueChange={(value) => updateFilter('category', value as TaskCategory)}
@@ -173,7 +175,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
           <SelectTrigger className="w-32">
             <div className="flex items-center gap-2">
               <Tag className="h-4 w-4" />
-              <SelectValue placeholder="分类" />
+              <SelectValue placeholder={t('tasks.filters.category')} />
             </div>
           </SelectTrigger>
           <SelectContent>
@@ -185,18 +187,18 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
           </SelectContent>
         </Select>
 
-        {/* 日期筛选 */}
+        {/* Date filter */}
         <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-32">
               <CalendarIcon className="h-4 w-4 mr-2" />
-              {filters.dueDateRange ? '已筛选' : '日期'}
+              {filters.dueDateRange ? t('tasks.filters.filtered') : t('tasks.filters.date')}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <div className="p-4 space-y-4">
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">快速筛选</h4>
+                <h4 className="font-medium text-sm">{t('tasks.filters.quickFilter')}</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {quickDateFilters.map((filter) => (
                     <Button
@@ -215,7 +217,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
               </div>
               
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">自定义日期</h4>
+                <h4 className="font-medium text-sm">{t('tasks.filters.customDate')}</h4>
                 <Calendar
                   mode="range"
                   selected={filters.dueDateRange ? {
@@ -238,7 +240,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
           </PopoverContent>
         </Popover>
 
-        {/* 清除所有筛选器 */}
+        {/* Clear all filters */}
         {activeFiltersCount > 0 && (
           <Button
             variant="ghost"
@@ -247,19 +249,19 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
             className="text-muted-foreground"
           >
             <X className="h-4 w-4 mr-1" />
-            清除筛选 ({activeFiltersCount})
+            {t('tasks.filters.clearFilters')} ({activeFiltersCount})
           </Button>
         )}
       </div>
 
-      {/* 活跃筛选器标签 */}
+      {/* Active filter tags */}
       {activeFiltersCount > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">筛选条件:</span>
+          <span className="text-sm text-muted-foreground">{t('tasks.filters.filterConditions')}:</span>
           
           {filters.status && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              状态: {statusOptions.find(opt => opt.value === filters.status)?.label}
+              {t('tasks.filters.status')}: {statusOptions.find(opt => opt.value === filters.status)?.label}
               <Button
                 variant="ghost"
                 size="sm"
@@ -273,7 +275,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
 
           {filters.priority && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              优先级: {priorityOptions.find(opt => opt.value === filters.priority)?.label}
+              {t('tasks.filters.priority')}: {priorityOptions.find(opt => opt.value === filters.priority)?.label}
               <Button
                 variant="ghost"
                 size="sm"
@@ -287,7 +289,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
 
           {filters.category && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              分类: {categoryOptions.find(opt => opt.value === filters.category)?.label}
+              {t('tasks.filters.category')}: {categoryOptions.find(opt => opt.value === filters.category)?.label}
               <Button
                 variant="ghost"
                 size="sm"
@@ -301,7 +303,7 @@ export function TaskFilters({ filters, onFiltersChange }: TaskFiltersProps) {
 
           {filters.dueDateRange && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              日期: {filters.dueDateRange.start.toLocaleDateString()} - {filters.dueDateRange.end.toLocaleDateString()}
+              {t('tasks.filters.date')}: {filters.dueDateRange.start.toLocaleDateString()} - {filters.dueDateRange.end.toLocaleDateString()}
               <Button
                 variant="ghost"
                 size="sm"

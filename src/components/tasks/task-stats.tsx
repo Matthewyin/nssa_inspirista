@@ -2,6 +2,7 @@
 
 import { useTaskStats } from '@/hooks/use-tasks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLanguage } from '@/hooks/use-language';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export function TaskStats() {
+  const { t } = useLanguage();
   const { stats, loading } = useTaskStats();
 
   if (loading) {
@@ -32,9 +34,9 @@ export function TaskStats() {
 
   const statCards = [
     {
-      title: '总任务数',
+      title: t('tasks.stats.totalTasks'),
       value: stats.totalTasks,
-      description: `${stats.completedTasks} 已完成`,
+      description: `${stats.completedTasks} ${t('tasks.stats.completed')}`,
       icon: CheckSquare,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -45,19 +47,19 @@ export function TaskStats() {
       }
     },
     {
-      title: '进行中',
+      title: t('tasks.stats.inProgress'),
       value: stats.inProgressTasks,
-      description: '当前活跃任务',
+      description: t('tasks.stats.currentActive'),
       icon: Clock,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      badge: stats.inProgressTasks > 5 ? '繁忙' : stats.inProgressTasks > 0 ? '正常' : '空闲',
+      badge: stats.inProgressTasks > 5 ? t('tasks.stats.busy') : stats.inProgressTasks > 0 ? t('tasks.stats.normal') : t('tasks.stats.idle'),
       badgeVariant: stats.inProgressTasks > 5 ? 'destructive' : 'secondary'
     },
     {
-      title: '完成率',
+      title: t('tasks.stats.completionRate'),
       value: `${Math.round(completionRate)}%`,
-      description: isOnTrack ? '表现良好' : '需要努力',
+      description: isOnTrack ? t('tasks.stats.performingWell') : t('tasks.stats.needsImprovement'),
       icon: TrendingUp,
       color: isOnTrack ? 'text-green-600' : 'text-yellow-600',
       bgColor: isOnTrack ? 'bg-green-50' : 'bg-yellow-50',
@@ -68,14 +70,14 @@ export function TaskStats() {
       }
     },
     {
-      title: '逾期任务',
+      title: t('tasks.stats.overdueTasks'),
       value: stats.overdueTasks,
-      description: hasOverdue ? '需要关注' : '按时进行',
+      description: hasOverdue ? t('tasks.stats.needsAttention') : t('tasks.stats.onTrack'),
       icon: AlertTriangle,
       color: hasOverdue ? 'text-red-600' : 'text-green-600',
       bgColor: hasOverdue ? 'bg-red-50' : 'bg-green-50',
       urgent: hasOverdue,
-      badge: hasOverdue ? '紧急' : '正常',
+      badge: hasOverdue ? t('tasks.stats.urgent') : t('tasks.stats.normal'),
       badgeVariant: hasOverdue ? 'destructive' : 'secondary'
     }
   ];
@@ -123,7 +125,7 @@ export function TaskStats() {
                     "h-3 w-3 mr-1",
                     !card.trend.isPositive && "rotate-180"
                   )} />
-                  {card.trend.isPositive ? '良好' : '待改善'}
+                  {card.trend.isPositive ? t('tasks.stats.good') : t('tasks.stats.needsWork')}
                 </div>
               )}
             </div>
@@ -155,7 +157,7 @@ export function TaskStats() {
   );
 }
 
-// 加载骨架屏
+// Loading skeleton
 function TaskStatsSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

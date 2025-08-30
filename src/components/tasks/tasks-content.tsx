@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTasks } from '@/hooks/use-tasks';
+import { useLanguage } from '@/hooks/use-language';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,18 +23,19 @@ import { TaskStats } from './task-stats';
 import type { TaskFilters as TaskFiltersType } from '@/lib/types/tasks';
 
 export function TasksContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const [view, setView] = useState<'board' | 'list'>('board');
   const [filters, setFilters] = useState<TaskFiltersType>({});
 
-  // 获取任务数据
+  // Get task data
   const { tasks, loading, error } = useTasks(filters);
 
-  // 处理URL筛选参数
+  // Handle URL filter parameters
   const urlFilter = searchParams.get('filter');
   const urlView = searchParams.get('view');
 
-  // 根据URL参数设置初始筛选
+  // Set initial filters based on URL parameters
   useState(() => {
     if (urlFilter === 'today') {
       const today = new Date();
@@ -65,26 +67,26 @@ export function TasksContent() {
   if (error) {
     return (
       <div className="text-center py-8">
-        <div className="text-red-500 mb-4">加载任务时出错</div>
-        <Button onClick={() => window.location.reload()}>重试</Button>
+        <div className="text-red-500 mb-4">{t('tasks.error')}</div>
+        <Button onClick={() => window.location.reload()}>{t('tasks.retry')}</Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* 页面标题 */}
+      {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">任务管理</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('tasks.title')}</h1>
         <p className="text-muted-foreground">
-          管理您的短期任务和目标
+          {t('tasks.description')}
         </p>
       </div>
 
-      {/* 任务统计 */}
+      {/* Task Statistics */}
       <TaskStats />
 
-      {/* 筛选和视图切换 */}
+      {/* Filters and View Toggle */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <TaskFilters filters={filters} onFiltersChange={setFilters} />
 
@@ -93,18 +95,18 @@ export function TasksContent() {
             <TabsList>
               <TabsTrigger value="board" className="flex items-center gap-2">
                 <LayoutGrid className="h-4 w-4" />
-                看板
+                {t('tasks.views.board')}
               </TabsTrigger>
               <TabsTrigger value="list" className="flex items-center gap-2">
                 <List className="h-4 w-4" />
-                列表
+                {t('tasks.views.list')}
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </div>
 
-      {/* 任务内容 */}
+      {/* Task Content */}
       {loading ? (
         <TasksContentSkeleton />
       ) : (
@@ -120,11 +122,11 @@ export function TasksContent() {
   );
 }
 
-// 加载骨架屏
+// Loading skeleton
 function TasksContentSkeleton() {
   return (
     <div className="space-y-6">
-      {/* 统计卡片骨架 */}
+      {/* Stats cards skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}>
@@ -139,7 +141,7 @@ function TasksContentSkeleton() {
         ))}
       </div>
 
-      {/* 看板骨架 */}
+      {/* Board skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {Array.from({ length: 3 }).map((_, columnIndex) => (
           <div key={columnIndex} className="space-y-4">

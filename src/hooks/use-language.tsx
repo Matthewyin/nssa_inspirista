@@ -158,6 +158,83 @@ const translations = {
         label: 'Language',
         placeholder: 'Select a language'
     },
+    tasks: {
+      title: 'Task Management',
+      description: 'Manage your short-term tasks and goals',
+      loading: 'Loading tasks...',
+      error: 'Error loading tasks',
+      retry: 'Retry',
+      views: {
+        board: 'Board',
+        list: 'List'
+      },
+      filters: {
+        status: 'Status',
+        priority: 'Priority',
+        category: 'Category',
+        date: 'Date',
+        filtered: 'Filtered',
+        quickFilter: 'Quick Filter',
+        customDate: 'Custom Date',
+        clearFilters: 'Clear Filters',
+        filterConditions: 'Filter Conditions'
+      },
+      status: {
+        todo: 'To Do',
+        in_progress: 'In Progress',
+        completed: 'Completed',
+        cancelled: 'Cancelled'
+      },
+      priority: {
+        high: 'High Priority',
+        medium: 'Medium Priority',
+        low: 'Low Priority'
+      },
+      category: {
+        work: 'Work',
+        study: 'Study',
+        personal: 'Personal',
+        health: 'Health',
+        other: 'Other'
+      },
+      dateFilters: {
+        today: 'Today',
+        thisWeek: 'This Week',
+        thisMonth: 'This Month',
+        overdue: 'Overdue'
+      },
+      stats: {
+        totalTasks: 'Total Tasks',
+        inProgress: 'In Progress',
+        completionRate: 'Completion Rate',
+        overdueTasks: 'Overdue Tasks',
+        completed: 'completed',
+        currentActive: 'current active tasks',
+        performingWell: 'performing well',
+        needsImprovement: 'needs improvement',
+        needsAttention: 'needs attention',
+        onTrack: 'on track',
+        busy: 'Busy',
+        normal: 'Normal',
+        idle: 'Idle',
+        urgent: 'Urgent',
+        good: 'Good',
+        needsWork: 'Needs Work'
+      },
+      board: {
+        skeleton: 'Board Skeleton',
+        statsCards: 'Stats Cards'
+      },
+      list: {
+        title: 'Title',
+        status: 'Status',
+        priority: 'Priority',
+        dueDate: 'Due Date',
+        progress: 'Progress',
+        createdAt: 'Created',
+        actions: 'Actions'
+      }
+    },
     categories: {
         inspiration: 'Inspiration',
         checklist: 'Checklist'
