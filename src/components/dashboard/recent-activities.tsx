@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
+import {
   CheckSquare,
   Lightbulb,
   List,
@@ -15,78 +15,10 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-
-// 模拟活动数据 - 实际项目中应该从API获取
-const mockActivities = [
-  {
-    id: '1',
-    type: 'task_completed' as const,
-    title: '完成了任务：学习React Hooks',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2小时前
-    metadata: {
-      taskId: 'task-1',
-      category: 'study',
-      priority: 'high'
-    }
-  },
-  {
-    id: '2',
-    type: 'task_created' as const,
-    title: '创建了新任务：准备项目演示',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4小时前
-    metadata: {
-      taskId: 'task-2',
-      category: 'work',
-      isAIGenerated: true
-    }
-  },
-  {
-    id: '3',
-    type: 'note_created' as const,
-    title: '记录了新灵感：移动端优化想法',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6小时前
-    metadata: {
-      noteId: 'note-1',
-      tags: ['移动端', '优化', 'UX']
-    }
-  },
-  {
-    id: '4',
-    type: 'checklist_completed' as const,
-    title: '完成了清单：晨间例行公事',
-    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8小时前
-    metadata: {
-      checklistId: 'checklist-1',
-      completedItems: 5,
-      totalItems: 6
-    }
-  },
-  {
-    id: '5',
-    type: 'task_completed' as const,
-    title: '完成了任务：代码审查',
-    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1天前
-    metadata: {
-      taskId: 'task-3',
-      category: 'work',
-      priority: 'medium'
-    }
-  }
-];
-
-type ActivityType = 'task_completed' | 'task_created' | 'note_created' | 'checklist_completed';
-
-interface Activity {
-  id: string;
-  type: ActivityType;
-  title: string;
-  timestamp: Date;
-  metadata?: any;
-}
+import { useActivities, type Activity as ActivityType, type ActivityType as ActivityTypeEnum } from '@/hooks/use-activities';
 
 export function RecentActivities() {
-  const activities = mockActivities.slice(0, 4); // 只显示最近4条活动
-  const loading = false; // 在实际项目中，这里应该来自Hook
+  const { activities, loading } = useActivities(4); // 获取最近4条活动
 
   if (loading) {
     return <RecentActivitiesSkeleton />;
@@ -123,8 +55,8 @@ export function RecentActivities() {
 }
 
 // 活动项组件
-function ActivityItem({ activity }: { activity: Activity }) {
-  const getActivityConfig = (type: ActivityType) => {
+function ActivityItem({ activity }: { activity: ActivityType }) {
+  const getActivityConfig = (type: ActivityTypeEnum) => {
     const configs = {
       task_completed: {
         icon: CheckSquare,
@@ -155,7 +87,7 @@ function ActivityItem({ activity }: { activity: Activity }) {
   };
 
   const config = getActivityConfig(activity.type);
-  const timeAgo = getTimeAgo(activity.timestamp);
+  const timeAgo = getTimeAgo(activity.timestamp.toDate());
 
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
@@ -222,9 +154,9 @@ function ActivityItem({ activity }: { activity: Activity }) {
 
       {/* 时间戳 */}
       <div className="text-xs text-muted-foreground flex-shrink-0">
-        {activity.timestamp.toLocaleTimeString('zh-CN', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
+        {activity.timestamp.toDate().toLocaleTimeString('zh-CN', {
+          hour: '2-digit',
+          minute: '2-digit'
         })}
       </div>
     </div>

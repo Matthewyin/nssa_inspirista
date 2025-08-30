@@ -128,44 +128,7 @@ export function EmptyTasks({ onCreateTask, onAIGenerate }: EmptyTasksProps) {
           ))}
         </div>
 
-        {/* 功能亮点 */}
-        <div className="bg-muted/50 rounded-lg p-6">
-          <div className="text-center mb-4">
-            <Lightbulb className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
-            <h4 className="font-medium text-foreground">功能亮点</h4>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                <span>AI智能任务规划和分解</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <span>可视化看板和列表视图</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                <span>进度跟踪和时间管理</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full" />
-                <span>优先级和分类管理</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full" />
-                <span>截止日期提醒和逾期警告</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-teal-500 rounded-full" />
-                <span>子任务分解和里程碑</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Plus,
   CheckSquare,
   Lightbulb,
@@ -10,7 +10,8 @@ import {
   Sparkles,
   Calendar,
   Target,
-  Clock
+  Clock,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -163,29 +164,21 @@ export function QuickActions() {
         </CardContent>
       </Card>
 
-      {/* 项目概览 */}
+      {/* 项目设置 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">项目概览</CardTitle>
+          <CardTitle className="text-lg">项目设置</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">总笔记数</span>
-              <span className="font-medium">--</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">总清单数</span>
-              <span className="font-medium">--</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">总任务数</span>
-              <span className="font-medium">--</span>
-            </div>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              管理您的个人项目设置和偏好
+            </p>
 
-            <Button variant="outline" size="sm" className="w-full mt-4" asChild>
+            <Button variant="outline" size="sm" className="w-full" asChild>
               <Link href="/settings">
-                项目设置
+                <Settings className="h-4 w-4 mr-2" />
+                打开设置
               </Link>
             </Button>
           </div>
