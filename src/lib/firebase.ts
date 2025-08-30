@@ -10,6 +10,12 @@ const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT
 const isProduction = process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_APP_ENV === 'production';
 const isBuild = process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_APP_ENV;
 
+// Check if we have valid Firebase configuration
+const hasValidFirebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+                               process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
+                               process.env.NEXT_PUBLIC_FIREBASE_API_KEY.trim() !== '' &&
+                               process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID.trim() !== '';
+
 // Firebase configuration with fallbacks for build environment
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'build-placeholder-api-key',
@@ -20,17 +26,21 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:placeholder'
 };
 
-// Validate configuration (skip validation during build)
-if (!isBuild && (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY || !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID)) {
+// Validate configuration (skip validation during build or when secrets are empty)
+if (!isBuild && !hasValidFirebaseConfig) {
   throw new Error(`Firebase configuration is incomplete. Environment: ${isDevelopment ? 'development' : isProduction ? 'production' : 'unknown'}`);
 }
 
-// Log environment info (only in development)
+// Log environment info
 if (isDevelopment) {
   console.log('🔧 Firebase Environment: Development');
   console.log('📊 Project ID:', firebaseConfig.projectId);
 } else if (isBuild) {
-  console.log('🏗️ Firebase Environment: Build (using placeholders)');
+  console.log('🏗️ Firebase Environment: Build');
+  console.log('🔑 Using placeholders:', !hasValidFirebaseConfig);
+} else if (isProduction) {
+  console.log('🚀 Firebase Environment: Production');
+  console.log('📊 Project ID:', firebaseConfig.projectId);
 }
 
 // Initialize Firebase
