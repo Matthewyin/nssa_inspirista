@@ -226,7 +226,8 @@ const translations = {
       },
       board: {
         skeleton: 'Board Skeleton',
-        statsCards: 'Stats Cards'
+        statsCards: 'Stats Cards',
+        noTasks: 'No {status} tasks'
       },
       list: {
         title: 'Title',
@@ -531,6 +532,11 @@ const translations = {
           daysAgo: '{days}天前',
           weeksAgo: '{weeks}周前'
         }
+      }
+    },
+    tasks: {
+      board: {
+        noTasks: '暂无{status}任务'
       }
     },
     categories: {

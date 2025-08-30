@@ -33,22 +33,22 @@ export function TaskBoard({ tasks }: TaskBoardProps) {
     {
       id: 'todo' as TaskStatus,
       title: t('tasks.status.todo'),
-      color: 'border-gray-200 bg-gray-50',
-      headerColor: 'text-gray-700',
+      color: 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50',
+      headerColor: 'text-slate-700 dark:text-slate-300',
       count: tasks.filter(task => task.status === 'todo').length
     },
     {
       id: 'in_progress' as TaskStatus,
       title: t('tasks.status.in_progress'),
-      color: 'border-blue-200 bg-blue-50',
-      headerColor: 'text-blue-700',
+      color: 'border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/30',
+      headerColor: 'text-blue-700 dark:text-blue-300',
       count: tasks.filter(task => task.status === 'in_progress').length
     },
     {
       id: 'completed' as TaskStatus,
       title: t('tasks.status.completed'),
-      color: 'border-green-200 bg-green-50',
-      headerColor: 'text-green-700',
+      color: 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/30',
+      headerColor: 'text-green-700 dark:text-green-300',
       count: tasks.filter(task => task.status === 'completed').length
     }
   ];
@@ -76,25 +76,13 @@ export function TaskBoard({ tasks }: TaskBoardProps) {
       {columns.map((column) => (
         <div key={column.id} className="space-y-4">
           {/* 列标题 */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className={cn("font-semibold", column.headerColor)}>
-                {column.title}
-              </h3>
-              <Badge variant="outline" className="text-xs">
-                {column.count}
-              </Badge>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => {
-                // TODO: 实现快速添加任务到指定列
-              }}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-2">
+            <h3 className={cn("font-semibold", column.headerColor)}>
+              {column.title}
+            </h3>
+            <Badge variant="outline" className="text-xs">
+              {column.count}
+            </Badge>
           </div>
 
           {/* 任务列表 */}
@@ -114,18 +102,9 @@ export function TaskBoard({ tasks }: TaskBoardProps) {
               {/* 空状态 */}
               {(!tasksByStatus[column.id] || tasksByStatus[column.id].length === 0) && (
                 <div className="text-center py-8 text-muted-foreground">
-                  <div className="mb-2">暂无{column.title}任务</div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => {
-                      // TODO: 实现快速添加任务
-                    }}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    添加任务
-                  </Button>
+                  <div className="text-sm">
+                    {t('tasks.board.noTasks', { status: column.title })}
+                  </div>
                 </div>
               )}
             </div>
