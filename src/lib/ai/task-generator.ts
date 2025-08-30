@@ -106,15 +106,17 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
     try {
       const geminiKey = localStorage.getItem('gemini-api-key');
       if (geminiKey) {
-        const geminiResult = await validateApiKey({ 
-          provider: 'gemini', 
-          apiKey: geminiKey,
-          prompt: userPrompt,
-          systemPrompt 
+        // 先验证API密钥
+        const geminiValidation = await validateApiKey({
+          provider: 'gemini',
+          apiKey: geminiKey
         });
-        
-        if (geminiResult.isValid && geminiResult.response) {
-          return geminiResult.response;
+
+        if (geminiValidation.isValid) {
+          // 这里应该调用实际的AI生成服务
+          // 由于当前的validateApiKey函数不支持自定义prompt，我们需要创建一个简单的实现
+          const response = await this.callGeminiAPI(geminiKey, systemPrompt, userPrompt);
+          return response;
         }
       }
     } catch (error) {
@@ -125,15 +127,16 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
     try {
       const deepseekKey = localStorage.getItem('deepseek-api-key');
       if (deepseekKey) {
-        const deepseekResult = await validateApiKey({ 
-          provider: 'deepseek', 
-          apiKey: deepseekKey,
-          prompt: userPrompt,
-          systemPrompt 
+        // 先验证API密钥
+        const deepseekValidation = await validateApiKey({
+          provider: 'deepseek',
+          apiKey: deepseekKey
         });
-        
-        if (deepseekResult.isValid && deepseekResult.response) {
-          return deepseekResult.response;
+
+        if (deepseekValidation.isValid) {
+          // 这里应该调用实际的AI生成服务
+          const response = await this.callDeepSeekAPI(deepseekKey, systemPrompt, userPrompt);
+          return response;
         }
       }
     } catch (error) {
@@ -233,6 +236,79 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
   private validateCategory(category: string): TaskCategory {
     const validCategories: TaskCategory[] = ['work', 'study', 'personal', 'health', 'other'];
     return validCategories.includes(category as TaskCategory) ? category as TaskCategory : 'personal';
+  }
+
+  // 调用Gemini API
+  private async callGeminiAPI(apiKey: string, systemPrompt: string, userPrompt: string): Promise<string> {
+    try {
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=' + apiKey, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `${systemPrompt}\n\n${userPrompt}`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } catch (error) {
+      console.error('Gemini API调用失败:', error);
+      throw error;
+    }
+  }
+
+  // 调用DeepSeek API
+  private async callDeepSeekAPI(apiKey: string, systemPrompt: string, userPrompt: string): Promise<string> {
+    try {
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: userPrompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 2048
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`DeepSeek API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || '';
+    } catch (error) {
+      console.error('DeepSeek API调用失败:', error);
+      throw error;
+    }
   }
 }
 
