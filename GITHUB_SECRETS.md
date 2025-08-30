@@ -1,39 +1,34 @@
 # 🔐 GitHub Secrets 配置清单
 
-## ✅ 必需的 GitHub Secrets
+## ✅ 简化配置 - 只需一个Secret！
 
-为了确保 GitHub Actions 和 Firebase App Hosting 正常工作，请在 GitHub 仓库中配置以下 Secrets：
+**好消息**: 现在只需要配置一个Firebase Service Account JSON即可！系统会自动从中提取所有需要的配置。
 
 **访问路径**: `https://github.com/Matthewyin/nssa_inspirista/settings/secrets/actions`
 
-### 🔥 Firebase 配置 Secrets
+### 🚀 唯一必需的Secret
 
 ```env
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAQVuM1XSbFw_x3IQ0ZV98XwCWGbgFhIGM
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=n8n-project-460516.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=n8n-project-460516
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=n8n-project-460516.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=18068529376
-NEXT_PUBLIC_FIREBASE_APP_ID=1:18068529376:web:8d39b5696a45e3d7494bf1
-```
-
-### 🚀 Firebase 部署 Secret
-
-```env
-FIREBASE_SERVICE_ACCOUNT_NSSA_INSPIRISTA=your_firebase_service_account_json
+FIREBASE_SERVICE_ACCOUNT_NSSA_INSPIRISTA=your_complete_firebase_service_account_json
 ```
 
 **状态**: ✅ 已配置
 
+## 🔧 自动配置说明
+
+GitHub Actions会自动从Service Account JSON中提取以下配置：
+
+- ✅ `project_id` → `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- ✅ `project_id` → `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` (自动生成)
+- ✅ `project_id` → `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` (自动生成)
+- ✅ 已知项目配置 → `NEXT_PUBLIC_FIREBASE_API_KEY`
+- ✅ 已知项目配置 → `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- ✅ 已知项目配置 → `NEXT_PUBLIC_FIREBASE_APP_ID`
+
 ## 📋 配置状态检查清单
 
-- [ ] `NEXT_PUBLIC_FIREBASE_API_KEY` - Firebase API 密钥
-- [ ] `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` - Firebase 认证域名
-- [ ] `NEXT_PUBLIC_FIREBASE_PROJECT_ID` - Firebase 项目 ID
-- [ ] `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` - Firebase 存储桶
-- [ ] `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` - Firebase 消息发送者 ID
-- [ ] `NEXT_PUBLIC_FIREBASE_APP_ID` - Firebase 应用 ID
-- [x] `FIREBASE_SERVICE_ACCOUNT_NSSA_INSPIRISTA` - Firebase 服务账户 (已配置)
+- [x] `FIREBASE_SERVICE_ACCOUNT_NSSA_INSPIRISTA` - Firebase 服务账户 JSON (已配置)
+- [x] 自动提取的Firebase Web配置 (无需手动配置)
 
 ## 🔧 配置步骤
 
