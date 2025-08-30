@@ -32,7 +32,7 @@ export function RecentActivities() {
           最近活动
         </CardTitle>
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/activities">
+          <Link href="/tasks">
             查看全部
             <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
