@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Plus,
-  Sparkles,
   LayoutGrid,
   List,
   Filter,
@@ -27,8 +25,6 @@ export function TasksContent() {
   const searchParams = useSearchParams();
   const [view, setView] = useState<'board' | 'list'>('board');
   const [filters, setFilters] = useState<TaskFiltersType>({});
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [aiDialogOpen, setAiDialogOpen] = useState(false);
 
   // 获取任务数据
   const { tasks, loading, error } = useTasks(filters);
