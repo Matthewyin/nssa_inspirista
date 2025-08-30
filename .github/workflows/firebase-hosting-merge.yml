@@ -11,6 +11,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Extract Firebase config from Service Account
+        run: |
+          # Extract project_id from service account JSON
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_NSSA_INSPIRISTA }}' > service-account.json
+          PROJECT_ID=$(cat service-account.json | jq -r '.project_id')
+
+          # Set Firebase configuration based on project_id
+          echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${PROJECT_ID}.firebaseapp.com" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${PROJECT_ID}.appspot.com" >> $GITHUB_ENV
+
+          # For API key and other configs, we'll use the known values for this project
+          if [ "$PROJECT_ID" = "n8n-project-460516" ]; then
+            echo "NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAQVuM1XSbFw_x3IQ0ZV98XwCWGbgFhIGM" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=18068529376" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_FIREBASE_APP_ID=1:18068529376:web:8d39b5696a45e3d7494bf1" >> $GITHUB_ENV
+          else
+            # Fallback values for other projects
+            echo "NEXT_PUBLIC_FIREBASE_API_KEY=placeholder-api-key" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:placeholder" >> $GITHUB_ENV
+          fi
+
+          echo "NEXT_PUBLIC_APP_ENV=production" >> $GITHUB_ENV
+
+          # Clean up
+          rm service-account.json
+
       - run: |
           if [ -f "package-lock.json" ]; then
             npm ci
@@ -18,15 +46,6 @@ jobs:
             npm i
           fi
           npm run build
-        env:
-          # Firebase configuration for build (will use placeholders if secrets not set)
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-          NEXT_PUBLIC_APP_ENV: production
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
