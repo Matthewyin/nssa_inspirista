@@ -391,7 +391,179 @@ const translations = {
           title: 'Task Created Successfully!',
           subtitle: 'AI Task Created',
           description: 'Your task plan has been successfully created, you can start executing now!'
+        },
+        generator: {
+          title: 'AI Task Generator',
+          description: 'Let AI help you create a detailed task plan with milestones',
+          inputLabel: 'Describe your goal',
+          inputPlaceholder: 'e.g., "Learn React Hooks in 7 days"',
+          generateButton: 'Generate with AI',
+          regenerateButton: 'Regenerate',
+          editButton: 'Edit Plan',
+          useButton: 'Use This Plan',
+          loadingTitle: 'AI is thinking...',
+          loadingDescription: 'Generating your personalized task plan',
+          errorTitle: 'Generation Failed',
+          errorDescription: 'Failed to generate task plan. Please try again.',
+          retryButton: 'Retry',
+          switchProvider: 'Try Different AI',
+          tips: {
+            title: 'Tips for better results',
+            timeframe: 'Include timeframe (e.g., "in 7 days")',
+            specific: 'Be specific about your goal',
+            context: 'Add context about your current level'
+          }
+        },
+        features: {
+          title: 'AI Features',
+          smartPlanning: 'Smart Planning',
+          smartPlanningDesc: 'AI creates realistic milestones based on your timeframe',
+          autoTags: 'Auto Tags',
+          autoTagsDesc: 'Automatically suggests relevant tags for your task',
+          timeEstimation: 'Time Estimation',
+          timeEstimationDesc: 'Estimates completion time for each milestone'
+        },
+        providers: {
+          gemini: 'Gemini AI',
+          deepseek: 'DeepSeek AI',
+          switchTo: 'Switch to {provider}',
+          currentProvider: 'Current: {provider}'
+        },
+        errors: {
+          noApiKey: 'No API key configured',
+          noApiKeyDesc: 'Please configure your AI provider API key in settings',
+          networkError: 'Network error',
+          networkErrorDesc: 'Please check your internet connection and try again',
+          rateLimitError: 'Rate limit exceeded',
+          rateLimitErrorDesc: 'Too many requests. Please wait a moment and try again',
+          invalidResponse: 'Invalid response',
+          invalidResponseDesc: 'AI returned an invalid response. Please try again'
         }
+      },
+      milestones: {
+        title: 'Milestones',
+        management: 'Milestone Management',
+        timeline: 'Milestone Timeline',
+        progress: 'Milestone Progress',
+        add: 'Add Milestone',
+        edit: 'Edit Milestone',
+        delete: 'Delete Milestone',
+        complete: 'Mark as Complete',
+        incomplete: 'Mark as Incomplete',
+        completed: 'Completed',
+        pending: 'Pending',
+        overdue: 'Overdue',
+        today: 'Today',
+        tomorrow: 'Tomorrow',
+        daysLeft: '{days} days left',
+        daysOverdue: '{days} days overdue',
+        completedOn: 'Completed on {date}',
+        dueOn: 'Due on {date}',
+        fields: {
+          title: 'Title',
+          titlePlaceholder: 'Milestone title',
+          description: 'Description',
+          descriptionPlaceholder: 'Milestone description',
+          targetDate: 'Target Date',
+          dayRange: 'Day Range',
+          dayRangePlaceholder: 'e.g., Day 1, Day 1-3'
+        },
+        actions: {
+          save: 'Save Changes',
+          cancel: 'Cancel',
+          addFirst: 'Add First Milestone',
+          batchComplete: 'Mark All Complete',
+          batchIncomplete: 'Mark All Incomplete',
+          batchDelete: 'Delete Selected',
+          selectAll: 'Select All',
+          clearSelection: 'Clear Selection'
+        },
+        status: {
+          notStarted: 'Not Started',
+          inProgress: 'In Progress',
+          completed: 'Completed',
+          allCompleted: 'All milestones completed!',
+          noneCompleted: 'No milestones completed yet'
+        },
+        empty: {
+          title: 'No milestones yet',
+          description: 'Add milestones to track task progress and important checkpoints',
+          addButton: 'Add First Milestone'
+        },
+        search: {
+          placeholder: 'Search milestones...',
+          noResults: 'No matching milestones found',
+          clearFilter: 'Clear Filter'
+        },
+        filters: {
+          all: 'All',
+          pending: 'Pending',
+          completed: 'Completed',
+          overdue: 'Overdue'
+        },
+        confirmDelete: {
+          title: 'Confirm Delete',
+          description: 'Are you sure you want to delete this milestone? This action cannot be undone.',
+          confirm: 'Delete',
+          cancel: 'Cancel'
+        }
+      }
+    },
+    common: {
+      errors: {
+        networkError: 'Network Error',
+        networkErrorDesc: 'Please check your internet connection and try again',
+        serverError: 'Server Error',
+        serverErrorDesc: 'Something went wrong on our end. Please try again later',
+        validationError: 'Validation Error',
+        validationErrorDesc: 'Please check your input and try again',
+        permissionError: 'Permission Denied',
+        permissionErrorDesc: 'You do not have permission to perform this action',
+        notFoundError: 'Not Found',
+        notFoundErrorDesc: 'The requested resource was not found',
+        timeoutError: 'Request Timeout',
+        timeoutErrorDesc: 'The request took too long. Please try again'
+      },
+      status: {
+        loading: 'Loading...',
+        saving: 'Saving...',
+        deleting: 'Deleting...',
+        updating: 'Updating...',
+        processing: 'Processing...',
+        success: 'Success',
+        failed: 'Failed',
+        completed: 'Completed',
+        cancelled: 'Cancelled',
+        pending: 'Pending'
+      },
+      actions: {
+        save: 'Save',
+        cancel: 'Cancel',
+        delete: 'Delete',
+        edit: 'Edit',
+        add: 'Add',
+        remove: 'Remove',
+        confirm: 'Confirm',
+        retry: 'Retry',
+        refresh: 'Refresh',
+        close: 'Close',
+        back: 'Back',
+        next: 'Next',
+        previous: 'Previous',
+        submit: 'Submit',
+        reset: 'Reset'
+      },
+      time: {
+        now: 'Now',
+        today: 'Today',
+        yesterday: 'Yesterday',
+        tomorrow: 'Tomorrow',
+        thisWeek: 'This Week',
+        lastWeek: 'Last Week',
+        nextWeek: 'Next Week',
+        thisMonth: 'This Month',
+        lastMonth: 'Last Month',
+        nextMonth: 'Next Month'
       }
     },
     categories: {
@@ -839,7 +1011,179 @@ const translations = {
           title: '任务创建成功！',
           subtitle: 'AI任务已创建',
           description: '您的任务计划已成功创建，现在可以开始执行了！'
+        },
+        generator: {
+          title: 'AI 任务生成器',
+          description: '让AI帮助您创建详细的任务计划和里程碑',
+          inputLabel: '描述您的目标',
+          inputPlaceholder: '例如："7天内学会React Hooks"',
+          generateButton: '使用AI生成',
+          regenerateButton: '重新生成',
+          editButton: '编辑计划',
+          useButton: '使用此计划',
+          loadingTitle: 'AI正在思考...',
+          loadingDescription: '正在为您生成个性化任务计划',
+          errorTitle: '生成失败',
+          errorDescription: '任务计划生成失败，请重试。',
+          retryButton: '重试',
+          switchProvider: '尝试其他AI',
+          tips: {
+            title: '获得更好结果的技巧',
+            timeframe: '包含时间范围（如"7天内"）',
+            specific: '具体描述您的目标',
+            context: '添加您当前水平的背景信息'
+          }
+        },
+        features: {
+          title: 'AI功能',
+          smartPlanning: '智能规划',
+          smartPlanningDesc: 'AI根据您的时间范围创建现实的里程碑',
+          autoTags: '自动标签',
+          autoTagsDesc: '自动为您的任务建议相关标签',
+          timeEstimation: '时间估算',
+          timeEstimationDesc: '估算每个里程碑的完成时间'
+        },
+        providers: {
+          gemini: 'Gemini AI',
+          deepseek: 'DeepSeek AI',
+          switchTo: '切换到 {provider}',
+          currentProvider: '当前：{provider}'
+        },
+        errors: {
+          noApiKey: '未配置API密钥',
+          noApiKeyDesc: '请在设置中配置您的AI服务商API密钥',
+          networkError: '网络错误',
+          networkErrorDesc: '请检查您的网络连接并重试',
+          rateLimitError: '请求频率超限',
+          rateLimitErrorDesc: '请求过于频繁，请稍等片刻后重试',
+          invalidResponse: '无效响应',
+          invalidResponseDesc: 'AI返回了无效响应，请重试'
         }
+      },
+      milestones: {
+        title: '里程碑',
+        management: '里程碑管理',
+        timeline: '里程碑时间线',
+        progress: '里程碑进度',
+        add: '添加里程碑',
+        edit: '编辑里程碑',
+        delete: '删除里程碑',
+        complete: '标记为完成',
+        incomplete: '标记为未完成',
+        completed: '已完成',
+        pending: '待完成',
+        overdue: '已逾期',
+        today: '今天',
+        tomorrow: '明天',
+        daysLeft: '还有{days}天',
+        daysOverdue: '逾期{days}天',
+        completedOn: '完成于{date}',
+        dueOn: '截止于{date}',
+        fields: {
+          title: '标题',
+          titlePlaceholder: '里程碑标题',
+          description: '描述',
+          descriptionPlaceholder: '里程碑描述',
+          targetDate: '目标日期',
+          dayRange: '天数范围',
+          dayRangePlaceholder: '如：第1天、第1-3天'
+        },
+        actions: {
+          save: '保存更改',
+          cancel: '取消',
+          addFirst: '添加第一个里程碑',
+          batchComplete: '全部标记完成',
+          batchIncomplete: '全部标记未完成',
+          batchDelete: '删除选中项',
+          selectAll: '全选',
+          clearSelection: '清除选择'
+        },
+        status: {
+          notStarted: '未开始',
+          inProgress: '进行中',
+          completed: '已完成',
+          allCompleted: '所有里程碑已完成！',
+          noneCompleted: '尚未完成任何里程碑'
+        },
+        empty: {
+          title: '暂无里程碑',
+          description: '添加里程碑来跟踪任务进度和重要节点',
+          addButton: '添加第一个里程碑'
+        },
+        search: {
+          placeholder: '搜索里程碑...',
+          noResults: '没有找到匹配的里程碑',
+          clearFilter: '清除筛选'
+        },
+        filters: {
+          all: '全部',
+          pending: '待完成',
+          completed: '已完成',
+          overdue: '已逾期'
+        },
+        confirmDelete: {
+          title: '确认删除',
+          description: '确定要删除这个里程碑吗？此操作无法撤销。',
+          confirm: '删除',
+          cancel: '取消'
+        }
+      }
+    },
+    common: {
+      errors: {
+        networkError: '网络错误',
+        networkErrorDesc: '请检查您的网络连接并重试',
+        serverError: '服务器错误',
+        serverErrorDesc: '服务器出现问题，请稍后重试',
+        validationError: '验证错误',
+        validationErrorDesc: '请检查您的输入并重试',
+        permissionError: '权限不足',
+        permissionErrorDesc: '您没有权限执行此操作',
+        notFoundError: '未找到',
+        notFoundErrorDesc: '请求的资源未找到',
+        timeoutError: '请求超时',
+        timeoutErrorDesc: '请求时间过长，请重试'
+      },
+      status: {
+        loading: '加载中...',
+        saving: '保存中...',
+        deleting: '删除中...',
+        updating: '更新中...',
+        processing: '处理中...',
+        success: '成功',
+        failed: '失败',
+        completed: '已完成',
+        cancelled: '已取消',
+        pending: '待处理'
+      },
+      actions: {
+        save: '保存',
+        cancel: '取消',
+        delete: '删除',
+        edit: '编辑',
+        add: '添加',
+        remove: '移除',
+        confirm: '确认',
+        retry: '重试',
+        refresh: '刷新',
+        close: '关闭',
+        back: '返回',
+        next: '下一步',
+        previous: '上一步',
+        submit: '提交',
+        reset: '重置'
+      },
+      time: {
+        now: '现在',
+        today: '今天',
+        yesterday: '昨天',
+        tomorrow: '明天',
+        thisWeek: '本周',
+        lastWeek: '上周',
+        nextWeek: '下周',
+        thisMonth: '本月',
+        lastMonth: '上月',
+        nextMonth: '下月'
       }
     },
     categories: {

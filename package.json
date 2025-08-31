@@ -26,6 +26,8 @@
     "test:backend-integration": "tsx src/scripts/test-backend-integration.ts",
     "test:end-to-end": "tsx src/scripts/test-end-to-end.ts",
     "test:comprehensive": "tsx src/scripts/test-comprehensive.ts",
+    "test:internationalization": "tsx src/scripts/test-internationalization.ts",
+    "test:simplified-form": "tsx src/scripts/test-simplified-task-form.ts",
     "test:all": "npm run test:comprehensive"
   },
   "dependencies": {
