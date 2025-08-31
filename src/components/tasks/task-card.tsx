@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { TaskEditDialog } from './task-edit-dialog';
+import { TaskDeleteDialog } from './task-delete-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +31,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import {
+  safeGetTaskDueDate,
+  safeIsTaskOverdue,
+  safeGetDaysUntilDue,
+  getFriendlyDateText,
+  safeToDate
+} from '@/lib/utils/date-utils';
 import type { Task, TaskStatus } from '@/lib/types/tasks';
 
 interface TaskCardProps {
@@ -43,28 +52,18 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
 
+  // 对话框状态
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   // 计算任务状态
   const isCompleted = task.status === 'completed';
   const isInProgress = task.status === 'in_progress';
 
-  // 计算基于里程碑的截止时间
-  const finalMilestone = task.milestones && task.milestones.length > 0
-    ? task.milestones[task.milestones.length - 1]
-    : null;
-
-  // 确保targetDate是Date对象
-  const getDueDate = () => {
-    if (finalMilestone?.targetDate) {
-      return finalMilestone.targetDate instanceof Date
-        ? finalMilestone.targetDate
-        : new Date(finalMilestone.targetDate);
-    }
-    return task.dueDate ? task.dueDate.toDate() : null;
-  };
-
-  const dueDate = getDueDate();
-  const isOverdue = !isCompleted && dueDate && dueDate < new Date();
-  const daysUntilDue = dueDate ? Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+  // 使用安全的日期处理函数
+  const dueDate = safeGetTaskDueDate(task);
+  const isOverdue = safeIsTaskOverdue(task);
+  const daysUntilDue = safeGetDaysUntilDue(task);
 
   // 处理卡片点击
   const handleCardClick = (e: React.MouseEvent) => {
@@ -98,6 +97,7 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
   };
 
   return (
+    <>
     <Card
       className={cn(
         "transition-all duration-200 cursor-pointer hover:shadow-md",
@@ -157,12 +157,12 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onEdit?.(task)}>
+              <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 mr-2" />
                 编辑任务
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onDelete?.(task.id)}
+              <DropdownMenuItem
+                onClick={() => setDeleteDialogOpen(true)}
                 className="text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -261,10 +261,25 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
 
           {/* 创建时间 */}
           <div className="text-xs">
-            {task.createdAt.toDate().toLocaleDateString()}
+            {getFriendlyDateText(task.createdAt)}
           </div>
         </div>
       </CardContent>
     </Card>
+
+    {/* 编辑对话框 */}
+    <TaskEditDialog
+      task={task}
+      open={editDialogOpen}
+      onOpenChange={setEditDialogOpen}
+    />
+
+    {/* 删除确认对话框 */}
+    <TaskDeleteDialog
+      task={task}
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+    />
+    </>
   );
 }

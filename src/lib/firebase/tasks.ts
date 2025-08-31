@@ -97,6 +97,7 @@ export class TaskService {
     // 计算基于里程碑的进度
     const progress = this.calculateMilestoneProgress(milestonesWithIds);
 
+    // 构建任务对象，避免undefined值
     const task: Omit<Task, 'id'> = {
       userId,
       title: taskData.title || '新任务',
@@ -105,7 +106,6 @@ export class TaskService {
       tags: taskData.tags || [],
       milestones: milestonesWithIds,
       isAIGenerated: taskData.isAIGenerated || false,
-      aiPrompt: taskData.aiPrompt,
       startDate: now,
       progress,
       createdAt: now,
@@ -121,6 +121,11 @@ export class TaskService {
       subtasks: [],
       timeSpent: 0,
     };
+
+    // 只在有值时添加可选字段，避免undefined
+    if (taskData.aiPrompt) {
+      (task as any).aiPrompt = taskData.aiPrompt;
+    }
 
     const docRef = await addDoc(collection(this.db, 'tasks'), task);
     return docRef.id;
@@ -141,6 +146,7 @@ export class TaskService {
     // 计算基于里程碑的进度
     const progress = this.calculateMilestoneProgress(milestonesWithIds);
 
+    // 构建AI任务对象，避免undefined值
     const task: Omit<Task, 'id'> = {
       userId,
       title: aiPlan.title,
@@ -149,7 +155,6 @@ export class TaskService {
       tags: aiPlan.tags,
       milestones: milestonesWithIds,
       isAIGenerated: true,
-      aiPrompt: aiPlan.originalPrompt,
       startDate: now,
       progress,
       createdAt: now,
@@ -165,6 +170,11 @@ export class TaskService {
       subtasks: [], // 新版本使用里程碑替代子任务
       timeSpent: 0,
     };
+
+    // 只在有值时添加可选字段，避免undefined
+    if (aiPlan.originalPrompt) {
+      (task as any).aiPrompt = aiPlan.originalPrompt;
+    }
 
     const docRef = await addDoc(collection(this.db, 'tasks'), task);
     return docRef.id;

@@ -155,14 +155,22 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
 
     setLoading(true);
     try {
+      // 构建任务数据，避免undefined值
       const taskData: TaskCreateInput = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         tags: generatedPlan?.tags || [],
         isAIGenerated: !!generatedPlan,
-        aiPrompt: isAIMode ? originalDescription : undefined,
-        milestones: generatedPlan?.milestones || undefined,
       };
+
+      // 只在有值时添加可选字段
+      if (isAIMode && originalDescription) {
+        taskData.aiPrompt = originalDescription;
+      }
+
+      if (generatedPlan?.milestones && generatedPlan.milestones.length > 0) {
+        taskData.milestones = generatedPlan.milestones;
+      }
 
       if (generatedPlan) {
         await createAITask(generatedPlan);

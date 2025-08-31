@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
+import { TaskEditDialog } from './task-edit-dialog';
+import { TaskDeleteDialog, TaskBatchDeleteDialog } from './task-delete-dialog';
+import {
   Clock,
   Calendar,
   AlertTriangle,
@@ -16,7 +18,9 @@ import {
   MoreHorizontal,
   ArrowUpDown,
   Filter,
-  Sparkles
+  Sparkles,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import {
   Table,
@@ -27,6 +31,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import {
+  safeGetTaskDueDate,
+  safeIsTaskOverdue,
+  safeGetDaysUntilDue,
+  getFriendlyDateText,
+  safeToDate
+} from '@/lib/utils/date-utils';
 import type { Task, TaskStatus } from '@/lib/types/tasks';
 
 interface TaskListProps {
@@ -42,6 +53,33 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
   const [sortField, setSortField] = useState<SortField>('dueDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+
+  // 对话框状态
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
+  const [currentTask, setCurrentTask] = useState<Task | null>(null);
+
+  // 批量操作处理函数
+  const handleEditTask = (task: Task) => {
+    setCurrentTask(task);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    setCurrentTask(task);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleBatchDelete = () => {
+    if (selectedTasks.length > 0) {
+      setBatchDeleteDialogOpen(true);
+    }
+  };
+
+  const handleBatchDeleteSuccess = () => {
+    setSelectedTasks([]);
+  };
 
   // Sort tasks
   const sortedTasks = [...tasks].sort((a, b) => {
@@ -123,6 +161,7 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
   };
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -134,10 +173,14 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
           {selectedTasks.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                {t('tasks.list.selected', { count: selectedTasks.length })}
+                已选择 {selectedTasks.length} 个任务
               </span>
-              <Button variant="outline" size="sm">
-                {t('tasks.list.batchActions')}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBatchDelete}
+              >
+                批量删除
               </Button>
             </div>
           )}
@@ -224,8 +267,9 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
               {sortedTasks.map((task) => {
                 const statusDisplay = getStatusDisplay(task.status);
                 const priorityDisplay = getPriorityDisplay(task.priority);
-                const isOverdue = task.status !== 'completed' && task.dueDate.toDate() < new Date();
-                const daysUntilDue = Math.ceil((task.dueDate.toDate().getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                const isOverdue = safeIsTaskOverdue(task);
+                const daysUntilDue = safeGetDaysUntilDue(task);
+                const dueDate = safeGetTaskDueDate(task);
 
                 return (
                   <TableRow 
@@ -284,20 +328,24 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
                     </TableCell>
                     
                     <TableCell>
-                      <div className={cn(
-                        "flex items-center gap-1 text-sm",
-                        isOverdue && "text-red-600",
-                        daysUntilDue <= 1 && !isOverdue && "text-orange-600"
-                      )}>
-                        <Calendar className="h-3 w-3" />
-                        <span>
-                          {isOverdue ? '已逾期' : 
-                           daysUntilDue === 0 ? '今天' :
-                           daysUntilDue === 1 ? '明天' :
-                           task.dueDate.toDate().toLocaleDateString()}
-                        </span>
-                        {isOverdue && <AlertTriangle className="h-3 w-3" />}
-                      </div>
+                      {dueDate ? (
+                        <div className={cn(
+                          "flex items-center gap-1 text-sm",
+                          isOverdue && "text-red-600",
+                          daysUntilDue !== null && daysUntilDue <= 1 && !isOverdue && "text-orange-600"
+                        )}>
+                          <Calendar className="h-3 w-3" />
+                          <span>
+                            {isOverdue ? '已逾期' :
+                             daysUntilDue === 0 ? '今天' :
+                             daysUntilDue === 1 ? '明天' :
+                             getFriendlyDateText(dueDate)}
+                          </span>
+                          {isOverdue && <AlertTriangle className="h-3 w-3" />}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">无截止日期</span>
+                      )}
                     </TableCell>
                     
                     <TableCell>
@@ -310,9 +358,24 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
                     </TableCell>
                     
                     <TableCell>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleEditTask(task)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteTask(task)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -322,5 +385,29 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
         </div>
       </CardContent>
     </Card>
+
+    {/* 编辑对话框 */}
+    <TaskEditDialog
+      task={currentTask}
+      open={editDialogOpen}
+      onOpenChange={setEditDialogOpen}
+    />
+
+    {/* 删除确认对话框 */}
+    <TaskDeleteDialog
+      task={currentTask}
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+    />
+
+    {/* 批量删除对话框 */}
+    <TaskBatchDeleteDialog
+      taskIds={selectedTasks}
+      tasks={tasks}
+      open={batchDeleteDialogOpen}
+      onOpenChange={setBatchDeleteDialogOpen}
+      onSuccess={handleBatchDeleteSuccess}
+    />
+    </>
   );
 }

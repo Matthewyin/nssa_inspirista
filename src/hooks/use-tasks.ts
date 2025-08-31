@@ -141,6 +141,44 @@ export function useTasks(filters?: TaskFilters) {
     }
   };
 
+  // 删除任务
+  const deleteTask = async (taskId: string) => {
+    try {
+      await taskService.deleteTask(taskId);
+      toast({
+        title: '任务删除成功',
+        description: '任务已被删除',
+      });
+    } catch (error) {
+      console.error('删除任务失败:', error);
+      toast({
+        variant: 'destructive',
+        title: '删除失败',
+        description: '任务删除失败，请稍后重试',
+      });
+      throw error;
+    }
+  };
+
+  // 批量删除任务
+  const deleteTasks = async (taskIds: string[]) => {
+    try {
+      await Promise.all(taskIds.map(id => taskService.deleteTask(id)));
+      toast({
+        title: '批量删除成功',
+        description: `已删除 ${taskIds.length} 个任务`,
+      });
+    } catch (error) {
+      console.error('批量删除任务失败:', error);
+      toast({
+        variant: 'destructive',
+        title: '批量删除失败',
+        description: '部分任务删除失败，请稍后重试',
+      });
+      throw error;
+    }
+  };
+
   // 更新任务进度
   const updateTaskProgress = async (taskId: string, progress: number) => {
     try {
@@ -155,25 +193,6 @@ export function useTasks(filters?: TaskFilters) {
         variant: 'destructive',
         title: '更新失败',
         description: '任务进度更新失败，请稍后重试',
-      });
-      throw error;
-    }
-  };
-
-  // 删除任务
-  const deleteTask = async (taskId: string) => {
-    try {
-      await taskService.deleteTask(taskId);
-      toast({
-        title: '任务删除成功',
-        description: '任务已删除',
-      });
-    } catch (error) {
-      console.error('删除任务失败:', error);
-      toast({
-        variant: 'destructive',
-        title: '删除失败',
-        description: '任务删除失败，请稍后重试',
       });
       throw error;
     }
@@ -314,6 +333,7 @@ export function useTasks(filters?: TaskFilters) {
     updateTaskStatus,
     updateTaskProgress,
     deleteTask,
+    deleteTasks,
     updateMilestoneStatus,
     addMilestone,
     updateMilestone,
