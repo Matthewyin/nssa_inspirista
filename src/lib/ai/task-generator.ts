@@ -212,9 +212,10 @@ export class AITaskGenerator {
       // 生成格式化的描述
       const description = this.formatTaskDescription(aiResponse);
 
-      // 转换里程碑，计算目标日期
+      // 转换里程碑，计算目标日期（基于任务创建日期）
+      const taskCreationDate = new Date(); // 任务创建的当天
       const milestones = aiResponse.milestones.map((milestone, index) => {
-        const targetDate = this.calculateMilestoneDate(milestone.dayRange, timeframeDays);
+        const targetDate = this.calculateMilestoneDate(milestone.dayRange, timeframeDays, taskCreationDate);
 
         return {
           title: milestone.title || `里程碑 ${index + 1}`,
@@ -269,22 +270,56 @@ export class AITaskGenerator {
     return `${timeframeDays}天内${originalPrompt}`;
   }
 
-  // 计算里程碑目标日期
-  private calculateMilestoneDate(dayRange: string, totalDays: number): Date {
-    const today = new Date();
+  // 计算里程碑目标日期（基于任务创建日期）
+  private calculateMilestoneDate(dayRange: string, totalDays: number, baseDate?: Date): Date {
+    // 使用传入的基准日期，如果没有则使用今天
+    const startDate = baseDate || new Date();
+
+    // 确保startDate是有效的日期
+    if (isNaN(startDate.getTime())) {
+      console.warn('Invalid base date provided, using current date');
+      const fallbackDate = new Date();
+      return this.calculateMilestoneDate(dayRange, totalDays, fallbackDate);
+    }
 
     // 解析天数范围，如"第1-2天"、"第3天"
     const rangeMatch = dayRange.match(/第(\d+)(?:-(\d+))?天/);
     if (rangeMatch) {
       const endDay = rangeMatch[2] ? parseInt(rangeMatch[2]) : parseInt(rangeMatch[1]);
-      const targetDate = new Date(today);
-      targetDate.setDate(today.getDate() + endDay);
+
+      // 验证解析的天数是否有效
+      if (isNaN(endDay) || endDay < 1 || endDay > 365) {
+        console.warn(`Invalid day range: ${dayRange}, using default`);
+        const targetDate = new Date(startDate);
+        targetDate.setDate(startDate.getDate() + Math.ceil(totalDays / 2));
+        return targetDate;
+      }
+
+      const targetDate = new Date(startDate);
+      targetDate.setDate(startDate.getDate() + endDay);
+
+      // 验证计算后的日期是否有效
+      if (isNaN(targetDate.getTime())) {
+        console.warn(`Invalid calculated date for day ${endDay}, using fallback`);
+        const fallbackDate = new Date(startDate.getTime() + endDay * 24 * 60 * 60 * 1000);
+        return fallbackDate;
+      }
+
       return targetDate;
     }
 
     // 默认情况：平均分配
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + Math.ceil(totalDays / 2));
+    const defaultDays = Math.ceil(totalDays / 2);
+    const targetDate = new Date(startDate);
+    targetDate.setDate(startDate.getDate() + defaultDays);
+
+    // 验证默认计算的日期是否有效
+    if (isNaN(targetDate.getTime())) {
+      console.warn('Invalid default calculated date, using timestamp method');
+      const fallbackDate = new Date(startDate.getTime() + defaultDays * 24 * 60 * 60 * 1000);
+      return fallbackDate;
+    }
+
     return targetDate;
   }
 
@@ -452,23 +487,25 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
 
 推荐标签：#学习 #目标`;
 
+    // 使用任务创建日期作为基准
+    const taskCreationDate = new Date();
     const milestones = [
       {
         title: '分析需求和制定计划',
         description: '明确目标要求，制定详细执行计划',
-        targetDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 明天
+        targetDate: this.calculateMilestoneDate('第1天', timeframeDays, taskCreationDate),
         dayRange: '第1天'
       },
       {
         title: '执行主要任务',
         description: '按计划执行核心任务内容',
-        targetDate: new Date(Date.now() + Math.ceil(timeframeDays/2) * 24 * 60 * 60 * 1000),
+        targetDate: this.calculateMilestoneDate(`第${Math.ceil(timeframeDays/2)}天`, timeframeDays, taskCreationDate),
         dayRange: `第${Math.ceil(timeframeDays/2)}天`
       },
       {
         title: '检查结果和总结',
         description: '验证完成情况，总结经验教训',
-        targetDate: new Date(Date.now() + timeframeDays * 24 * 60 * 60 * 1000),
+        targetDate: this.calculateMilestoneDate(`第${timeframeDays}天`, timeframeDays, taskCreationDate),
         dayRange: `第${timeframeDays}天`
       }
     ];

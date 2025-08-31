@@ -119,11 +119,28 @@ export function MilestoneEditDialog({
     setShowDeleteConfirm(false);
   };
 
-  // 计算时间状态
+  // 计算时间状态（使用安全的日期处理）
   const now = new Date();
-  const targetDate = formData.targetDate instanceof Date ? formData.targetDate : new Date(formData.targetDate);
-  const isOverdue = !formData.isCompleted && targetDate < now;
-  const daysUntilDue = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  let targetDate: Date;
+  let isOverdue = false;
+  let daysUntilDue = 0;
+
+  try {
+    if (formData.targetDate instanceof Date) {
+      targetDate = isNaN(formData.targetDate.getTime()) ? new Date() : formData.targetDate;
+    } else {
+      const convertedDate = new Date(formData.targetDate);
+      targetDate = isNaN(convertedDate.getTime()) ? new Date() : convertedDate;
+    }
+
+    isOverdue = !formData.isCompleted && targetDate < now;
+    daysUntilDue = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  } catch (error) {
+    console.warn('Error calculating milestone time status:', error);
+    targetDate = new Date();
+    isOverdue = false;
+    daysUntilDue = 0;
+  }
 
   if (!milestone) return null;
 

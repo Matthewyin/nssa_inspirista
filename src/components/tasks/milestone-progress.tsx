@@ -123,13 +123,32 @@ export function MilestoneProgress({
         <CardContent className={cn("pt-0", compact && "px-3 pb-3")}>
           <div className="space-y-3">
             {milestones.map((milestone, index) => {
-              const isOverdue = !milestone.isCompleted && 
-                milestone.targetDate && 
-                milestone.targetDate < new Date();
-              
-              const daysUntilDue = milestone.targetDate ? 
-                Math.ceil((milestone.targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 
-                null;
+              // 安全的日期处理
+              let targetDate: Date | null = null;
+              let isOverdue = false;
+              let daysUntilDue: number | null = null;
+
+              try {
+                if (milestone.targetDate) {
+                  if (milestone.targetDate instanceof Date) {
+                    targetDate = isNaN(milestone.targetDate.getTime()) ? null : milestone.targetDate;
+                  } else {
+                    const convertedDate = new Date(milestone.targetDate);
+                    targetDate = isNaN(convertedDate.getTime()) ? null : convertedDate;
+                  }
+
+                  if (targetDate) {
+                    const now = new Date();
+                    isOverdue = !milestone.isCompleted && targetDate < now;
+                    daysUntilDue = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                  }
+                }
+              } catch (error) {
+                console.warn('Error processing milestone date:', error);
+                targetDate = null;
+                isOverdue = false;
+                daysUntilDue = null;
+              }
 
               return (
                 <div
@@ -186,20 +205,27 @@ export function MilestoneProgress({
                     {/* 时间信息 */}
                     <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                       {/* 目标日期 */}
-                      {milestone.targetDate && (
+                      {targetDate && (
                         <div className={cn(
                           "flex items-center gap-1",
                           isOverdue && "text-red-600"
                         )}>
                           <Calendar className="h-3 w-3" />
                           <span>
-                            {format(milestone.targetDate, 'MM/dd', { locale: zhCN })}
+                            {(() => {
+                              try {
+                                return format(targetDate, 'MM/dd', { locale: zhCN });
+                              } catch (error) {
+                                console.warn('Error formatting date:', error);
+                                return targetDate.toLocaleDateString();
+                              }
+                            })()}
                           </span>
                           {isOverdue && <span>(逾期)</span>}
                           {daysUntilDue !== null && daysUntilDue >= 0 && !milestone.isCompleted && (
                             <span>
-                              ({daysUntilDue === 0 ? '今天' : 
-                                daysUntilDue === 1 ? '明天' : 
+                              ({daysUntilDue === 0 ? '今天' :
+                                daysUntilDue === 1 ? '明天' :
                                 `${daysUntilDue}天后`})
                             </span>
                           )}

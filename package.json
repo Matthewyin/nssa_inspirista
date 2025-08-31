@@ -34,6 +34,7 @@
     "test:date-fix": "tsx src/scripts/test-date-handling-fix.ts",
     "test:firebase-fix": "tsx src/scripts/test-firebase-undefined-fix.ts",
     "test:task-management": "tsx src/scripts/test-task-management-complete.ts",
+    "test:milestone-dates": "tsx src/scripts/test-milestone-date-calculation.ts",
     "test:all": "npm run test:comprehensive"
   },
   "dependencies": {

@@ -86,13 +86,29 @@ export class TaskService {
   async createTask(userId: string, taskData: TaskCreateInput): Promise<string> {
     const now = Timestamp.now();
 
-    // 为里程碑生成ID并转换日期
-    const milestonesWithIds: Milestone[] = (taskData.milestones || []).map(milestone => ({
-      ...milestone,
-      id: crypto.randomUUID(),
-      isCompleted: false,
-      targetDate: milestone.targetDate instanceof Date ? milestone.targetDate : new Date(milestone.targetDate)
-    }));
+    // 为里程碑生成ID并安全转换日期
+    const milestonesWithIds: Milestone[] = (taskData.milestones || []).map(milestone => {
+      let targetDate: Date;
+
+      try {
+        if (milestone.targetDate instanceof Date) {
+          targetDate = isNaN(milestone.targetDate.getTime()) ? new Date() : milestone.targetDate;
+        } else {
+          const convertedDate = new Date(milestone.targetDate);
+          targetDate = isNaN(convertedDate.getTime()) ? new Date() : convertedDate;
+        }
+      } catch (error) {
+        console.warn('Invalid milestone date, using current date:', error);
+        targetDate = new Date();
+      }
+
+      return {
+        ...milestone,
+        id: crypto.randomUUID(),
+        isCompleted: false,
+        targetDate
+      };
+    });
 
     // 计算基于里程碑的进度
     const progress = this.calculateMilestoneProgress(milestonesWithIds);
@@ -135,13 +151,29 @@ export class TaskService {
   async createAITask(userId: string, aiPlan: TaskPlan): Promise<string> {
     const now = Timestamp.now();
 
-    // 为里程碑生成ID
-    const milestonesWithIds: Milestone[] = aiPlan.milestones.map(milestone => ({
-      ...milestone,
-      id: crypto.randomUUID(),
-      isCompleted: false,
-      targetDate: milestone.targetDate instanceof Date ? milestone.targetDate : new Date(milestone.targetDate)
-    }));
+    // 为里程碑生成ID并安全转换日期
+    const milestonesWithIds: Milestone[] = aiPlan.milestones.map(milestone => {
+      let targetDate: Date;
+
+      try {
+        if (milestone.targetDate instanceof Date) {
+          targetDate = isNaN(milestone.targetDate.getTime()) ? new Date() : milestone.targetDate;
+        } else {
+          const convertedDate = new Date(milestone.targetDate);
+          targetDate = isNaN(convertedDate.getTime()) ? new Date() : convertedDate;
+        }
+      } catch (error) {
+        console.warn('Invalid AI milestone date, using current date:', error);
+        targetDate = new Date();
+      }
+
+      return {
+        ...milestone,
+        id: crypto.randomUUID(),
+        isCompleted: false,
+        targetDate
+      };
+    });
 
     // 计算基于里程碑的进度
     const progress = this.calculateMilestoneProgress(milestonesWithIds);
@@ -161,9 +193,20 @@ export class TaskService {
       updatedAt: now,
 
       // 兼容性字段（保留以支持现有数据和迁移）
-      dueDate: milestonesWithIds.length > 0
-        ? Timestamp.fromDate(milestonesWithIds[milestonesWithIds.length - 1].targetDate)
-        : Timestamp.fromDate(new Date(Date.now() + aiPlan.timeframeDays * 24 * 60 * 60 * 1000)),
+      dueDate: (() => {
+        try {
+          if (milestonesWithIds.length > 0) {
+            const finalMilestone = milestonesWithIds[milestonesWithIds.length - 1];
+            return Timestamp.fromDate(finalMilestone.targetDate);
+          } else {
+            const fallbackDate = new Date(Date.now() + aiPlan.timeframeDays * 24 * 60 * 60 * 1000);
+            return Timestamp.fromDate(fallbackDate);
+          }
+        } catch (error) {
+          console.warn('Error creating dueDate timestamp, using fallback:', error);
+          return Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 默认7天后
+        }
+      })(),
       priority: 'medium',
       category: 'personal',
       estimatedHours: Math.ceil(aiPlan.timeframeDays * 2), // 估算每天2小时
