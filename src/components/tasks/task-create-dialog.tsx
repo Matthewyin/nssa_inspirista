@@ -158,17 +158,14 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
       const taskData: TaskCreateInput = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        category: 'personal',
-        priority: 'medium',
-        dueDate: null,
-        tags: [],
+        tags: generatedPlan?.tags || [],
         isAIGenerated: !!generatedPlan,
-        aiPlan: generatedPlan || undefined,
-        originalPrompt: isAIMode ? originalDescription : undefined,
+        aiPrompt: isAIMode ? originalDescription : undefined,
+        milestones: generatedPlan?.milestones || undefined,
       };
 
       if (generatedPlan) {
-        await createAITask(taskData);
+        await createAITask(generatedPlan);
       } else {
         await createTask(taskData);
       }
