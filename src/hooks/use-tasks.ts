@@ -38,11 +38,28 @@ export function useTasks(filters?: TaskFilters) {
     const unsubscribe: Unsubscribe = onSnapshot(
       query,
       (snapshot) => {
-        const tasksData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Task));
-        
+        const tasksData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          const task = { id: doc.id, ...data } as Task;
+
+          // 转换里程碑中的日期字段
+          if (task.milestones && Array.isArray(task.milestones)) {
+            task.milestones = task.milestones.map(milestone => ({
+              ...milestone,
+              targetDate: milestone.targetDate instanceof Date
+                ? milestone.targetDate
+                : new Date(milestone.targetDate),
+              completedDate: milestone.completedDate
+                ? (milestone.completedDate instanceof Date
+                    ? milestone.completedDate
+                    : new Date(milestone.completedDate))
+                : undefined
+            }));
+          }
+
+          return task;
+        });
+
         setTasks(tasksData);
         setLoading(false);
       },

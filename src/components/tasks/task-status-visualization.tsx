@@ -39,15 +39,34 @@ export function TaskStatusVisualization({ task, className }: TaskStatusVisualiza
   const now = new Date();
   const createdDate = task.createdAt.toDate();
   const finalMilestone = milestones.length > 0 ? milestones[milestones.length - 1] : null;
-  const dueDate = finalMilestone?.targetDate || (task.dueDate ? task.dueDate.toDate() : null);
-  
+
+  // 确保日期是Date对象
+  const getDueDate = () => {
+    if (finalMilestone?.targetDate) {
+      return finalMilestone.targetDate instanceof Date
+        ? finalMilestone.targetDate
+        : new Date(finalMilestone.targetDate);
+    }
+    return task.dueDate ? task.dueDate.toDate() : null;
+  };
+
+  const dueDate = getDueDate();
   const daysFromCreation = differenceInDays(now, createdDate);
   const daysUntilDue = dueDate ? differenceInDays(dueDate, now) : null;
   const isOverdue = !isCompleted && dueDate && dueDate < now;
 
   // 计算下一个里程碑
   const nextMilestone = milestones.find(m => !m.isCompleted);
-  const nextMilestoneDays = nextMilestone?.targetDate ? differenceInDays(nextMilestone.targetDate, now) : null;
+  const getNextMilestoneDate = () => {
+    if (nextMilestone?.targetDate) {
+      return nextMilestone.targetDate instanceof Date
+        ? nextMilestone.targetDate
+        : new Date(nextMilestone.targetDate);
+    }
+    return null;
+  };
+  const nextMilestoneDate = getNextMilestoneDate();
+  const nextMilestoneDays = nextMilestoneDate ? differenceInDays(nextMilestoneDate, now) : null;
 
   // 状态配置
   const statusConfig = {

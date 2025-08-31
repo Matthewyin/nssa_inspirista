@@ -121,8 +121,9 @@ export function MilestoneEditDialog({
 
   // 计算时间状态
   const now = new Date();
-  const isOverdue = !formData.isCompleted && formData.targetDate < now;
-  const daysUntilDue = Math.ceil((formData.targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const targetDate = formData.targetDate instanceof Date ? formData.targetDate : new Date(formData.targetDate);
+  const isOverdue = !formData.isCompleted && targetDate < now;
+  const daysUntilDue = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
   if (!milestone) return null;
 

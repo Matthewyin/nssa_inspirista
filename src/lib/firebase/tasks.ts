@@ -29,6 +29,28 @@ import type {
 export class TaskService {
   private db = db;
 
+  // 转换Firebase数据中的日期字段
+  private convertTaskDates(taskData: any): Task {
+    const task = { ...taskData } as Task;
+
+    // 转换里程碑中的日期
+    if (task.milestones && Array.isArray(task.milestones)) {
+      task.milestones = task.milestones.map(milestone => ({
+        ...milestone,
+        targetDate: milestone.targetDate instanceof Date
+          ? milestone.targetDate
+          : new Date(milestone.targetDate),
+        completedDate: milestone.completedDate
+          ? (milestone.completedDate instanceof Date
+              ? milestone.completedDate
+              : new Date(milestone.completedDate))
+          : undefined
+      }));
+    }
+
+    return task;
+  }
+
   // 计算基于里程碑的进度
   private calculateMilestoneProgress(milestones: Milestone[]): number {
     if (milestones.length === 0) return 0;

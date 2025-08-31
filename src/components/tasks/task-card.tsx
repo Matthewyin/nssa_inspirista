@@ -51,7 +51,18 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
   const finalMilestone = task.milestones && task.milestones.length > 0
     ? task.milestones[task.milestones.length - 1]
     : null;
-  const dueDate = finalMilestone?.targetDate || (task.dueDate ? task.dueDate.toDate() : null);
+
+  // 确保targetDate是Date对象
+  const getDueDate = () => {
+    if (finalMilestone?.targetDate) {
+      return finalMilestone.targetDate instanceof Date
+        ? finalMilestone.targetDate
+        : new Date(finalMilestone.targetDate);
+    }
+    return task.dueDate ? task.dueDate.toDate() : null;
+  };
+
+  const dueDate = getDueDate();
   const isOverdue = !isCompleted && dueDate && dueDate < new Date();
   const daysUntilDue = dueDate ? Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
 
