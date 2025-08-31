@@ -22,9 +22,10 @@ import type { Task, TaskStatus } from '@/lib/types/tasks';
 
 interface TaskBoardProps {
   tasks: Task[];
+  onMilestoneToggle?: (taskId: string, milestoneId: string, isCompleted: boolean) => void;
 }
 
-export function TaskBoard({ tasks }: TaskBoardProps) {
+export function TaskBoard({ tasks, onMilestoneToggle }: TaskBoardProps) {
   const { t } = useLanguage();
   const { updateTaskStatus } = useTasks();
 
@@ -96,6 +97,9 @@ export function TaskBoard({ tasks }: TaskBoardProps) {
                   key={task.id}
                   task={task}
                   onStatusChange={handleStatusChange}
+                  onMilestoneToggle={(milestoneId, isCompleted) =>
+                    onMilestoneToggle?.(task.id, milestoneId, isCompleted)
+                  }
                 />
               )) || []}
               

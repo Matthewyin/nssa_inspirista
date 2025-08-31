@@ -15,31 +15,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+
 import { Badge } from '@/components/ui/badge';
-import { 
-  CalendarIcon,
-  Clock,
-  Plus,
-  X,
-  Loader2
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import type { TaskPriority, TaskCategory } from '@/lib/types/tasks';
+import { Plus, X, Loader2 } from 'lucide-react';
+import { MilestoneInput } from './milestone-input';
+import type { Milestone, TaskCreateInput } from '@/lib/types/tasks';
 
 interface TaskCreateDialogProps {
   open: boolean;
@@ -55,26 +35,19 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'medium' as TaskPriority,
-    category: 'personal' as TaskCategory,
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 默认7天后
-    estimatedHours: '',
-    tags: [] as string[]
+    tags: [] as string[],
+    milestones: [] as Omit<Milestone, 'id' | 'isCompleted'>[]
   });
   
   const [newTag, setNewTag] = useState('');
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   // 重置表单
   const resetForm = () => {
     setFormData({
       title: '',
       description: '',
-      priority: 'medium',
-      category: 'personal',
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      estimatedHours: '',
-      tags: []
+      tags: [],
+      milestones: []
     });
     setNewTag('');
   };
@@ -89,20 +62,15 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
 
     setLoading(true);
     try {
-      await createTask({
+      const taskInput: TaskCreateInput = {
         title: formData.title.trim(),
-        description: formData.description.trim() || undefined,
-        priority: formData.priority,
-        category: formData.category,
-        dueDate: new Date(formData.dueDate),
-        estimatedHours: formData.estimatedHours ? parseFloat(formData.estimatedHours) : undefined,
+        description: formData.description.trim(),
         tags: formData.tags,
-        status: 'todo',
-        progress: 0,
-        timeSpent: 0,
-        isAIGenerated: false,
-        subtasks: []
-      });
+        milestones: formData.milestones,
+        isAIGenerated: false
+      };
+
+      await createTask(taskInput);
       
       resetForm();
       onOpenChange(false);
@@ -180,99 +148,13 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
             />
           </div>
 
-          {/* 优先级和分类 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t('tasks.create.fields.priority')}</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as TaskPriority }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high">{t('tasks.priority.high')}</SelectItem>
-                  <SelectItem value="medium">{t('tasks.priority.medium')}</SelectItem>
-                  <SelectItem value="low">{t('tasks.priority.low')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* 里程碑输入 */}
+          <MilestoneInput
+            milestones={formData.milestones}
+            onChange={(milestones) => setFormData(prev => ({ ...prev, milestones }))}
+          />
 
-            <div className="space-y-2">
-              <Label>{t('tasks.create.fields.category')}</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as TaskCategory }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="work">{t('tasks.category.work')}</SelectItem>
-                  <SelectItem value="study">{t('tasks.category.study')}</SelectItem>
-                  <SelectItem value="personal">{t('tasks.category.personal')}</SelectItem>
-                  <SelectItem value="health">{t('tasks.category.health')}</SelectItem>
-                  <SelectItem value="other">{t('tasks.category.other')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          {/* 截止日期和预估时间 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t('tasks.create.fields.dueDate')}</Label>
-              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.dueDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.dueDate ? (
-                      format(formData.dueDate, "PPP", { locale: zhCN })
-                    ) : (
-                      t('tasks.create.fields.selectDate')
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.dueDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        setFormData(prev => ({ ...prev, dueDate: date }));
-                        setDatePickerOpen(false);
-                      }
-                    }}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="estimatedHours">{t('tasks.create.fields.estimatedHours')}</Label>
-              <div className="relative">
-                <Input
-                  id="estimatedHours"
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  value={formData.estimatedHours}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: e.target.value }))}
-                  placeholder="8"
-                />
-                <Clock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-          </div>
 
           {/* 标签 */}
           <div className="space-y-2">
@@ -282,7 +164,7 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
                 <Input
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={handleTagKeyPress}
+                  onKeyDown={handleTagKeyPress}
                   placeholder={t('tasks.create.fields.tagsPlaceholder')}
                   className="flex-1"
                 />

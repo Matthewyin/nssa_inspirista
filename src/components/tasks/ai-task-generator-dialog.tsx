@@ -14,7 +14,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -24,9 +23,13 @@ import {
   Clock,
   Target,
   Calendar,
-  RefreshCw
+  RefreshCw,
+  MapPin,
+  Flag
 } from 'lucide-react';
 import type { TaskPlan } from '@/lib/types/tasks';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 interface AITaskGeneratorDialogProps {
   open: boolean;
@@ -38,24 +41,22 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
   const { t } = useLanguage();
   const [step, setStep] = useState<'input' | 'preview' | 'created'>('input');
   const [prompt, setPrompt] = useState('');
-  const [timeframe, setTimeframe] = useState(7);
   const [generatedPlan, setGeneratedPlan] = useState<TaskPlan | null>(null);
 
-  // 示例提示词
+  // 示例提示词（包含时间范围）
   const examplePrompts = [
-    t('tasks.ai.examples.exam'),
-    t('tasks.ai.examples.react'),
-    t('tasks.ai.examples.thesis'),
-    t('tasks.ai.examples.fitness'),
-    t('tasks.ai.examples.interview'),
-    t('tasks.ai.examples.python')
+    '3天内学会OSPF路由协议',
+    '7天内完成React项目开发',
+    '14天内准备期末考试',
+    '5天内学会Python基础',
+    '10天内完成毕业论文初稿',
+    '21天内养成健身习惯'
   ];
 
   // 重置对话框状态
   const resetDialog = () => {
     setStep('input');
     setPrompt('');
-    setTimeframe(7);
     setGeneratedPlan(null);
   };
 
@@ -63,7 +64,7 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
-    const plan = await generateTaskPlan(prompt.trim(), timeframe);
+    const plan = await generateTaskPlan(prompt.trim());
     if (plan) {
       setGeneratedPlan(plan);
       setStep('preview');
@@ -147,22 +148,13 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
                 </div>
               </div>
 
-              {/* 时间范围 */}
-              <div className="space-y-4">
-                <Label>{t('tasks.ai.fields.timeframe')}</Label>
-                <div className="space-y-2">
-                  <Slider
-                    value={[timeframe]}
-                    onValueChange={(value) => setTimeframe(value[0])}
-                    min={3}
-                    max={30}
-                    step={1}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>{t('tasks.ai.fields.minDays')}</span>
-                    <span className="font-medium text-foreground">{timeframe} {t('tasks.ai.fields.days')}</span>
-                    <span>{t('tasks.ai.fields.maxDays')}</span>
+              {/* AI智能提示 */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-3">
+                  <Target className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-900 mb-1">{t('tasks.ai.smartTip.title')}</h4>
+                    <p className="text-sm text-blue-700">{t('tasks.ai.smartTip.description')}</p>
                   </div>
                 </div>
               </div>
@@ -230,18 +222,16 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-blue-600" />
-                      <span>{t('tasks.ai.preview.dueDate')}: {generatedPlan.dueDate.toLocaleDateString()}</span>
+                      <span>{t('tasks.ai.preview.timeframe')}: {generatedPlan.timeframeDays} {t('tasks.ai.preview.days')}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-orange-600" />
-                      <span>{t('tasks.ai.preview.estimated')}: {generatedPlan.estimatedHours}{t('tasks.ai.preview.hours')}</span>
+                      <MapPin className="h-4 w-4 text-green-600" />
+                      <span>{t('tasks.ai.preview.milestones')}: {generatedPlan.milestones.length}</span>
                     </div>
-                    <Badge variant="outline" className="capitalize">
-                      {t(`tasks.priority.${generatedPlan.priority}`)}
-                    </Badge>
-                    <Badge variant="secondary" className="capitalize">
-                      {t(`tasks.category.${generatedPlan.category}`)}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-purple-600" />
+                      <span>{t('tasks.ai.preview.aiGenerated')}</span>
+                    </div>
                   </div>
 
                   {generatedPlan.tags.length > 0 && (
@@ -256,29 +246,35 @@ export function AITaskGeneratorDialog({ open, onOpenChange }: AITaskGeneratorDia
                 </CardContent>
               </Card>
 
-              {/* 子任务列表 */}
-              {generatedPlan.subtasks.length > 0 && (
+              {/* 里程碑列表 */}
+              {generatedPlan.milestones.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      {t('tasks.ai.preview.subtasks')} ({generatedPlan.subtasks.length}{t('tasks.ai.preview.subtasksCount')})
+                      <Flag className="h-5 w-5 text-green-600" />
+                      {t('tasks.ai.preview.milestones')} ({generatedPlan.milestones.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {generatedPlan.subtasks.map((subtask, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                      {generatedPlan.milestones.map((milestone, index) => (
+                        <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
                           <div className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
                             {index + 1}
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-medium">{subtask.title}</h4>
-                            {subtask.estimatedMinutes && (
-                              <p className="text-sm text-muted-foreground">
-                                {t('tasks.ai.preview.estimatedTime')}: {subtask.estimatedMinutes}{t('tasks.ai.preview.minutes')}
-                              </p>
-                            )}
+                            <h4 className="font-medium">{milestone.title}</h4>
+                            <p className="text-sm text-muted-foreground mt-1">{milestone.description}</p>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                <span>{format(milestone.targetDate, 'MM/dd', { locale: zhCN })}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{milestone.dayRange}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ))}

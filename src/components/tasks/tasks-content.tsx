@@ -29,7 +29,26 @@ export function TasksContent() {
   const [filters, setFilters] = useState<TaskFiltersType>({});
 
   // Get task data
-  const { tasks, loading, error } = useTasks(filters);
+  const {
+    tasks,
+    loading,
+    error,
+    updateMilestoneStatus,
+    addMilestone,
+    updateMilestone,
+    deleteMilestone,
+    batchUpdateMilestoneStatus,
+    batchDeleteMilestones
+  } = useTasks(filters);
+
+  // Handle milestone toggle
+  const handleMilestoneToggle = async (taskId: string, milestoneId: string, isCompleted: boolean) => {
+    try {
+      await updateMilestoneStatus(taskId, milestoneId, isCompleted);
+    } catch (error) {
+      console.error('Failed to update milestone status:', error);
+    }
+  };
 
   // Handle URL filter parameters
   const urlFilter = searchParams.get('filter');
@@ -112,9 +131,9 @@ export function TasksContent() {
       ) : (
         <div className="space-y-6">
           {view === 'board' ? (
-            <TaskBoard tasks={tasks} />
+            <TaskBoard tasks={tasks} onMilestoneToggle={handleMilestoneToggle} />
           ) : (
-            <TaskList tasks={tasks} />
+            <TaskList tasks={tasks} onMilestoneToggle={handleMilestoneToggle} />
           )}
         </div>
       )}

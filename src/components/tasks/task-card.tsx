@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Clock,
+import { MilestoneProgress } from './milestone-progress';
+import {
   Calendar,
   AlertTriangle,
   CheckCircle2,
@@ -17,7 +18,8 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Target
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -34,31 +36,32 @@ interface TaskCardProps {
   onStatusChange: (taskId: string, status: TaskStatus) => void;
   onEdit?: (task: Task) => void;
   onDelete?: (taskId: string) => void;
+  onMilestoneToggle?: (milestoneId: string, isCompleted: boolean) => void;
 }
 
-export function TaskCard({ task, onStatusChange, onEdit, onDelete }: TaskCardProps) {
+export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneToggle }: TaskCardProps) {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
 
   // 计算任务状态
   const isCompleted = task.status === 'completed';
   const isInProgress = task.status === 'in_progress';
-  const isOverdue = !isCompleted && task.dueDate.toDate() < new Date();
-  const daysUntilDue = Math.ceil((task.dueDate.toDate().getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
-  // 优先级配置
-  const priorityConfig = {
-    high: { color: 'border-red-200 bg-red-50 text-red-700', label: '高', dotColor: 'bg-red-500' },
-    medium: { color: 'border-yellow-200 bg-yellow-50 text-yellow-700', label: '中', dotColor: 'bg-yellow-500' },
-    low: { color: 'border-green-200 bg-green-50 text-green-700', label: '低', dotColor: 'bg-green-500' }
-  };
+  // 计算基于里程碑的截止时间
+  const finalMilestone = task.milestones && task.milestones.length > 0
+    ? task.milestones[task.milestones.length - 1]
+    : null;
+  const dueDate = finalMilestone?.targetDate || (task.dueDate ? task.dueDate.toDate() : null);
+  const isOverdue = !isCompleted && dueDate && dueDate < new Date();
+  const daysUntilDue = dueDate ? Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
 
-  // 分类配置
-  const categoryConfig = {
-    work: { label: '工作', color: 'bg-blue-100 text-blue-800' },
-    study: { label: '学习', color: 'bg-purple-100 text-purple-800' },
-    personal: { label: '个人', color: 'bg-gray-100 text-gray-800' },
-    health: { label: '健康', color: 'bg-green-100 text-green-800' },
-    other: { label: '其他', color: 'bg-orange-100 text-orange-800' }
+  // 处理卡片点击
+  const handleCardClick = (e: React.MouseEvent) => {
+    // 如果点击的是按钮或其他交互元素，不触发跳转
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    router.push(`/tasks/${task.id}`);
   };
 
   // 状态操作按钮
@@ -84,7 +87,7 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete }: TaskCardPro
   };
 
   return (
-    <Card 
+    <Card
       className={cn(
         "transition-all duration-200 cursor-pointer hover:shadow-md",
         isCompleted && "opacity-75",
@@ -93,6 +96,7 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete }: TaskCardPro
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       <CardContent className="p-4">
         {/* 任务标题和状态 */}
@@ -164,20 +168,23 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete }: TaskCardPro
           </p>
         )}
 
-        {/* 标签和分类 */}
+        {/* 标签和AI标识 */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          {/* 优先级 */}
-          <div className="flex items-center gap-1">
-            <div className={cn("h-2 w-2 rounded-full", priorityConfig[task.priority].dotColor)} />
-            <span className="text-xs text-muted-foreground">
-              {priorityConfig[task.priority].label}优先级
-            </span>
-          </div>
-
-          {/* 分类 */}
-          <Badge variant="secondary" className={cn("text-xs px-2 py-0.5", categoryConfig[task.category].color)}>
-            {categoryConfig[task.category].label}
-          </Badge>
+          {/* 任务标签 */}
+          {task.tags && task.tags.length > 0 && (
+            <>
+              {task.tags.slice(0, 2).map((tag, index) => (
+                <Badge key={index} variant="secondary" className="text-xs px-2 py-0.5">
+                  {tag}
+                </Badge>
+              ))}
+              {task.tags.length > 2 && (
+                <Badge variant="outline" className="text-xs px-2 py-0.5">
+                  +{task.tags.length - 2}
+                </Badge>
+              )}
+            </>
+          )}
 
           {/* AI生成标识 */}
           {task.isAIGenerated && (
@@ -199,15 +206,15 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete }: TaskCardPro
           </div>
         )}
 
-        {/* 子任务预览 */}
-        {task.subtasks.length > 0 && (
+        {/* 里程碑进度 */}
+        {task.milestones && task.milestones.length > 0 && (
           <div className="mb-3">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>子任务</span>
-              <span>
-                {task.subtasks.filter(st => st.isCompleted).length}/{task.subtasks.length}
-              </span>
-            </div>
+            <MilestoneProgress
+              milestones={task.milestones}
+              onMilestoneToggle={onMilestoneToggle}
+              compact={true}
+              className="border-0 shadow-none bg-transparent p-0"
+            />
           </div>
         )}
 
@@ -215,36 +222,36 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete }: TaskCardPro
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-3">
             {/* 截止时间 */}
-            <div className={cn(
-              "flex items-center gap-1",
-              isOverdue && "text-red-600",
-              daysUntilDue <= 1 && !isOverdue && "text-orange-600"
-            )}>
-              <Calendar className="h-3 w-3" />
-              <span>
-                {isOverdue ? '已逾期' : 
-                 daysUntilDue === 0 ? '今天' :
-                 daysUntilDue === 1 ? '明天' :
-                 `${daysUntilDue}天后`}
-              </span>
-              {isOverdue && <AlertTriangle className="h-3 w-3" />}
-            </div>
+            {dueDate && (
+              <div className={cn(
+                "flex items-center gap-1",
+                isOverdue && "text-red-600",
+                daysUntilDue !== null && daysUntilDue <= 1 && !isOverdue && "text-orange-600"
+              )}>
+                <Calendar className="h-3 w-3" />
+                <span>
+                  {isOverdue ? '已逾期' :
+                   daysUntilDue === 0 ? '今天' :
+                   daysUntilDue === 1 ? '明天' :
+                   daysUntilDue !== null ? `${daysUntilDue}天后` : ''}
+                </span>
+                {isOverdue && <AlertTriangle className="h-3 w-3" />}
+              </div>
+            )}
 
-            {/* 预估时间 */}
-            {task.estimatedHours && (
+            {/* 里程碑数量 */}
+            {task.milestones && task.milestones.length > 0 && (
               <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{task.estimatedHours}h</span>
+                <Target className="h-3 w-3" />
+                <span>{task.milestones.length}个里程碑</span>
               </div>
             )}
           </div>
 
-          {/* 已花费时间 */}
-          {task.timeSpent > 0 && (
-            <div className="text-xs">
-              已用 {Math.round(task.timeSpent / 60)}h
-            </div>
-          )}
+          {/* 创建时间 */}
+          <div className="text-xs">
+            {task.createdAt.toDate().toLocaleDateString()}
+          </div>
         </div>
       </CardContent>
     </Card>

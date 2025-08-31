@@ -1,47 +1,290 @@
-import type { TaskPlan, TaskOptimization, Task, TaskPriority, TaskCategory } from '@/lib/types/tasks';
+import type { TaskPlan, TaskOptimization, Task, AITaskResponse } from '@/lib/types/tasks';
 import { validateApiKey } from '@/app/actions';
 
 export class AITaskGenerator {
-  
+
   // 基于目标生成任务计划
-  async generateTaskPlan(prompt: string, timeframe: number): Promise<TaskPlan> {
-    const systemPrompt = `你是一个专业的任务规划助手。用户会提供一个目标和时间范围（${timeframe}天），请帮助分解成具体的、可执行的任务计划。
+  async generateTaskPlan(prompt: string, timeframe?: number): Promise<TaskPlan> {
+    // 从用户输入中提取时间范围
+    const extractedTimeframe = this.extractTimeframe(prompt, timeframe);
 
-要求：
-1. 任务要具体、可衡量、可在${timeframe}天内完成
-2. 时间安排要合理，考虑工作日和休息日
-3. 考虑任务的优先级（high/medium/low）
-4. 提供预估工作时长（小时）
-5. 分解成3-8个适当的子任务
-6. 选择合适的分类：work（工作）、study（学习）、personal（个人）、health（健康）、other（其他）
+    const systemPrompt = `你是一个专业的短期任务规划助手。用户会提供一个学习或工作目标，请帮助制定具体的里程碑计划。
 
-请严格按照以下JSON格式返回，不要包含任何其他文字：
-{
-  "title": "任务标题",
-  "description": "详细描述任务目标和要求",
-  "priority": "high|medium|low",
-  "category": "work|study|personal|health|other", 
-  "tags": ["标签1", "标签2"],
-  "estimatedHours": 数字,
-  "subtasks": [
-    {
-      "title": "子任务标题",
-      "isCompleted": false,
-      "estimatedMinutes": 数字
-    }
-  ]
-}`;
+输入格式识别：
+- 如果用户输入包含"X天内"，使用X作为总天数
+- 如果没有明确天数，默认使用7天
+- 目标应该是具体、可衡量的
 
-    const userPrompt = `目标：${prompt}\n时间范围：${timeframe}天\n\n请生成详细的任务计划。`;
+输出要求：
+1. 总分结构描述（1句话，15字内）
+2. 里程碑列表（每个里程碑1-2句话，20字左右）
+3. 2个相关标签
+
+严格按照以下格式返回，不要包含任何其他文字：
+总体规划：[一句话描述整体计划]
+
+里程碑计划：
+里程碑1（第1-X天）：[具体要完成的内容]
+里程碑2（第X-Y天）：[具体要完成的内容]
+里程碑3（第Y-Z天）：[具体要完成的内容]
+
+推荐标签：#标签1 #标签2`;
+
+    const userPrompt = `目标：${prompt}\n时间范围：${extractedTimeframe}天\n\n请生成详细的任务计划。`;
 
     try {
+      console.log('开始生成AI任务计划...');
       const result = await this.callAI(systemPrompt, userPrompt);
-      const parsedPlan = this.parseTaskPlan(result, prompt, timeframe);
-      return parsedPlan;
+
+      if (!result || result.trim().length === 0) {
+        console.warn('AI返回空响应，使用默认计划');
+        return this.generateDefaultTaskPlan(prompt, extractedTimeframe);
+      }
+
+      console.log('解析AI响应...');
+      const parsedResponse = this.parseAIResponse(result);
+
+      console.log('转换为任务计划...');
+      const taskPlan = this.convertToTaskPlan(parsedResponse, prompt, extractedTimeframe);
+
+      console.log('AI任务计划生成成功');
+      return taskPlan;
     } catch (error) {
       console.error('AI任务生成失败:', error);
-      throw new Error('AI任务生成失败，请稍后重试');
+
+      // 根据错误类型提供不同的处理
+      if (error instanceof Error) {
+        if (error.message.includes('API密钥')) {
+          console.warn('未配置API密钥，使用默认计划');
+          return this.generateDefaultTaskPlan(prompt, extractedTimeframe);
+        } else if (error.message.includes('网络') || error.message.includes('连接')) {
+          console.warn('网络连接失败，使用默认计划');
+          return this.generateDefaultTaskPlan(prompt, extractedTimeframe);
+        } else if (error.message.includes('响应格式')) {
+          console.warn('AI响应格式错误，使用默认计划');
+          return this.generateDefaultTaskPlan(prompt, extractedTimeframe);
+        }
+      }
+
+      // 默认错误处理：返回默认计划而不是抛出错误
+      console.warn('AI生成失败，使用默认计划');
+      return this.generateDefaultTaskPlan(prompt, extractedTimeframe);
     }
+  }
+
+  // 从用户输入中提取时间范围
+  private extractTimeframe(prompt: string, defaultTimeframe?: number): number {
+    // 匹配"X天内"的模式
+    const timeframeMatch = prompt.match(/(\d+)天内/);
+    if (timeframeMatch) {
+      const days = parseInt(timeframeMatch[1]);
+      // 限制在3-30天范围内
+      return Math.min(Math.max(days, 3), 30);
+    }
+
+    return defaultTimeframe || 7;
+  }
+
+  // 解析AI响应文本（增强版本，支持更灵活的格式）
+  private parseAIResponse(response: string): AITaskResponse {
+    try {
+      console.log('原始AI响应:', response);
+
+      // 清理响应文本
+      const cleanResponse = response.trim();
+
+      // 提取总体规划
+      const summaryMatch = cleanResponse.match(/总体规划[：:]\s*(.+)/);
+      const summary = summaryMatch ? summaryMatch[1].trim() : '';
+
+      // 提取里程碑 - 支持更灵活的格式
+      const milestones: AITaskResponse['milestones'] = [];
+
+      // 尝试匹配里程碑计划部分
+      const milestonesSection = cleanResponse.match(/里程碑计划[：:]([\s\S]*?)(?:推荐标签|$)/);
+
+      if (milestonesSection) {
+        const milestoneText = milestonesSection[1].trim();
+        const milestoneLines = milestoneText.split('\n').filter(line => line.trim());
+
+        for (const line of milestoneLines) {
+          // 支持多种里程碑格式
+          const patterns = [
+            /里程碑\s*(\d+)\s*[（(]\s*(.+?)\s*[）)]\s*[：:]\s*(.+)/,
+            /(\d+)\s*[.、]\s*[（(]\s*(.+?)\s*[）)]\s*[：:]\s*(.+)/,
+            /里程碑\s*(\d+)\s*[：:]\s*(.+)/
+          ];
+
+          for (const pattern of patterns) {
+            const match = line.match(pattern);
+            if (match) {
+              let dayRange, description;
+
+              if (match.length === 4) {
+                // 格式：里程碑1（第1天）：描述
+                dayRange = match[2].trim();
+                description = match[3].trim();
+              } else if (match.length === 3) {
+                // 格式：里程碑1：描述
+                dayRange = `第${match[1]}天`;
+                description = match[2].trim();
+              }
+
+              if (description) {
+                milestones.push({
+                  title: description.length > 20 ? description.substring(0, 20) + '...' : description,
+                  description: description,
+                  dayRange: dayRange || `第${milestones.length + 1}天`
+                });
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // 如果没有解析到里程碑，尝试从整个响应中提取
+      if (milestones.length === 0) {
+        console.warn('未能解析到里程碑，尝试备用方法');
+        const lines = cleanResponse.split('\n').filter(line => line.trim());
+
+        for (let i = 0; i < lines.length && milestones.length < 5; i++) {
+          const line = lines[i].trim();
+          if (line.length > 10 && line.length < 100 &&
+              (line.includes('学习') || line.includes('完成') || line.includes('掌握') ||
+               line.includes('实践') || line.includes('练习'))) {
+            milestones.push({
+              title: line.length > 20 ? line.substring(0, 20) + '...' : line,
+              description: line,
+              dayRange: `第${milestones.length + 1}天`
+            });
+          }
+        }
+      }
+
+      // 提取标签
+      const tags: string[] = [];
+      const tagsMatch = cleanResponse.match(/推荐标签[：:]\s*(.+)/);
+
+      if (tagsMatch) {
+        const tagString = tagsMatch[1].trim();
+        // 支持多种标签格式：#标签、标签、#标签1 #标签2
+        const tagPatterns = [
+          /#([^#\s，,]+)/g,
+          /([^\s，,#]+)/g
+        ];
+
+        for (const pattern of tagPatterns) {
+          const matches = tagString.match(pattern);
+          if (matches) {
+            tags.push(...matches.map(tag => tag.replace('#', '').trim()).filter(tag => tag.length > 0));
+            break;
+          }
+        }
+      }
+
+      // 验证解析结果
+      const result: AITaskResponse = {
+        summary: summary || '完成指定目标',
+        milestones: milestones.length > 0 ? milestones.slice(0, 5) : [], // 最多5个里程碑
+        tags: tags.length > 0 ? tags.slice(0, 2) : ['学习', '目标'] // 确保至少有2个标签
+      };
+
+      console.log('解析结果:', result);
+      return result;
+
+    } catch (error) {
+      console.error('解析AI响应失败:', error);
+      throw new Error('AI响应格式不正确');
+    }
+  }
+
+  // 将AI响应转换为TaskPlan
+  private convertToTaskPlan(aiResponse: AITaskResponse, originalPrompt: string, timeframeDays: number): TaskPlan {
+    try {
+      // 验证AI响应的完整性
+      if (!aiResponse.summary || !aiResponse.milestones || aiResponse.milestones.length === 0) {
+        console.warn('AI响应不完整，使用默认计划');
+        return this.generateDefaultTaskPlan(originalPrompt, timeframeDays);
+      }
+
+      // 生成格式化的描述
+      const description = this.formatTaskDescription(aiResponse);
+
+      // 转换里程碑，计算目标日期
+      const milestones = aiResponse.milestones.map((milestone, index) => {
+        const targetDate = this.calculateMilestoneDate(milestone.dayRange, timeframeDays);
+
+        return {
+          title: milestone.title || `里程碑 ${index + 1}`,
+          description: milestone.description || milestone.title || `完成第 ${index + 1} 个阶段`,
+          targetDate,
+          dayRange: milestone.dayRange || `第${index + 1}天`
+        };
+      });
+
+      // 确保至少有2个标签
+      const tags = aiResponse.tags && aiResponse.tags.length > 0
+        ? aiResponse.tags.slice(0, 2)
+        : ['学习', '目标'];
+
+      return {
+        title: this.generateTaskTitle(originalPrompt, timeframeDays),
+        description,
+        tags,
+        milestones,
+        originalPrompt,
+        timeframeDays
+      };
+    } catch (error) {
+      console.error('转换TaskPlan失败:', error);
+      return this.generateDefaultTaskPlan(originalPrompt, timeframeDays);
+    }
+  }
+
+  // 格式化任务描述
+  private formatTaskDescription(aiResponse: AITaskResponse): string {
+    let description = `总体规划：${aiResponse.summary}\n\n里程碑计划：\n`;
+
+    aiResponse.milestones.forEach((milestone, index) => {
+      description += `里程碑${index + 1}（${milestone.dayRange}）：${milestone.description}\n`;
+    });
+
+    if (aiResponse.tags.length > 0) {
+      description += `\n推荐标签：${aiResponse.tags.map(tag => `#${tag}`).join(' ')}`;
+    }
+
+    return description;
+  }
+
+  // 生成任务标题
+  private generateTaskTitle(originalPrompt: string, timeframeDays: number): string {
+    // 如果原始提示词已经包含时间范围，直接使用
+    if (originalPrompt.includes('天内')) {
+      return originalPrompt;
+    }
+
+    // 否则添加时间范围
+    return `${timeframeDays}天内${originalPrompt}`;
+  }
+
+  // 计算里程碑目标日期
+  private calculateMilestoneDate(dayRange: string, totalDays: number): Date {
+    const today = new Date();
+
+    // 解析天数范围，如"第1-2天"、"第3天"
+    const rangeMatch = dayRange.match(/第(\d+)(?:-(\d+))?天/);
+    if (rangeMatch) {
+      const endDay = rangeMatch[2] ? parseInt(rangeMatch[2]) : parseInt(rangeMatch[1]);
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + endDay);
+      return targetDate;
+    }
+
+    // 默认情况：平均分配
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + Math.ceil(totalDays / 2));
+    return targetDate;
   }
 
   // 优化现有任务
@@ -100,107 +343,110 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
     }
   }
 
-  // 调用AI服务
+  // 调用AI服务（增强版本，支持重试和更好的错误处理）
   private async callAI(systemPrompt: string, userPrompt: string): Promise<string> {
-    // 尝试使用Gemini
-    try {
-      const geminiKey = localStorage.getItem('gemini-api-key');
-      if (geminiKey) {
-        // 先验证API密钥
-        const geminiValidation = await validateApiKey({
-          provider: 'gemini',
-          apiKey: geminiKey
-        });
+    const maxRetries = 2;
+    const retryDelay = 1000; // 1秒
 
-        if (geminiValidation.isValid) {
-          // 这里应该调用实际的AI生成服务
-          // 由于当前的validateApiKey函数不支持自定义prompt，我们需要创建一个简单的实现
+    // 尝试使用Gemini
+    const geminiKey = localStorage.getItem('gemini-api-key');
+    if (geminiKey) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`尝试使用Gemini API (第${attempt}次)`);
           const response = await this.callGeminiAPI(geminiKey, systemPrompt, userPrompt);
-          return response;
+
+          if (response && response.trim().length > 0) {
+            console.log('Gemini API调用成功');
+            return response;
+          } else {
+            throw new Error('Gemini返回空响应');
+          }
+        } catch (error) {
+          console.warn(`Gemini API调用失败 (第${attempt}次):`, error);
+
+          if (attempt < maxRetries) {
+            console.log(`等待${retryDelay}ms后重试...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+          }
         }
       }
-    } catch (error) {
-      console.warn('Gemini调用失败，尝试DeepSeek:', error);
     }
 
     // 尝试使用DeepSeek
-    try {
-      const deepseekKey = localStorage.getItem('deepseek-api-key');
-      if (deepseekKey) {
-        // 先验证API密钥
-        const deepseekValidation = await validateApiKey({
-          provider: 'deepseek',
-          apiKey: deepseekKey
-        });
-
-        if (deepseekValidation.isValid) {
-          // 这里应该调用实际的AI生成服务
+    const deepseekKey = localStorage.getItem('deepseek-api-key');
+    if (deepseekKey) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`尝试使用DeepSeek API (第${attempt}次)`);
           const response = await this.callDeepSeekAPI(deepseekKey, systemPrompt, userPrompt);
-          return response;
+
+          if (response && response.trim().length > 0) {
+            console.log('DeepSeek API调用成功');
+            return response;
+          } else {
+            throw new Error('DeepSeek返回空响应');
+          }
+        } catch (error) {
+          console.warn(`DeepSeek API调用失败 (第${attempt}次):`, error);
+
+          if (attempt < maxRetries) {
+            console.log(`等待${retryDelay}ms后重试...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+          }
         }
       }
-    } catch (error) {
-      console.warn('DeepSeek调用失败:', error);
     }
 
-    throw new Error('没有可用的AI服务，请检查API密钥配置');
+    // 如果没有配置API密钥，提供更详细的错误信息
+    if (!geminiKey && !deepseekKey) {
+      throw new Error('未配置AI服务API密钥。请在设置中配置Gemini或DeepSeek API密钥。');
+    }
+
+    throw new Error('所有AI服务调用失败，请检查网络连接和API密钥配置');
   }
 
-  // 解析任务计划
-  private parseTaskPlan(result: string, originalPrompt: string, timeframe: number): TaskPlan {
-    try {
-      // 清理可能的markdown代码块标记
-      const cleanResult = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(cleanResult);
+  // 生成默认任务计划（当AI解析失败时使用）
+  private generateDefaultTaskPlan(originalPrompt: string, timeframeDays: number): TaskPlan {
+    const title = this.generateTaskTitle(originalPrompt, timeframeDays);
+    const description = `总体规划：完成"${originalPrompt}"的相关任务
 
-      // 验证必需字段
-      if (!parsed.title || !parsed.description) {
-        throw new Error('AI返回的数据格式不完整');
+里程碑计划：
+里程碑1（第1天）：分析需求和制定计划
+里程碑2（第${Math.ceil(timeframeDays/2)}天）：执行主要任务
+里程碑3（第${timeframeDays}天）：检查结果和总结
+
+推荐标签：#学习 #目标`;
+
+    const milestones = [
+      {
+        title: '分析需求和制定计划',
+        description: '明确目标要求，制定详细执行计划',
+        targetDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 明天
+        dayRange: '第1天'
+      },
+      {
+        title: '执行主要任务',
+        description: '按计划执行核心任务内容',
+        targetDate: new Date(Date.now() + Math.ceil(timeframeDays/2) * 24 * 60 * 60 * 1000),
+        dayRange: `第${Math.ceil(timeframeDays/2)}天`
+      },
+      {
+        title: '检查结果和总结',
+        description: '验证完成情况，总结经验教训',
+        targetDate: new Date(Date.now() + timeframeDays * 24 * 60 * 60 * 1000),
+        dayRange: `第${timeframeDays}天`
       }
+    ];
 
-      // 计算截止日期
-      const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + timeframe);
-
-      return {
-        title: parsed.title,
-        description: parsed.description,
-        dueDate,
-        priority: this.validatePriority(parsed.priority),
-        category: this.validateCategory(parsed.category),
-        tags: Array.isArray(parsed.tags) ? parsed.tags : [],
-        subtasks: Array.isArray(parsed.subtasks) ? parsed.subtasks.map((st: any) => ({
-          title: st.title || '子任务',
-          isCompleted: false,
-          estimatedMinutes: typeof st.estimatedMinutes === 'number' ? st.estimatedMinutes : 30,
-        })) : [],
-        estimatedHours: typeof parsed.estimatedHours === 'number' ? parsed.estimatedHours : timeframe * 2,
-        originalPrompt,
-      };
-    } catch (error) {
-      console.error('解析AI响应失败:', error);
-      
-      // 返回默认的任务计划
-      const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + timeframe);
-      
-      return {
-        title: originalPrompt.slice(0, 50) + (originalPrompt.length > 50 ? '...' : ''),
-        description: `基于目标"${originalPrompt}"的任务计划`,
-        dueDate,
-        priority: 'medium',
-        category: 'personal',
-        tags: [],
-        subtasks: [
-          { title: '分析需求', isCompleted: false, estimatedMinutes: 60 },
-          { title: '制定计划', isCompleted: false, estimatedMinutes: 90 },
-          { title: '执行任务', isCompleted: false, estimatedMinutes: 180 },
-          { title: '检查结果', isCompleted: false, estimatedMinutes: 30 },
-        ],
-        estimatedHours: timeframe * 2,
-        originalPrompt,
-      };
-    }
+    return {
+      title,
+      description,
+      tags: ['学习', '目标'],
+      milestones,
+      originalPrompt,
+      timeframeDays
+    };
   }
 
   // 解析优化建议

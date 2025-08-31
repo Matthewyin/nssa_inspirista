@@ -31,12 +31,13 @@ import type { Task, TaskStatus } from '@/lib/types/tasks';
 
 interface TaskListProps {
   tasks: Task[];
+  onMilestoneToggle?: (taskId: string, milestoneId: string, isCompleted: boolean) => void;
 }
 
 type SortField = 'title' | 'dueDate' | 'priority' | 'status' | 'progress' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
-export function TaskList({ tasks }: TaskListProps) {
+export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
   const { t } = useLanguage();
   const [sortField, setSortField] = useState<SortField>('dueDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');

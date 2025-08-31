@@ -13,7 +13,20 @@
     "env:dev": "node scripts/setup-env.js development",
     "env:prod": "node scripts/setup-env.js production",
     "dev:clean": "npm run env:dev && npm run dev",
-    "build:prod": "npm run env:prod && npm run build"
+    "build:prod": "npm run env:prod && npm run build",
+    "migrate:tasks": "tsx src/scripts/migrate-tasks.ts",
+    "test:task-structure": "tsx src/scripts/test-task-structure.ts",
+    "test:ai-service": "tsx src/scripts/test-ai-service.ts",
+    "test:ai-integration": "tsx src/scripts/test-ai-integration.ts",
+    "test:firebase-service": "tsx src/scripts/test-firebase-service.ts",
+    "test:phase1": "tsx src/scripts/test-phase1.ts",
+    "test:frontend-components": "tsx src/scripts/test-frontend-components.ts",
+    "test:task-display": "tsx src/scripts/test-task-display.ts",
+    "test:milestone-management": "tsx src/scripts/test-milestone-management.ts",
+    "test:backend-integration": "tsx src/scripts/test-backend-integration.ts",
+    "test:end-to-end": "tsx src/scripts/test-end-to-end.ts",
+    "test:comprehensive": "tsx src/scripts/test-comprehensive.ts",
+    "test:all": "npm run test:comprehensive"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

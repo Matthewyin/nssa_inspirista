@@ -6,12 +6,14 @@ import { useAuth } from './use-auth';
 import { taskService } from '@/lib/firebase/tasks';
 import { aiTaskGenerator } from '@/lib/ai/task-generator';
 import { useToast } from './use-toast';
-import type { 
-  Task, 
-  TaskFilters, 
-  TaskStats, 
+import type {
+  Task,
+  TaskFilters,
+  TaskStats,
   TaskPlan,
-  TaskOptimization 
+  TaskOptimization,
+  TaskCreateInput,
+  Milestone
 } from '@/lib/types/tasks';
 
 export function useTasks(filters?: TaskFilters) {
@@ -55,7 +57,7 @@ export function useTasks(filters?: TaskFilters) {
   }, [user, filters]);
 
   // 创建任务
-  const createTask = async (taskData: Partial<Task>) => {
+  const createTask = async (taskData: TaskCreateInput) => {
     if (!user) return;
 
     try {
@@ -160,6 +162,132 @@ export function useTasks(filters?: TaskFilters) {
     }
   };
 
+  // 更新里程碑状态
+  const updateMilestoneStatus = async (taskId: string, milestoneId: string, isCompleted: boolean) => {
+    if (!user) return;
+
+    try {
+      await taskService.updateMilestoneStatus(taskId, milestoneId, isCompleted);
+      toast({
+        title: '里程碑状态更新成功',
+        description: isCompleted ? '里程碑已完成' : '里程碑已重置',
+      });
+    } catch (error) {
+      console.error('更新里程碑状态失败:', error);
+      toast({
+        variant: 'destructive',
+        title: '更新失败',
+        description: '里程碑状态更新失败，请稍后重试',
+      });
+      throw error;
+    }
+  };
+
+  // 添加里程碑
+  const addMilestone = async (taskId: string, milestone: Omit<Milestone, 'id' | 'isCompleted'>) => {
+    if (!user) return;
+
+    try {
+      await taskService.addMilestone(taskId, milestone);
+      toast({
+        title: '里程碑添加成功',
+        description: `里程碑"${milestone.title}"已添加`,
+      });
+    } catch (error) {
+      console.error('添加里程碑失败:', error);
+      toast({
+        variant: 'destructive',
+        title: '添加失败',
+        description: '里程碑添加失败，请稍后重试',
+      });
+      throw error;
+    }
+  };
+
+  // 更新里程碑
+  const updateMilestone = async (taskId: string, milestoneId: string, updates: Partial<Milestone>) => {
+    if (!user) return;
+
+    try {
+      await taskService.updateMilestone(taskId, milestoneId, updates);
+      toast({
+        title: '里程碑更新成功',
+        description: '里程碑信息已更新',
+      });
+    } catch (error) {
+      console.error('更新里程碑失败:', error);
+      toast({
+        variant: 'destructive',
+        title: '更新失败',
+        description: '里程碑更新失败，请稍后重试',
+      });
+      throw error;
+    }
+  };
+
+  // 删除里程碑
+  const deleteMilestone = async (taskId: string, milestoneId: string) => {
+    if (!user) return;
+
+    try {
+      await taskService.deleteMilestone(taskId, milestoneId);
+      toast({
+        title: '里程碑删除成功',
+        description: '里程碑已删除',
+      });
+    } catch (error) {
+      console.error('删除里程碑失败:', error);
+      toast({
+        variant: 'destructive',
+        title: '删除失败',
+        description: '里程碑删除失败，请稍后重试',
+      });
+      throw error;
+    }
+  };
+
+  // 批量更新里程碑状态
+  const batchUpdateMilestoneStatus = async (taskId: string, milestoneIds: string[], isCompleted: boolean) => {
+    if (!user) return;
+
+    try {
+      await taskService.batchUpdateMilestoneStatus(taskId, milestoneIds, isCompleted);
+      toast({
+        title: '批量操作成功',
+        description: `已${isCompleted ? '完成' : '重置'} ${milestoneIds.length} 个里程碑`,
+      });
+    } catch (error) {
+      console.error('批量更新里程碑状态失败:', error);
+      toast({
+        variant: 'destructive',
+        title: '批量操作失败',
+        description: '批量更新失败，请稍后重试',
+      });
+      throw error;
+    }
+  };
+
+  // 批量删除里程碑
+  const batchDeleteMilestones = async (taskId: string, milestoneIds: string[]) => {
+    if (!user) return;
+
+    try {
+      await taskService.batchDeleteMilestones(taskId, milestoneIds);
+      toast({
+        title: '批量删除成功',
+        description: `已删除 ${milestoneIds.length} 个里程碑`,
+      });
+    } catch (error) {
+      console.error('批量删除里程碑失败:', error);
+      toast({
+        variant: 'destructive',
+        title: '批量删除失败',
+        description: '批量删除失败，请稍后重试',
+      });
+      throw error;
+    }
+  };
+
   return {
     tasks,
     loading,
@@ -169,6 +297,12 @@ export function useTasks(filters?: TaskFilters) {
     updateTaskStatus,
     updateTaskProgress,
     deleteTask,
+    updateMilestoneStatus,
+    addMilestone,
+    updateMilestone,
+    deleteMilestone,
+    batchUpdateMilestoneStatus,
+    batchDeleteMilestones,
   };
 }
 
@@ -246,12 +380,12 @@ export function useAITaskGenerator() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateTaskPlan = async (prompt: string, timeframe: number): Promise<TaskPlan | null> => {
+  const generateTaskPlan = async (prompt: string): Promise<TaskPlan | null> => {
     if (!user) return null;
 
     setIsGenerating(true);
     try {
-      const plan = await aiTaskGenerator.generateTaskPlan(prompt, timeframe);
+      const plan = await aiTaskGenerator.generateTaskPlan(prompt);
       toast({
         title: 'AI任务计划生成成功',
         description: '请查看并确认任务计划',
