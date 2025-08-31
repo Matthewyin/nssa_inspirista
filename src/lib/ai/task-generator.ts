@@ -1,6 +1,7 @@
 import type { TaskPlan, TaskOptimization, Task, AITaskResponse } from '@/lib/types/tasks';
 import type { AiConfig } from '@/lib/types';
 import { validateApiKey } from '@/app/actions';
+import { Timestamp } from 'firebase/firestore';
 
 export class AITaskGenerator {
 
@@ -217,10 +218,15 @@ export class AITaskGenerator {
       const milestones = aiResponse.milestones.map((milestone, index) => {
         const targetDate = this.calculateMilestoneDate(milestone.dayRange, timeframeDays, taskCreationDate);
 
+        // 确保targetDate是有效的Date对象，可以安全转换为Timestamp
+        const safeTargetDate = targetDate instanceof Date && !isNaN(targetDate.getTime())
+          ? targetDate
+          : new Date(taskCreationDate.getTime() + (index + 1) * 24 * 60 * 60 * 1000);
+
         return {
           title: milestone.title || `里程碑 ${index + 1}`,
           description: milestone.description || milestone.title || `完成第 ${index + 1} 个阶段`,
-          targetDate,
+          targetDate: safeTargetDate,
           dayRange: milestone.dayRange || `第${index + 1}天`
         };
       });
@@ -493,19 +499,28 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
       {
         title: '分析需求和制定计划',
         description: '明确目标要求，制定详细执行计划',
-        targetDate: this.calculateMilestoneDate('第1天', timeframeDays, taskCreationDate),
+        targetDate: (() => {
+          const date = this.calculateMilestoneDate('第1天', timeframeDays, taskCreationDate);
+          return date instanceof Date && !isNaN(date.getTime()) ? date : new Date(taskCreationDate.getTime() + 24 * 60 * 60 * 1000);
+        })(),
         dayRange: '第1天'
       },
       {
         title: '执行主要任务',
         description: '按计划执行核心任务内容',
-        targetDate: this.calculateMilestoneDate(`第${Math.ceil(timeframeDays/2)}天`, timeframeDays, taskCreationDate),
+        targetDate: (() => {
+          const date = this.calculateMilestoneDate(`第${Math.ceil(timeframeDays/2)}天`, timeframeDays, taskCreationDate);
+          return date instanceof Date && !isNaN(date.getTime()) ? date : new Date(taskCreationDate.getTime() + Math.ceil(timeframeDays/2) * 24 * 60 * 60 * 1000);
+        })(),
         dayRange: `第${Math.ceil(timeframeDays/2)}天`
       },
       {
         title: '检查结果和总结',
         description: '验证完成情况，总结经验教训',
-        targetDate: this.calculateMilestoneDate(`第${timeframeDays}天`, timeframeDays, taskCreationDate),
+        targetDate: (() => {
+          const date = this.calculateMilestoneDate(`第${timeframeDays}天`, timeframeDays, taskCreationDate);
+          return date instanceof Date && !isNaN(date.getTime()) ? date : new Date(taskCreationDate.getTime() + timeframeDays * 24 * 60 * 60 * 1000);
+        })(),
         dayRange: `第${timeframeDays}天`
       }
     ];

@@ -32,6 +32,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { safeMilestoneTargetDate } from '@/lib/utils/date-utils';
 import type { Milestone } from '@/lib/types/tasks';
 
 interface MilestoneEditDialogProps {
@@ -121,26 +122,9 @@ export function MilestoneEditDialog({
 
   // 计算时间状态（使用安全的日期处理）
   const now = new Date();
-  let targetDate: Date;
-  let isOverdue = false;
-  let daysUntilDue = 0;
-
-  try {
-    if (formData.targetDate instanceof Date) {
-      targetDate = isNaN(formData.targetDate.getTime()) ? new Date() : formData.targetDate;
-    } else {
-      const convertedDate = new Date(formData.targetDate);
-      targetDate = isNaN(convertedDate.getTime()) ? new Date() : convertedDate;
-    }
-
-    isOverdue = !formData.isCompleted && targetDate < now;
-    daysUntilDue = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  } catch (error) {
-    console.warn('Error calculating milestone time status:', error);
-    targetDate = new Date();
-    isOverdue = false;
-    daysUntilDue = 0;
-  }
+  const targetDate = safeMilestoneTargetDate({ targetDate: formData.targetDate }) || new Date();
+  const isOverdue = !formData.isCompleted && targetDate < now;
+  const daysUntilDue = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
   if (!milestone) return null;
 

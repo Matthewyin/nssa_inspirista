@@ -7,6 +7,7 @@ import { Timestamp } from 'firebase/firestore';
 
 /**
  * 安全地将各种日期格式转换为Date对象
+ * 专门处理Firebase Timestamp和各种日期格式
  */
 export function safeToDate(dateValue: any): Date | null {
   try {
@@ -19,17 +20,33 @@ export function safeToDate(dateValue: any): Date | null {
       return isValidDate(dateValue) ? dateValue : null;
     }
 
-    // 如果是Firebase Timestamp
+    // 如果是Firebase Timestamp对象
     if (dateValue && typeof dateValue.toDate === 'function') {
-      const date = dateValue.toDate();
-      return isValidDate(date) ? date : null;
+      try {
+        const date = dateValue.toDate();
+        return isValidDate(date) ? date : null;
+      } catch (timestampError) {
+        console.warn('Failed to convert Timestamp to Date:', timestampError);
+        return null;
+      }
+    }
+
+    // 如果是Timestamp-like对象（有seconds属性）
+    if (dateValue && typeof dateValue.seconds === 'number') {
+      try {
+        const date = new Date(dateValue.seconds * 1000);
+        return isValidDate(date) ? date : null;
+      } catch (secondsError) {
+        console.warn('Failed to convert seconds to Date:', secondsError);
+        return null;
+      }
     }
 
     // 如果是字符串或数字，尝试转换
     const date = new Date(dateValue);
     return isValidDate(date) ? date : null;
   } catch (error) {
-    console.warn('Date conversion failed:', error);
+    console.warn('Date conversion failed:', error, 'Input:', dateValue);
     return null;
   }
 }
@@ -202,6 +219,40 @@ export function createSafeTimestamp(dateValue: any): Timestamp | null {
     return Timestamp.fromDate(date);
   } catch (error) {
     console.warn('Timestamp creation failed:', error);
+    return null;
+  }
+}
+
+/**
+ * 安全地从里程碑对象获取目标日期
+ * 专门处理里程碑的targetDate字段
+ */
+export function safeMilestoneTargetDate(milestone: any): Date | null {
+  if (!milestone || !milestone.targetDate) {
+    return null;
+  }
+
+  try {
+    // 使用通用的safeToDate函数
+    const date = safeToDate(milestone.targetDate);
+    if (date) {
+      return date;
+    }
+
+    // 如果通用方法失败，尝试其他可能的格式
+    console.warn('Failed to parse milestone targetDate, trying fallback methods:', milestone.targetDate);
+
+    // 尝试直接解析字符串
+    if (typeof milestone.targetDate === 'string') {
+      const parsed = new Date(milestone.targetDate);
+      if (isValidDate(parsed)) {
+        return parsed;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.warn('Error parsing milestone targetDate:', error, 'Milestone:', milestone);
     return null;
   }
 }

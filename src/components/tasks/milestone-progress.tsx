@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { safeMilestoneTargetDate } from '@/lib/utils/date-utils';
 import type { Milestone } from '@/lib/types/tasks';
 
 interface MilestoneProgressProps {
@@ -123,31 +124,15 @@ export function MilestoneProgress({
         <CardContent className={cn("pt-0", compact && "px-3 pb-3")}>
           <div className="space-y-3">
             {milestones.map((milestone, index) => {
-              // 安全的日期处理
-              let targetDate: Date | null = null;
+              // 使用安全的里程碑日期处理函数
+              const targetDate = safeMilestoneTargetDate(milestone);
               let isOverdue = false;
               let daysUntilDue: number | null = null;
 
-              try {
-                if (milestone.targetDate) {
-                  if (milestone.targetDate instanceof Date) {
-                    targetDate = isNaN(milestone.targetDate.getTime()) ? null : milestone.targetDate;
-                  } else {
-                    const convertedDate = new Date(milestone.targetDate);
-                    targetDate = isNaN(convertedDate.getTime()) ? null : convertedDate;
-                  }
-
-                  if (targetDate) {
-                    const now = new Date();
-                    isOverdue = !milestone.isCompleted && targetDate < now;
-                    daysUntilDue = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                  }
-                }
-              } catch (error) {
-                console.warn('Error processing milestone date:', error);
-                targetDate = null;
-                isOverdue = false;
-                daysUntilDue = null;
+              if (targetDate) {
+                const now = new Date();
+                isOverdue = !milestone.isCompleted && targetDate < now;
+                daysUntilDue = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
               }
 
               return (
@@ -213,11 +198,18 @@ export function MilestoneProgress({
                           <Calendar className="h-3 w-3" />
                           <span>
                             {(() => {
+                              if (!targetDate) return '无日期';
+
                               try {
                                 return format(targetDate, 'MM/dd', { locale: zhCN });
-                              } catch (error) {
-                                console.warn('Error formatting date:', error);
-                                return targetDate.toLocaleDateString();
+                              } catch (formatError) {
+                                console.warn('Error formatting milestone date:', formatError, 'Date:', targetDate);
+                                try {
+                                  return targetDate.toLocaleDateString('zh-CN');
+                                } catch (localError) {
+                                  console.warn('Error with toLocaleDateString:', localError);
+                                  return '日期格式错误';
+                                }
                               }
                             })()}
                           </span>

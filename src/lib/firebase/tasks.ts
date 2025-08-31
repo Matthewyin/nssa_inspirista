@@ -86,13 +86,16 @@ export class TaskService {
   async createTask(userId: string, taskData: TaskCreateInput): Promise<string> {
     const now = Timestamp.now();
 
-    // 为里程碑生成ID并安全转换日期
+    // 为里程碑生成ID并安全转换日期为Timestamp
     const milestonesWithIds: Milestone[] = (taskData.milestones || []).map(milestone => {
       let targetDate: Date;
 
       try {
         if (milestone.targetDate instanceof Date) {
           targetDate = isNaN(milestone.targetDate.getTime()) ? new Date() : milestone.targetDate;
+        } else if (milestone.targetDate && typeof milestone.targetDate.toDate === 'function') {
+          // 如果已经是Timestamp，转换为Date
+          targetDate = milestone.targetDate.toDate();
         } else {
           const convertedDate = new Date(milestone.targetDate);
           targetDate = isNaN(convertedDate.getTime()) ? new Date() : convertedDate;
@@ -102,11 +105,16 @@ export class TaskService {
         targetDate = new Date();
       }
 
+      // 确保targetDate是有效的Date对象，然后转换为Timestamp存储
+      const safeTargetDate = targetDate instanceof Date && !isNaN(targetDate.getTime())
+        ? targetDate
+        : new Date();
+
       return {
         ...milestone,
         id: crypto.randomUUID(),
         isCompleted: false,
-        targetDate
+        targetDate: Timestamp.fromDate(safeTargetDate)
       };
     });
 
@@ -151,13 +159,16 @@ export class TaskService {
   async createAITask(userId: string, aiPlan: TaskPlan): Promise<string> {
     const now = Timestamp.now();
 
-    // 为里程碑生成ID并安全转换日期
+    // 为里程碑生成ID并安全转换日期为Timestamp
     const milestonesWithIds: Milestone[] = aiPlan.milestones.map(milestone => {
       let targetDate: Date;
 
       try {
         if (milestone.targetDate instanceof Date) {
           targetDate = isNaN(milestone.targetDate.getTime()) ? new Date() : milestone.targetDate;
+        } else if (milestone.targetDate && typeof milestone.targetDate.toDate === 'function') {
+          // 如果已经是Timestamp，转换为Date
+          targetDate = milestone.targetDate.toDate();
         } else {
           const convertedDate = new Date(milestone.targetDate);
           targetDate = isNaN(convertedDate.getTime()) ? new Date() : convertedDate;
@@ -167,11 +178,16 @@ export class TaskService {
         targetDate = new Date();
       }
 
+      // 确保targetDate是有效的Date对象，然后转换为Timestamp存储
+      const safeTargetDate = targetDate instanceof Date && !isNaN(targetDate.getTime())
+        ? targetDate
+        : new Date();
+
       return {
         ...milestone,
         id: crypto.randomUUID(),
         isCompleted: false,
-        targetDate
+        targetDate: Timestamp.fromDate(safeTargetDate)
       };
     });
 
@@ -271,11 +287,27 @@ export class TaskService {
     }
 
     const taskData = taskDoc.docs[0].data() as Task;
+    // 安全转换日期为Timestamp
+    let targetDate: Date;
+    try {
+      if (milestone.targetDate instanceof Date) {
+        targetDate = isNaN(milestone.targetDate.getTime()) ? new Date() : milestone.targetDate;
+      } else if (milestone.targetDate && typeof milestone.targetDate.toDate === 'function') {
+        targetDate = milestone.targetDate.toDate();
+      } else {
+        const convertedDate = new Date(milestone.targetDate);
+        targetDate = isNaN(convertedDate.getTime()) ? new Date() : convertedDate;
+      }
+    } catch (error) {
+      console.warn('Invalid milestone date in addMilestone, using current date:', error);
+      targetDate = new Date();
+    }
+
     const newMilestone: Milestone = {
       ...milestone,
       id: crypto.randomUUID(),
       isCompleted: false,
-      targetDate: milestone.targetDate instanceof Date ? milestone.targetDate : new Date(milestone.targetDate)
+      targetDate: Timestamp.fromDate(targetDate)
     };
 
     const updatedMilestones = [...taskData.milestones, newMilestone];

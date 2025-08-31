@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format, differenceInDays } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { safeToDate, safeMilestoneTargetDate } from '@/lib/utils/date-utils';
 import type { Task } from '@/lib/types/tasks';
 
 interface TaskStatusVisualizationProps {
@@ -35,65 +36,28 @@ export function TaskStatusVisualization({ task, className }: TaskStatusVisualiza
   const totalMilestones = milestones.length;
   const milestoneProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
-  // 计算时间信息（使用安全的日期处理）
+  // 计算时间信息（使用安全的日期处理工具）
   const now = new Date();
-  let createdDate: Date;
-  let dueDate: Date | null = null;
-  let nextMilestoneDate: Date | null = null;
 
-  try {
-    // 安全获取创建日期
-    createdDate = task.createdAt && typeof task.createdAt.toDate === 'function'
-      ? task.createdAt.toDate()
-      : new Date();
-
-    if (isNaN(createdDate.getTime())) {
-      createdDate = new Date();
-    }
-  } catch (error) {
-    console.warn('Error getting task creation date:', error);
-    createdDate = new Date();
-  }
+  // 安全获取创建日期
+  const createdDate = safeToDate(task.createdAt) || new Date();
 
   // 安全获取截止日期
   const finalMilestone = milestones.length > 0 ? milestones[milestones.length - 1] : null;
-  try {
-    if (finalMilestone?.targetDate) {
-      if (finalMilestone.targetDate instanceof Date) {
-        dueDate = isNaN(finalMilestone.targetDate.getTime()) ? null : finalMilestone.targetDate;
-      } else {
-        const convertedDate = new Date(finalMilestone.targetDate);
-        dueDate = isNaN(convertedDate.getTime()) ? null : convertedDate;
-      }
-    } else if (task.dueDate) {
-      const taskDueDate = task.dueDate && typeof task.dueDate.toDate === 'function'
-        ? task.dueDate.toDate()
-        : new Date(task.dueDate);
-      dueDate = isNaN(taskDueDate.getTime()) ? null : taskDueDate;
-    }
-  } catch (error) {
-    console.warn('Error getting due date:', error);
-    dueDate = null;
+  let dueDate: Date | null = null;
+
+  if (finalMilestone) {
+    dueDate = safeMilestoneTargetDate(finalMilestone);
+  } else if (task.dueDate) {
+    dueDate = safeToDate(task.dueDate);
   }
 
   // 安全获取下一个里程碑日期
   const nextMilestone = milestones.find(m => !m.isCompleted);
-  try {
-    if (nextMilestone?.targetDate) {
-      if (nextMilestone.targetDate instanceof Date) {
-        nextMilestoneDate = isNaN(nextMilestone.targetDate.getTime()) ? null : nextMilestone.targetDate;
-      } else {
-        const convertedDate = new Date(nextMilestone.targetDate);
-        nextMilestoneDate = isNaN(convertedDate.getTime()) ? null : convertedDate;
-      }
-    }
-  } catch (error) {
-    console.warn('Error getting next milestone date:', error);
-    nextMilestoneDate = null;
-  }
+  const nextMilestoneDate = nextMilestone ? safeMilestoneTargetDate(nextMilestone) : null;
 
   // 安全计算日期差异
-  const daysFromCreation = createdDate ? differenceInDays(now, createdDate) : 0;
+  const daysFromCreation = differenceInDays(now, createdDate);
   const daysUntilDue = dueDate ? differenceInDays(dueDate, now) : null;
   const isOverdue = !isCompleted && dueDate && dueDate < now;
   const nextMilestoneDays = nextMilestoneDate ? differenceInDays(nextMilestoneDate, now) : null;
