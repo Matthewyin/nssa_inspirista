@@ -1,10 +1,11 @@
 import type { TaskPlan, TaskOptimization, Task, AITaskResponse } from '@/lib/types/tasks';
+import type { AiConfig } from '@/lib/types';
 import { validateApiKey } from '@/app/actions';
 
 export class AITaskGenerator {
 
   // 基于目标生成任务计划
-  async generateTaskPlan(prompt: string, timeframe?: number): Promise<TaskPlan> {
+  async generateTaskPlan(prompt: string, aiConfig?: AiConfig, apiKey?: string, timeframe?: number): Promise<TaskPlan> {
     // 从用户输入中提取时间范围
     const extractedTimeframe = this.extractTimeframe(prompt, timeframe);
 
@@ -34,7 +35,7 @@ export class AITaskGenerator {
 
     try {
       console.log('开始生成AI任务计划...');
-      const result = await this.callAI(systemPrompt, userPrompt);
+      const result = await this.callAI(systemPrompt, userPrompt, aiConfig, apiKey);
 
       if (!result || result.trim().length === 0) {
         console.warn('AI返回空响应，使用默认计划');
@@ -344,10 +345,43 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
   }
 
   // 调用AI服务（增强版本，支持重试和更好的错误处理）
-  private async callAI(systemPrompt: string, userPrompt: string): Promise<string> {
+  private async callAI(systemPrompt: string, userPrompt: string, aiConfig?: AiConfig, apiKey?: string): Promise<string> {
     const maxRetries = 2;
     const retryDelay = 1000; // 1秒
 
+    // 如果指定了AI配置，使用指定的配置
+    if (aiConfig && apiKey) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`尝试使用${aiConfig.provider} API (${aiConfig.model}) (第${attempt}次)`);
+
+          let response: string;
+          if (aiConfig.provider === 'gemini') {
+            response = await this.callGeminiAPI(apiKey, systemPrompt, userPrompt, aiConfig.model);
+          } else if (aiConfig.provider === 'deepseek') {
+            response = await this.callDeepSeekAPI(apiKey, systemPrompt, userPrompt, aiConfig.model);
+          } else {
+            throw new Error(`不支持的AI提供商: ${aiConfig.provider}`);
+          }
+
+          if (response && response.trim().length > 0) {
+            console.log(`${aiConfig.provider} API调用成功`);
+            return response;
+          } else {
+            throw new Error(`${aiConfig.provider}返回空响应`);
+          }
+        } catch (error) {
+          console.warn(`${aiConfig.provider} API调用失败 (第${attempt}次):`, error);
+          if (attempt < maxRetries) {
+            console.log(`等待${retryDelay}ms后重试...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+          }
+        }
+      }
+      throw new Error(`${aiConfig.provider} API调用失败，请检查API密钥和网络连接`);
+    }
+
+    // 回退到原有的逻辑（尝试所有可用的API）
     // 尝试使用Gemini
     const geminiKey = localStorage.getItem('gemini-api-key');
     if (geminiKey) {
@@ -485,9 +519,11 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
   }
 
   // 调用Gemini API
-  private async callGeminiAPI(apiKey: string, systemPrompt: string, userPrompt: string): Promise<string> {
+  private async callGeminiAPI(apiKey: string, systemPrompt: string, userPrompt: string, model: string = 'gemini-2.5-flash'): Promise<string> {
     try {
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=' + apiKey, {
+      // 将模型名称映射到API端点
+      const modelEndpoint = model === 'gemini-2.5-pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -520,7 +556,7 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
   }
 
   // 调用DeepSeek API
-  private async callDeepSeekAPI(apiKey: string, systemPrompt: string, userPrompt: string): Promise<string> {
+  private async callDeepSeekAPI(apiKey: string, systemPrompt: string, userPrompt: string, model: string = 'deepseek-chat'): Promise<string> {
     try {
       const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
@@ -529,7 +565,7 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: model,
           messages: [
             {
               role: 'system',

@@ -380,12 +380,12 @@ export function useAITaskGenerator() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateTaskPlan = async (prompt: string): Promise<TaskPlan | null> => {
+  const generateTaskPlan = async (prompt: string, aiConfig?: any, apiKey?: string): Promise<TaskPlan | null> => {
     if (!user) return null;
 
     setIsGenerating(true);
     try {
-      const plan = await aiTaskGenerator.generateTaskPlan(prompt);
+      const plan = await aiTaskGenerator.generateTaskPlan(prompt, aiConfig, apiKey);
       toast({
         title: 'AI任务计划生成成功',
         description: '请查看并确认任务计划',

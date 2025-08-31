@@ -28,6 +28,7 @@
     "test:comprehensive": "tsx src/scripts/test-comprehensive.ts",
     "test:internationalization": "tsx src/scripts/test-internationalization.ts",
     "test:simplified-form": "tsx src/scripts/test-simplified-task-form.ts",
+    "test:ai-model-selection": "tsx src/scripts/test-ai-model-selection.ts",
     "test:all": "npm run test:comprehensive"
   },
   "dependencies": {

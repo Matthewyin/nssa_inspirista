@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTasks, useAITaskGenerator } from '@/hooks/use-tasks';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Sparkles,
   Loader2,
   Wand2,
@@ -23,16 +31,43 @@ import {
   Info
 } from 'lucide-react';
 import type { TaskCreateInput, TaskPlan } from '@/lib/types/tasks';
+import type { AiProvider, AiModel, AiConfig } from '@/lib/types';
 
 interface TaskCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+// AI提供商配置
+const AI_PROVIDERS: {
+  value: AiProvider;
+  label: string;
+  models: AiModel[];
+}[] = [
+  {
+    value: 'gemini',
+    label: 'Google Gemini',
+    models: ['gemini-2.5-flash', 'gemini-2.5-pro'],
+  },
+  {
+    value: 'deepseek',
+    label: 'DeepSeek',
+    models: ['deepseek-chat', 'deepseek-coder'],
+  },
+];
+
 export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) {
   const { createTask } = useTasks();
   const { isGenerating, generateTaskPlan, createAITask } = useAITaskGenerator();
   const [loading, setLoading] = useState(false);
+
+  // AI配置状态
+  const [geminiApiKey] = useLocalStorage<string | null>('gemini-api-key', null);
+  const [deepseekApiKey] = useLocalStorage<string | null>('deepseek-api-key', null);
+  const [aiConfig, setAiConfig] = useLocalStorage<AiConfig>('ai-config', {
+    provider: 'gemini',
+    model: 'gemini-2.5-flash',
+  });
 
   // 表单状态 - 简化为只有标题和描述
   const [formData, setFormData] = useState({
@@ -56,22 +91,50 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
     setOriginalDescription('');
   };
 
+  // 获取当前可用的API密钥
+  const getCurrentApiKey = (): string | null => {
+    if (aiConfig.provider === 'gemini') {
+      return geminiApiKey;
+    } else if (aiConfig.provider === 'deepseek') {
+      return deepseekApiKey;
+    }
+    return null;
+  };
+
+  // 检查是否可以使用AI
+  const canUseAI = (): boolean => {
+    const apiKey = getCurrentApiKey();
+    return !!apiKey && !!formData.description.trim();
+  };
+
   // AI生成任务计划
   const handleAIGenerate = async () => {
-    if (!formData.description.trim()) return;
+    if (!canUseAI()) return;
+
+    const apiKey = getCurrentApiKey();
+    if (!apiKey) {
+      // TODO: 显示需要配置API密钥的提示
+      return;
+    }
 
     // 保存原始描述
     setOriginalDescription(formData.description);
     setIsAIMode(true);
 
-    const plan = await generateTaskPlan(formData.description.trim());
-    if (plan) {
-      setGeneratedPlan(plan);
-      // 将AI生成的内容替换到描述框中
-      setFormData(prev => ({
-        ...prev,
-        description: plan.description
-      }));
+    try {
+      // 使用真正的AI生成
+      const plan = await generateTaskPlan(formData.description.trim(), aiConfig, apiKey);
+      if (plan) {
+        setGeneratedPlan(plan);
+        // 将AI生成的内容替换到描述框中
+        setFormData(prev => ({
+          ...prev,
+          description: plan.description
+        }));
+      }
+    } catch (error) {
+      console.error('AI生成失败:', error);
+      // TODO: 显示错误提示
     }
   };
 
@@ -146,6 +209,91 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
             />
           </div>
 
+          {/* AI配置选择 */}
+          <div className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-600" />
+              <Label className="text-sm font-medium text-purple-800">AI助手配置</Label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* AI提供商选择 */}
+              <div className="space-y-1">
+                <Label className="text-xs text-purple-700">AI提供商</Label>
+                <Select
+                  value={aiConfig.provider}
+                  onValueChange={(value: AiProvider) => {
+                    const newProvider = value;
+                    const defaultModel = AI_PROVIDERS.find(p => p.value === newProvider)?.models[0] || 'gemini-2.5-flash';
+                    setAiConfig({ provider: newProvider, model: defaultModel });
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AI_PROVIDERS.map((provider) => (
+                      <SelectItem key={provider.value} value={provider.value}>
+                        {provider.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* AI模型选择 */}
+              <div className="space-y-1">
+                <Label className="text-xs text-purple-700">模型</Label>
+                <Select
+                  value={aiConfig.model}
+                  onValueChange={(value: AiModel) => {
+                    setAiConfig(prev => ({ ...prev, model: value }));
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AI_PROVIDERS.find(p => p.value === aiConfig.provider)?.models.map((model) => (
+                      <SelectItem key={model} value={model}>
+                        {model}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* API密钥状态 */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs">
+                {getCurrentApiKey() ? (
+                  <>
+                    <CheckCircle2 className="h-3 w-3 text-green-600" />
+                    <span className="text-green-700">API密钥已配置</span>
+                  </>
+                ) : (
+                  <>
+                    <Info className="h-3 w-3 text-orange-600" />
+                    <span className="text-orange-700">需要配置API密钥</span>
+                  </>
+                )}
+              </div>
+
+              {!getCurrentApiKey() && (
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-xs text-purple-600 hover:text-purple-700"
+                  onClick={() => window.open('/settings', '_blank')}
+                >
+                  前往设置
+                </Button>
+              )}
+            </div>
+          </div>
+
           {/* 任务描述 */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -156,7 +304,7 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
                   variant="outline"
                   size="sm"
                   onClick={handleAIGenerate}
-                  disabled={!formData.description.trim() || isGenerating}
+                  disabled={!canUseAI() || isGenerating}
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0"
                 >
                   {isGenerating ? (
@@ -167,7 +315,7 @@ export function TaskCreateDialog({ open, onOpenChange }: TaskCreateDialogProps) 
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
-                      AI生成计划
+                      使用 {aiConfig.provider === 'gemini' ? 'Gemini' : 'DeepSeek'} 生成
                     </>
                   )}
                 </Button>
