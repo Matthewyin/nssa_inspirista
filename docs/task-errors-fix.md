@@ -34,6 +34,8 @@
 - `src/components/tasks/task-detail-view.tsx`
 - `src/components/tasks/task-status-visualization.tsx`
 - `src/components/tasks/milestone-timeline.tsx`
+- `src/lib/firebase/tasks.ts` - 修复了 `getTaskStats` 函数中的日期处理
+- `src/hooks/use-tasks.ts` - 更新了 `useTodayTasks` Hook 的客户端筛选逻辑
 
 ## 问题2: FirebaseError: The query requires an index
 

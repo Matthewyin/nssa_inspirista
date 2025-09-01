@@ -6,6 +6,7 @@ import { useAuth } from './use-auth';
 import { taskService } from '@/lib/firebase/tasks';
 import { aiTaskGenerator } from '@/lib/ai/task-generator';
 import { useToast } from './use-toast';
+import { safeGetTaskDueDate } from '@/lib/utils/date-utils';
 import type {
   Task,
   TaskFilters,
@@ -391,12 +392,24 @@ export function useTodayTasks() {
     const unsubscribe = onSnapshot(
       query,
       (snapshot) => {
-        const tasksData = snapshot.docs.map(doc => ({
+        const allTasks = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         } as Task));
-        
-        setTodayTasks(tasksData);
+
+        // 在客户端筛选今日到期的任务
+        const today = new Date();
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+        const todayTasksFiltered = allTasks.filter(task => {
+          if (task.status === 'completed') return false;
+
+          const dueDate = safeGetTaskDueDate(task);
+          return dueDate && dueDate >= startOfDay && dueDate < endOfDay;
+        });
+
+        setTodayTasks(todayTasksFiltered);
         setLoading(false);
       },
       (error) => {

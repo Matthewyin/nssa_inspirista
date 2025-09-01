@@ -14,6 +14,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { safeGetTaskDueDate, safeToDate } from '../utils/date-utils';
 import type {
   Task,
   TaskFilters,
@@ -565,9 +566,13 @@ export class TaskService {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(task => task.status === 'completed').length;
     const inProgressTasks = tasks.filter(task => task.status === 'in_progress').length;
-    const overdueTasks = tasks.filter(task => 
-      task.status !== 'completed' && task.dueDate.toDate() < now
-    ).length;
+    const overdueTasks = tasks.filter(task => {
+      if (task.status === 'completed') return false;
+
+      // 使用安全的日期处理
+      const dueDate = safeGetTaskDueDate(task);
+      return dueDate && dueDate < now;
+    }).length;
 
     const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
@@ -579,10 +584,13 @@ export class TaskService {
     let avgCompletionTime = 0;
     if (completedTasksWithTime.length > 0) {
       const totalDays = completedTasksWithTime.reduce((sum, task) => {
-        const startDate = task.startDate.toDate();
-        const completedDate = task.completedAt!.toDate();
+        const startDate = safeToDate(task.startDate);
+        const completedDate = safeToDate(task.completedAt);
+
+        if (!startDate || !completedDate) return sum;
+
         const days = Math.ceil((completedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        return sum + days;
+        return sum + Math.max(0, days); // 确保天数不为负
       }, 0);
       avgCompletionTime = totalDays / completedTasksWithTime.length;
     }
@@ -597,35 +605,25 @@ export class TaskService {
     };
   }
 
-  // 获取今日到期的任务
+  // 获取今日到期的任务（简化查询，避免复杂索引）
   getTodayTasks(userId: string) {
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-
+    // 简化查询，只按userId筛选，在客户端进行日期筛选
     return query(
       collection(this.db, 'tasks'),
       where('userId', '==', userId),
-      where('dueDate', '>=', Timestamp.fromDate(startOfDay)),
-      where('dueDate', '<', Timestamp.fromDate(endOfDay)),
       where('status', '!=', 'completed'),
       orderBy('status'),
-      orderBy('priority', 'desc')
+      orderBy('createdAt', 'desc')
     );
   }
 
-  // 获取本周到期的任务
+  // 获取本周到期的任务（简化查询，避免复杂索引）
   getThisWeekTasks(userId: string) {
-    const today = new Date();
-    const startOfWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
-    const endOfWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay() + 7);
-
+    // 简化查询，只按userId筛选，在客户端进行日期筛选
     return query(
       collection(this.db, 'tasks'),
       where('userId', '==', userId),
-      where('dueDate', '>=', Timestamp.fromDate(startOfWeek)),
-      where('dueDate', '<', Timestamp.fromDate(endOfWeek)),
-      orderBy('dueDate', 'asc')
+      orderBy('createdAt', 'desc')
     );
   }
 
