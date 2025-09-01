@@ -61,22 +61,36 @@ export class TaskService {
 
   // 获取用户任务（支持筛选和实时监听）
   getUserTasks(userId: string, filters?: TaskFilters) {
+    // 基础查询：只按userId筛选，按创建时间排序（避免复杂索引）
     let q = query(
       collection(this.db, 'tasks'),
       where('userId', '==', userId),
-      orderBy('dueDate', 'asc')
+      orderBy('createdAt', 'desc')
     );
 
+    // 如果有筛选条件，使用单个筛选条件避免复合索引
+    // 优先级：status > priority > category
     if (filters?.status) {
-      q = query(q, where('status', '==', filters.status));
-    }
-
-    if (filters?.category) {
-      q = query(q, where('category', '==', filters.category));
-    }
-
-    if (filters?.priority) {
-      q = query(q, where('priority', '==', filters.priority));
+      q = query(
+        collection(this.db, 'tasks'),
+        where('userId', '==', userId),
+        where('status', '==', filters.status),
+        orderBy('createdAt', 'desc')
+      );
+    } else if (filters?.priority) {
+      q = query(
+        collection(this.db, 'tasks'),
+        where('userId', '==', userId),
+        where('priority', '==', filters.priority),
+        orderBy('createdAt', 'desc')
+      );
+    } else if (filters?.category) {
+      q = query(
+        collection(this.db, 'tasks'),
+        where('userId', '==', userId),
+        where('category', '==', filters.category),
+        orderBy('createdAt', 'desc')
+      );
     }
 
     return q;

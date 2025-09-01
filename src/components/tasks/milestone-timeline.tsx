@@ -15,6 +15,8 @@ import {
 import { cn } from '@/lib/utils';
 import { format, differenceInDays } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { useSafeMilestoneDates } from '@/hooks/use-safe-dates';
+import { safeToDate, safeFormatDate } from '@/lib/utils/date-utils';
 import type { Milestone } from '@/lib/types/tasks';
 
 interface MilestoneTimelineProps {
@@ -24,16 +26,23 @@ interface MilestoneTimelineProps {
   compact?: boolean;
 }
 
-export function MilestoneTimeline({ 
-  milestones, 
-  onMilestoneToggle, 
+export function MilestoneTimeline({
+  milestones,
+  onMilestoneToggle,
   className,
-  compact = false 
+  compact = false
 }: MilestoneTimelineProps) {
-  // 按目标日期排序里程碑
-  const sortedMilestones = [...milestones].sort((a, b) => 
-    a.targetDate.getTime() - b.targetDate.getTime()
-  );
+  // 使用安全的里程碑日期处理
+  const safeMilestones = useSafeMilestoneDates(milestones);
+
+  // 按目标日期排序里程碑（只包含有效日期的）
+  const sortedMilestones = safeMilestones
+    .filter(m => m.safeDateInfo.isValid)
+    .sort((a, b) => {
+      const dateA = a.safeDateInfo.date?.getTime() || 0;
+      const dateB = b.safeDateInfo.date?.getTime() || 0;
+      return dateA - dateB;
+    });
 
   // 计算统计信息
   const completedCount = milestones.filter(m => m.isCompleted).length;
@@ -63,16 +72,17 @@ export function MilestoneTimeline({
           
           <div className="space-y-6">
             {sortedMilestones.map((milestone, index) => {
-              const isOverdue = !milestone.isCompleted && milestone.targetDate < now;
-              const daysFromNow = differenceInDays(milestone.targetDate, now);
+              const { safeDateInfo } = milestone;
+              const isOverdue = safeDateInfo.isOverdue;
+              const daysFromNow = safeDateInfo.daysUntilDue || 0;
               const isToday = daysFromNow === 0;
               const isTomorrow = daysFromNow === 1;
               const isYesterday = daysFromNow === -1;
-              
+
               // 计算与前一个里程碑的时间间隔
               const prevMilestone = index > 0 ? sortedMilestones[index - 1] : null;
-              const daysSincePrev = prevMilestone ? 
-                differenceInDays(milestone.targetDate, prevMilestone.targetDate) : 0;
+              const daysSincePrev = prevMilestone && prevMilestone.safeDateInfo.date && safeDateInfo.date ?
+                Math.ceil((safeDateInfo.date.getTime() - prevMilestone.safeDateInfo.date.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
               return (
                 <div key={milestone.id} className="relative flex items-start gap-4">
@@ -165,10 +175,10 @@ export function MilestoneTimeline({
                         )}>
                           <Calendar className="h-3 w-3" />
                           <span>
-                            {format(milestone.targetDate, 'MM月dd日', { locale: zhCN })}
+                            {safeFormatDate(safeDateInfo.date, 'MM月dd日') || '无效日期'}
                           </span>
                           <span className="text-muted-foreground">
-                            ({format(milestone.targetDate, 'EEEE', { locale: zhCN })})
+                            ({safeFormatDate(safeDateInfo.date, 'EEEE') || ''})
                           </span>
                         </div>
                         
@@ -192,7 +202,7 @@ export function MilestoneTimeline({
                               <>
                                 <CheckCircle2 className="h-3 w-3" />
                                 <span>
-                                  {format(milestone.completedDate, 'MM/dd HH:mm', { locale: zhCN })} 完成
+                                  {safeFormatDate(safeToDate(milestone.completedDate), 'MM/dd HH:mm') || '无效日期'} 完成
                                 </span>
                               </>
                             )

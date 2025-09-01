@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSafeTaskDates, useNextMilestone, useTaskProgress } from '@/hooks/use-safe-dates';
+import { safeToDate, safeFormatDate } from '@/lib/utils/date-utils';
 import type { Task } from '@/lib/types/tasks';
 
 interface TaskStatusVisualizationProps {
@@ -144,21 +145,21 @@ export function TaskStatusVisualization({ task, className }: TaskStatusVisualiza
               <div>
                 <span className="text-muted-foreground">创建时间：</span>
                 <div className="font-medium">
-                  {format(createdDate, 'yyyy/MM/dd', { locale: zhCN })}
+                  {createdDate.formatted || '无效日期'}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {daysFromCreation}天前
                 </div>
               </div>
-              
-              {dueDate && (
+
+              {dueDate.date && (
                 <div>
                   <span className="text-muted-foreground">截止时间：</span>
                   <div className={cn("font-medium", isOverdue && "text-red-600")}>
-                    {format(dueDate, 'yyyy/MM/dd', { locale: zhCN })}
+                    {dueDate.formatted || '无效日期'}
                   </div>
                   <div className={cn("text-xs", isOverdue ? "text-red-600" : "text-muted-foreground")}>
-                    {isOverdue ? `逾期${Math.abs(daysUntilDue!)}天` : 
+                    {isOverdue ? `逾期${Math.abs(daysUntilDue!)}天` :
                      daysUntilDue === 0 ? '今天截止' :
                      daysUntilDue === 1 ? '明天截止' :
                      `还有${daysUntilDue}天`}
@@ -172,10 +173,11 @@ export function TaskStatusVisualization({ task, className }: TaskStatusVisualiza
                 <div>
                   <span className="text-muted-foreground">完成时间：</span>
                   <div className="font-medium text-green-600">
-                    {format(task.completedAt.toDate(), 'yyyy/MM/dd', { locale: zhCN })}
+                    {safeFormatDate(safeToDate(task.completedAt), 'yyyy/MM/dd') || '无效日期'}
                   </div>
                   <div className="text-xs text-green-600">
-                    {differenceInDays(task.completedAt.toDate(), createdDate)}天完成
+                    {createdDate.date && safeToDate(task.completedAt) ?
+                      Math.ceil((safeToDate(task.completedAt)!.getTime() - createdDate.date.getTime()) / (1000 * 60 * 60 * 24)) : 0}天完成
                   </div>
                 </div>
               )}

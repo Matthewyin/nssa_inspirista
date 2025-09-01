@@ -22,6 +22,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { MilestoneProgress } from './milestone-progress';
+import { useSafeTaskDates } from '@/hooks/use-safe-dates';
+import { safeToDate, safeFormatDate } from '@/lib/utils/date-utils';
 import type { Task } from '@/lib/types/tasks';
 
 interface TaskDetailViewProps {
@@ -43,16 +45,13 @@ export function TaskDetailView({
 }: TaskDetailViewProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
+  // 使用安全的日期处理Hook
+  const { createdDate, dueDate } = useSafeTaskDates(task);
+
   // 计算任务状态
   const isCompleted = task.status === 'completed';
   const isInProgress = task.status === 'in_progress';
-  
-  // 计算基于里程碑的截止时间
-  const finalMilestone = task.milestones && task.milestones.length > 0 
-    ? task.milestones[task.milestones.length - 1] 
-    : null;
-  const dueDate = finalMilestone?.targetDate || (task.dueDate ? task.dueDate.toDate() : null);
-  const isOverdue = !isCompleted && dueDate && dueDate < new Date();
+  const isOverdue = dueDate.isOverdue;
 
   // 状态配置
   const statusConfig = {
@@ -191,28 +190,28 @@ export function TaskDetailView({
             <div className="grid grid-cols-2 gap-4 pl-6 text-sm">
               <div>
                 <span className="text-muted-foreground">创建时间：</span>
-                <span>{format(task.createdAt.toDate(), 'yyyy/MM/dd HH:mm', { locale: zhCN })}</span>
+                <span>{createdDate.formatted || '无效日期'}</span>
               </div>
-              
-              {dueDate && (
+
+              {dueDate.date && (
                 <div>
                   <span className="text-muted-foreground">截止时间：</span>
                   <span className={cn(isOverdue && "text-red-600")}>
-                    {format(dueDate, 'yyyy/MM/dd', { locale: zhCN })}
+                    {dueDate.formatted || '无效日期'}
                   </span>
                 </div>
               )}
-              
+
               <div>
                 <span className="text-muted-foreground">更新时间：</span>
-                <span>{format(task.updatedAt.toDate(), 'yyyy/MM/dd HH:mm', { locale: zhCN })}</span>
+                <span>{safeFormatDate(safeToDate(task.updatedAt), 'yyyy/MM/dd HH:mm') || '无效日期'}</span>
               </div>
-              
+
               {task.completedAt && (
                 <div>
                   <span className="text-muted-foreground">完成时间：</span>
                   <span className="text-green-600">
-                    {format(task.completedAt.toDate(), 'yyyy/MM/dd HH:mm', { locale: zhCN })}
+                    {safeFormatDate(safeToDate(task.completedAt), 'yyyy/MM/dd HH:mm') || '无效日期'}
                   </span>
                 </div>
               )}
