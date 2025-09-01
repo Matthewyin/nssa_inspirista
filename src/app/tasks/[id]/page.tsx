@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { safeToDate, safeFormatDate } from '@/lib/utils/date-utils';
 import { TaskDetailView } from '@/components/tasks/task-detail-view';
 import { MilestoneManager } from '@/components/tasks/milestone-manager';
 import { MilestoneTimeline } from '@/components/tasks/milestone-timeline';
@@ -197,7 +198,7 @@ export default function TaskDetailPage() {
           <div>
             <h1 className="text-2xl font-bold">{task.title}</h1>
             <p className="text-muted-foreground">
-              创建于 {format(task.createdAt.toDate(), 'yyyy年MM月dd日', { locale: zhCN })}
+              创建于 {safeFormatDate(safeToDate(task.createdAt), 'yyyy年MM月dd日') || '无效日期'}
             </p>
           </div>
         </div>

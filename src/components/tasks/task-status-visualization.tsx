@@ -34,6 +34,9 @@ export function TaskStatusVisualization({ task, className }: TaskStatusVisualiza
   const nextMilestone = useNextMilestone(task.milestones || []);
   const taskProgress = useTaskProgress(task);
 
+  // 从taskProgress中提取里程碑相关数据
+  const { completedMilestones, totalMilestones, percentage: milestoneProgress } = taskProgress;
+
   // 计算时间信息
   const now = new Date();
   const daysFromCreation = createdDate.date ? Math.ceil((now.getTime() - createdDate.date.getTime()) / (1000 * 60 * 60 * 24)) : 0;
