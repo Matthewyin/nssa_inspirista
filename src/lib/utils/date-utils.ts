@@ -82,17 +82,39 @@ export function safeDaysDifference(date1: any, date2: any): number | null {
 
 /**
  * 安全地格式化日期
+ * 防止RangeError: Invalid time value
  */
-export function safeFormatDate(dateValue: any, options?: Intl.DateTimeFormatOptions): string {
-  const date = safeToDate(dateValue);
-  if (!date) {
-    return '无效日期';
-  }
-
+export function safeFormatDate(
+  dateValue: any,
+  formatString: string = 'yyyy-MM-dd',
+  options?: { locale?: any }
+): string {
   try {
-    return date.toLocaleDateString('zh-CN', options);
+    const date = safeToDate(dateValue);
+    if (!date) {
+      return '无效日期';
+    }
+
+    // 如果是简单的格式字符串，使用原生方法
+    if (formatString === 'yyyy-MM-dd') {
+      return date.toISOString().split('T')[0];
+    } else if (formatString === 'MM/dd') {
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${month}/${day}`;
+    }
+
+    // 对于复杂格式，尝试使用date-fns
+    try {
+      const { format } = require('date-fns');
+      return format(date, formatString, options);
+    } catch (formatError) {
+      console.warn('Date formatting failed, using fallback:', formatError);
+      // 使用原生方法作为回退
+      return date.toLocaleDateString('zh-CN');
+    }
   } catch (error) {
-    console.warn('Date formatting failed:', error);
+    console.warn('Safe format date failed:', error, 'Input:', dateValue);
     return '格式化失败';
   }
 }
@@ -254,5 +276,39 @@ export function safeMilestoneTargetDate(milestone: any): Date | null {
   } catch (error) {
     console.warn('Error parsing milestone targetDate:', error, 'Milestone:', milestone);
     return null;
+  }
+}
+
+
+
+/**
+ * 安全的相对日期计算
+ * 防止日期计算中的错误
+ */
+export function safeRelativeDate(dateValue: any): string {
+  try {
+    const date = safeToDate(dateValue);
+    if (!date) {
+      return '无日期';
+    }
+
+    const now = new Date();
+    const diffMs = date.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return '今天';
+    } else if (diffDays === 1) {
+      return '明天';
+    } else if (diffDays === -1) {
+      return '昨天';
+    } else if (diffDays > 0) {
+      return `${diffDays}天后`;
+    } else {
+      return `${Math.abs(diffDays)}天前`;
+    }
+  } catch (error) {
+    console.warn('Relative date calculation failed:', error);
+    return '日期计算错误';
   }
 }

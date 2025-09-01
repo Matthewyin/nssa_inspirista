@@ -14,9 +14,7 @@ import {
   Flag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format, differenceInDays } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import { safeToDate, safeMilestoneTargetDate } from '@/lib/utils/date-utils';
+import { useSafeTaskDates, useNextMilestone, useTaskProgress } from '@/hooks/use-safe-dates';
 import type { Task } from '@/lib/types/tasks';
 
 interface TaskStatusVisualizationProps {
@@ -30,37 +28,20 @@ export function TaskStatusVisualization({ task, className }: TaskStatusVisualiza
   const isInProgress = task.status === 'in_progress';
   const isTodo = task.status === 'todo';
 
-  // 计算里程碑统计
-  const milestones = task.milestones || [];
-  const completedMilestones = milestones.filter(m => m.isCompleted).length;
-  const totalMilestones = milestones.length;
-  const milestoneProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+  // 使用安全的日期处理Hooks
+  const { createdDate, dueDate } = useSafeTaskDates(task);
+  const nextMilestone = useNextMilestone(task.milestones || []);
+  const taskProgress = useTaskProgress(task);
 
-  // 计算时间信息（使用安全的日期处理工具）
+  // 计算时间信息
   const now = new Date();
+  const daysFromCreation = createdDate.date ? Math.ceil((now.getTime() - createdDate.date.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+  const daysUntilDue = dueDate.daysUntilDue;
+  const isOverdue = dueDate.isOverdue;
+  const nextMilestoneDays = nextMilestone?.safeDateInfo.daysUntilDue || null;
 
-  // 安全获取创建日期
-  const createdDate = safeToDate(task.createdAt) || new Date();
-
-  // 安全获取截止日期
-  const finalMilestone = milestones.length > 0 ? milestones[milestones.length - 1] : null;
-  let dueDate: Date | null = null;
-
-  if (finalMilestone) {
-    dueDate = safeMilestoneTargetDate(finalMilestone);
-  } else if (task.dueDate) {
-    dueDate = safeToDate(task.dueDate);
-  }
-
-  // 安全获取下一个里程碑日期
-  const nextMilestone = milestones.find(m => !m.isCompleted);
-  const nextMilestoneDate = nextMilestone ? safeMilestoneTargetDate(nextMilestone) : null;
-
-  // 安全计算日期差异
-  const daysFromCreation = differenceInDays(now, createdDate);
-  const daysUntilDue = dueDate ? differenceInDays(dueDate, now) : null;
-  const isOverdue = !isCompleted && dueDate && dueDate < now;
-  const nextMilestoneDays = nextMilestoneDate ? differenceInDays(nextMilestoneDate, now) : null;
+  // 使用Hook计算的进度
+  const milestoneProgress = taskProgress.percentage;
 
   // 状态配置
   const statusConfig = {

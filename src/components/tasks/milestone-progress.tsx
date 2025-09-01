@@ -16,9 +16,7 @@ import {
   Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import { safeMilestoneTargetDate } from '@/lib/utils/date-utils';
+import { useSafeMilestoneDates } from '@/hooks/use-safe-dates';
 import type { Milestone } from '@/lib/types/tasks';
 
 interface MilestoneProgressProps {
@@ -36,13 +34,16 @@ export function MilestoneProgress({
 }: MilestoneProgressProps) {
   const [isExpanded, setIsExpanded] = useState(!compact);
 
+  // 使用安全的里程碑日期处理
+  const safeMilestones = useSafeMilestoneDates(milestones);
+
   // 计算进度
-  const completedCount = milestones.filter(m => m.isCompleted).length;
-  const totalCount = milestones.length;
+  const completedCount = safeMilestones.filter(m => m.isCompleted).length;
+  const totalCount = safeMilestones.length;
   const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   // 获取下一个未完成的里程碑
-  const nextMilestone = milestones.find(m => !m.isCompleted);
+  const nextMilestone = safeMilestones.find(m => !m.isCompleted);
 
   // 计算状态
   const isAllCompleted = completedCount === totalCount && totalCount > 0;
@@ -123,17 +124,11 @@ export function MilestoneProgress({
       {isExpanded && (
         <CardContent className={cn("pt-0", compact && "px-3 pb-3")}>
           <div className="space-y-3">
-            {milestones.map((milestone, index) => {
-              // 使用安全的里程碑日期处理函数
-              const targetDate = safeMilestoneTargetDate(milestone);
-              let isOverdue = false;
-              let daysUntilDue: number | null = null;
-
-              if (targetDate) {
-                const now = new Date();
-                isOverdue = !milestone.isCompleted && targetDate < now;
-                daysUntilDue = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-              }
+            {safeMilestones.map((milestone, index) => {
+              // 使用安全处理后的里程碑数据
+              const { safeDateInfo } = milestone;
+              const isOverdue = safeDateInfo.isOverdue;
+              const daysUntilDue = safeDateInfo.daysUntilDue;
 
               return (
                 <div
@@ -190,36 +185,16 @@ export function MilestoneProgress({
                     {/* 时间信息 */}
                     <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                       {/* 目标日期 */}
-                      {targetDate && (
+                      {safeDateInfo.isValid && (
                         <div className={cn(
                           "flex items-center gap-1",
                           isOverdue && "text-red-600"
                         )}>
                           <Calendar className="h-3 w-3" />
-                          <span>
-                            {(() => {
-                              if (!targetDate) return '无日期';
-
-                              try {
-                                return format(targetDate, 'MM/dd', { locale: zhCN });
-                              } catch (formatError) {
-                                console.warn('Error formatting milestone date:', formatError, 'Date:', targetDate);
-                                try {
-                                  return targetDate.toLocaleDateString('zh-CN');
-                                } catch (localError) {
-                                  console.warn('Error with toLocaleDateString:', localError);
-                                  return '日期格式错误';
-                                }
-                              }
-                            })()}
-                          </span>
+                          <span>{safeDateInfo.formatted}</span>
                           {isOverdue && <span>(逾期)</span>}
                           {daysUntilDue !== null && daysUntilDue >= 0 && !milestone.isCompleted && (
-                            <span>
-                              ({daysUntilDue === 0 ? '今天' :
-                                daysUntilDue === 1 ? '明天' :
-                                `${daysUntilDue}天后`})
-                            </span>
+                            <span>({safeDateInfo.relative})</span>
                           )}
                         </div>
                       )}

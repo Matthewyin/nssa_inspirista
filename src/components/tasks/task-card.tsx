@@ -31,13 +31,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import {
-  safeGetTaskDueDate,
-  safeIsTaskOverdue,
-  safeGetDaysUntilDue,
-  getFriendlyDateText,
-  safeToDate
-} from '@/lib/utils/date-utils';
+import { useSafeTaskDates } from '@/hooks/use-safe-dates';
 import type { Task, TaskStatus } from '@/lib/types/tasks';
 
 interface TaskCardProps {
@@ -60,10 +54,10 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
   const isCompleted = task.status === 'completed';
   const isInProgress = task.status === 'in_progress';
 
-  // 使用安全的日期处理函数
-  const dueDate = safeGetTaskDueDate(task);
-  const isOverdue = safeIsTaskOverdue(task);
-  const daysUntilDue = safeGetDaysUntilDue(task);
+  // 使用安全的日期处理Hook
+  const { createdDate, dueDate } = useSafeTaskDates(task);
+  const isOverdue = dueDate.isOverdue;
+  const daysUntilDue = dueDate.daysUntilDue;
 
   // 处理卡片点击
   const handleCardClick = (e: React.MouseEvent) => {
@@ -233,19 +227,14 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-3">
             {/* 截止时间 */}
-            {dueDate && (
+            {dueDate.isValid && (
               <div className={cn(
                 "flex items-center gap-1",
                 isOverdue && "text-red-600",
                 daysUntilDue !== null && daysUntilDue <= 1 && !isOverdue && "text-orange-600"
               )}>
                 <Calendar className="h-3 w-3" />
-                <span>
-                  {isOverdue ? '已逾期' :
-                   daysUntilDue === 0 ? '今天' :
-                   daysUntilDue === 1 ? '明天' :
-                   daysUntilDue !== null ? `${daysUntilDue}天后` : ''}
-                </span>
+                <span>{dueDate.relative}</span>
                 {isOverdue && <AlertTriangle className="h-3 w-3" />}
               </div>
             )}
@@ -261,7 +250,7 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
 
           {/* 创建时间 */}
           <div className="text-xs">
-            {getFriendlyDateText(task.createdAt)}
+            {createdDate.relative}
           </div>
         </div>
       </CardContent>
