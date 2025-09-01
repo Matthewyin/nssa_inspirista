@@ -44,9 +44,6 @@ export function TaskStatusVisualization({ task, className }: TaskStatusVisualiza
   const isOverdue = dueDate.isOverdue;
   const nextMilestoneDays = nextMilestone?.safeDateInfo.daysUntilDue || null;
 
-  // 使用Hook计算的进度
-  const milestoneProgress = taskProgress.percentage;
-
   // 状态配置
   const statusConfig = {
     todo: {
