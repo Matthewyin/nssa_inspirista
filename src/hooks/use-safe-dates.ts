@@ -117,9 +117,28 @@ export function useSafeDate(dateValue: any, formatString?: string) {
  */
 export function useNextMilestone(milestones: Milestone[]) {
   return useMemo(() => {
-    const safeMilestones = useSafeMilestoneDates(milestones);
+    const now = new Date();
+
+    const safeMilestones = milestones.map((milestone) => {
+      const targetDate = safeMilestoneTargetDate(milestone);
+      const isOverdue = !milestone.isCompleted && targetDate && targetDate < now;
+      const daysUntilDue = targetDate ? Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+
+      return {
+        ...milestone,
+        safeDateInfo: {
+          date: targetDate,
+          isValid: !!targetDate,
+          formatted: safeFormatDate(targetDate, 'MM/dd'),
+          relative: safeRelativeDate(targetDate),
+          isOverdue: !!isOverdue,
+          daysUntilDue,
+        } as SafeDateInfo,
+      };
+    });
+
     const nextMilestone = safeMilestones.find(m => !m.isCompleted);
-    
+
     return nextMilestone || null;
   }, [milestones]);
 }
@@ -137,14 +156,33 @@ export function useTaskProgress(task: Task) {
         nextMilestone: null,
       };
     }
-    
+
     const completedMilestones = task.milestones.filter(m => m.isCompleted).length;
     const totalMilestones = task.milestones.length;
     const percentage = Math.round((completedMilestones / totalMilestones) * 100);
-    
-    const safeMilestones = useSafeMilestoneDates(task.milestones);
+
+    // 直接处理里程碑，不调用其他Hook
+    const now = new Date();
+    const safeMilestones = task.milestones.map((milestone) => {
+      const targetDate = safeMilestoneTargetDate(milestone);
+      const isOverdue = !milestone.isCompleted && targetDate && targetDate < now;
+      const daysUntilDue = targetDate ? Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+
+      return {
+        ...milestone,
+        safeDateInfo: {
+          date: targetDate,
+          isValid: !!targetDate,
+          formatted: safeFormatDate(targetDate, 'MM/dd'),
+          relative: safeRelativeDate(targetDate),
+          isOverdue: !!isOverdue,
+          daysUntilDue,
+        } as SafeDateInfo,
+      };
+    });
+
     const nextMilestone = safeMilestones.find(m => !m.isCompleted);
-    
+
     return {
       percentage,
       completedMilestones,

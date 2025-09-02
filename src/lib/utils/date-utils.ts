@@ -262,7 +262,7 @@ export function safeMilestoneTargetDate(milestone: any): Date | null {
     }
 
     // 如果通用方法失败，尝试其他可能的格式
-    console.warn('Failed to parse milestone targetDate, trying fallback methods:', milestone.targetDate);
+    console.debug('Failed to parse milestone targetDate, trying fallback methods:', milestone.targetDate);
 
     // 尝试直接解析字符串
     if (typeof milestone.targetDate === 'string') {

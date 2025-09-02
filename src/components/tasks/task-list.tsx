@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/hooks/use-language';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
-import { TaskEditDialog } from './task-edit-dialog';
 import { TaskDeleteDialog, TaskBatchDeleteDialog } from './task-delete-dialog';
 import {
   Clock,
@@ -50,20 +50,20 @@ type SortDirection = 'asc' | 'desc';
 
 export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
   const { t } = useLanguage();
+  const router = useRouter();
   const [sortField, setSortField] = useState<SortField>('dueDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
 
   // 对话框状态
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
 
   // 批量操作处理函数
   const handleEditTask = (task: Task) => {
-    setCurrentTask(task);
-    setEditDialogOpen(true);
+    // 直接跳转到编辑页面，而不是打开弹窗
+    router.push(`/tasks/${task.id}/edit`);
   };
 
   const handleDeleteTask = (task: Task) => {
@@ -137,6 +137,16 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
     } else {
       setSelectedTasks([]);
     }
+  };
+
+  // 处理任务行点击
+  const handleTaskRowClick = (task: Task, e: React.MouseEvent) => {
+    // 如果点击的是按钮、复选框或其他交互元素，不触发跳转
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input[type="checkbox"]') || target.closest('[role="checkbox"]')) {
+      return;
+    }
+    router.push(`/tasks/${task.id}`);
   };
 
   // Get status display
@@ -272,13 +282,14 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
                 const dueDate = safeGetTaskDueDate(task);
 
                 return (
-                  <TableRow 
+                  <TableRow
                     key={task.id}
                     className={cn(
-                      "hover:bg-muted/50",
+                      "hover:bg-muted/50 cursor-pointer transition-colors",
                       task.status === 'completed' && "opacity-60",
                       isOverdue && "bg-red-50"
                     )}
+                    onClick={(e) => handleTaskRowClick(task, e)}
                   >
                     <TableCell>
                       <Checkbox
@@ -385,13 +396,6 @@ export function TaskList({ tasks, onMilestoneToggle }: TaskListProps) {
         </div>
       </CardContent>
     </Card>
-
-    {/* 编辑对话框 */}
-    <TaskEditDialog
-      task={currentTask}
-      open={editDialogOpen}
-      onOpenChange={setEditDialogOpen}
-    />
 
     {/* 删除确认对话框 */}
     <TaskDeleteDialog

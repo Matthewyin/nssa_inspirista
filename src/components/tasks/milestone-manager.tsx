@@ -38,6 +38,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { safeToDate, safeFormatDate, safeMilestoneTargetDate } from '@/lib/utils/date-utils';
 import type { Milestone } from '@/lib/types/tasks';
 
 interface MilestoneManagerProps {
@@ -107,10 +108,11 @@ export function MilestoneManager({
 
   // 开始编辑里程碑
   const startEditMilestone = (milestone: Milestone) => {
+    const safeTargetDate = safeMilestoneTargetDate(milestone) || new Date();
     setEditForm({
       title: milestone.title,
       description: milestone.description,
-      targetDate: milestone.targetDate,
+      targetDate: safeTargetDate,
       dayRange: milestone.dayRange
     });
     setEditingMilestone(milestone.id);
@@ -192,12 +194,12 @@ export function MilestoneManager({
         <div className="space-y-3">
           {milestones.map((milestone, index) => {
             const isEditing = editingMilestone === milestone.id;
-            const isOverdue = !milestone.isCompleted && 
-              milestone.targetDate && 
-              milestone.targetDate < new Date();
-            
-            const daysUntilDue = milestone.targetDate ? 
-              Math.ceil((milestone.targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 
+            const safeTargetDate = safeMilestoneTargetDate(milestone);
+            const now = new Date();
+            const isOverdue = !milestone.isCompleted && safeTargetDate && safeTargetDate < now;
+
+            const daysUntilDue = safeTargetDate ?
+              Math.ceil((safeTargetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) :
               null;
 
             return (
@@ -363,20 +365,20 @@ export function MilestoneManager({
                           
                           {/* 时间信息 */}
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            {milestone.targetDate && (
+                            {safeTargetDate && (
                               <div className={cn(
                                 "flex items-center gap-1",
                                 isOverdue && "text-red-600"
                               )}>
                                 <CalendarIcon className="h-3 w-3" />
                                 <span>
-                                  {format(milestone.targetDate, 'MM/dd', { locale: zhCN })}
+                                  {safeFormatDate(safeTargetDate, 'MM/dd') || '无效日期'}
                                 </span>
                                 {isOverdue && <AlertTriangle className="h-3 w-3" />}
                                 {daysUntilDue !== null && daysUntilDue >= 0 && !milestone.isCompleted && (
                                   <span>
-                                    ({daysUntilDue === 0 ? '今天' : 
-                                      daysUntilDue === 1 ? '明天' : 
+                                    ({daysUntilDue === 0 ? '今天' :
+                                      daysUntilDue === 1 ? '明天' :
                                       `${daysUntilDue}天后`})
                                   </span>
                                 )}
@@ -394,7 +396,7 @@ export function MilestoneManager({
                               <div className="flex items-center gap-1 text-green-600">
                                 <CheckCircle2 className="h-3 w-3" />
                                 <span>
-                                  {format(milestone.completedDate, 'MM/dd HH:mm', { locale: zhCN })}
+                                  {safeFormatDate(safeToDate(milestone.completedDate), 'MM/dd HH:mm') || '无效日期'}
                                 </span>
                               </div>
                             )}
@@ -471,7 +473,7 @@ export function MilestoneManager({
                       className="w-full justify-start text-left font-normal mt-1"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(newMilestone.targetDate, "PPP", { locale: zhCN })}
+                      {safeFormatDate(newMilestone.targetDate, "PPP") || '选择日期'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">

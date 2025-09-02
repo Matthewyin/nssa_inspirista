@@ -11,6 +11,7 @@ import {
   writeBatch,
   Timestamp,
   getDocs,
+  getDoc,
   limit,
 } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -50,6 +51,24 @@ export class TaskService {
     }
 
     return task;
+  }
+
+  // 获取单个任务
+  async getTask(taskId: string): Promise<Task | null> {
+    try {
+      const taskRef = doc(this.db, 'tasks', taskId);
+      const taskSnap = await getDoc(taskRef);
+
+      if (taskSnap.exists()) {
+        const taskData = taskSnap.data();
+        return this.convertTaskDates({ id: taskSnap.id, ...taskData });
+      }
+
+      return null;
+    } catch (error) {
+      console.error('获取任务失败:', error);
+      throw error;
+    }
   }
 
   // 计算基于里程碑的进度
@@ -151,9 +170,20 @@ export class TaskService {
       updatedAt: now,
 
       // 兼容性字段（保留以支持现有数据）
-      dueDate: taskData.milestones && taskData.milestones.length > 0
-        ? Timestamp.fromDate(taskData.milestones[taskData.milestones.length - 1].targetDate)
-        : Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
+      dueDate: (() => {
+        try {
+          if (milestonesWithIds.length > 0) {
+            const finalMilestone = milestonesWithIds[milestonesWithIds.length - 1];
+            // finalMilestone.targetDate 已经是 Timestamp，直接返回
+            return finalMilestone.targetDate;
+          } else {
+            return Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+          }
+        } catch (error) {
+          console.warn('Error creating dueDate timestamp in createTask, using fallback:', error);
+          return Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+        }
+      })(),
       priority: 'medium',
       category: 'personal',
       estimatedHours: 0,
@@ -228,7 +258,8 @@ export class TaskService {
         try {
           if (milestonesWithIds.length > 0) {
             const finalMilestone = milestonesWithIds[milestonesWithIds.length - 1];
-            return Timestamp.fromDate(finalMilestone.targetDate);
+            // finalMilestone.targetDate 已经是 Timestamp，直接返回
+            return finalMilestone.targetDate;
           } else {
             const fallbackDate = new Date(Date.now() + aiPlan.timeframeDays * 24 * 60 * 60 * 1000);
             return Timestamp.fromDate(fallbackDate);
@@ -397,16 +428,54 @@ export class TaskService {
   async updateTask(taskId: string, updates: Partial<Task>): Promise<void> {
     const taskRef = doc(this.db, 'tasks', taskId);
 
-    // 如果更新包含里程碑，重新计算进度和状态
+    // 如果更新包含里程碑，需要处理里程碑的日期转换和进度计算
     if (updates.milestones) {
-      const newProgress = this.calculateMilestoneProgress(updates.milestones);
-      const allCompleted = updates.milestones.every(m => m.isCompleted);
-      const anyCompleted = updates.milestones.some(m => m.isCompleted);
+      // 处理里程碑日期转换，确保所有日期都是 Timestamp 格式
+      const processedMilestones = updates.milestones.map(milestone => {
+        let targetDate: any = milestone.targetDate;
+
+        // 如果 targetDate 是 Date 对象，转换为 Timestamp
+        if (targetDate instanceof Date) {
+          targetDate = Timestamp.fromDate(targetDate);
+        }
+        // 如果 targetDate 是字符串或其他格式，尝试转换
+        else if (targetDate && typeof targetDate === 'string') {
+          try {
+            targetDate = Timestamp.fromDate(new Date(targetDate));
+          } catch (error) {
+            console.warn('Invalid date format, using current date:', targetDate);
+            targetDate = Timestamp.now();
+          }
+        }
+        // 如果已经是 Timestamp，保持不变
+        else if (!targetDate || typeof targetDate.toDate !== 'function') {
+          targetDate = Timestamp.now();
+        }
+
+        return {
+          ...milestone,
+          id: milestone.id || crypto.randomUUID(),
+          isCompleted: milestone.isCompleted || false,
+          targetDate,
+          completedDate: milestone.completedDate ?
+            (milestone.completedDate instanceof Date ?
+              milestone.completedDate :
+              new Date(milestone.completedDate)) :
+            undefined
+        };
+      });
+
+      updates.milestones = processedMilestones;
+
+      // 重新计算进度和状态
+      const newProgress = this.calculateMilestoneProgress(processedMilestones);
+      const allCompleted = processedMilestones.every(m => m.isCompleted);
+      const anyCompleted = processedMilestones.some(m => m.isCompleted);
 
       updates.progress = newProgress;
 
       // 自动更新任务状态
-      if (allCompleted && updates.milestones.length > 0) {
+      if (allCompleted && processedMilestones.length > 0) {
         updates.status = 'completed';
         updates.completedAt = Timestamp.now();
       } else if (anyCompleted) {
@@ -416,8 +485,42 @@ export class TaskService {
       }
     }
 
+    // 深度清理数据，移除所有 undefined 和 null 值
+    const deepCleanObject = (obj: any): any => {
+      if (obj === null || obj === undefined) return undefined;
+      if (Array.isArray(obj)) {
+        return obj.map(deepCleanObject).filter(item => item !== undefined);
+      }
+      if (typeof obj === 'object') {
+        const cleaned: any = {};
+        for (const [key, value] of Object.entries(obj)) {
+          const cleanedValue = deepCleanObject(value);
+          if (cleanedValue !== undefined) {
+            cleaned[key] = cleanedValue;
+          }
+        }
+        return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+      }
+      return obj;
+    };
+
+    const cleanUpdates = deepCleanObject(updates);
+
+    console.log('🔍 Firestore updateTask 调试信息:');
+    console.log('📥 原始数据:', JSON.stringify(updates, null, 2));
+    console.log('🧹 清理后数据:', JSON.stringify(cleanUpdates, null, 2));
+
+    // 检查是否还有 undefined 值
+    const hasUndefined = JSON.stringify(cleanUpdates).includes('undefined');
+    console.log('⚠️ 是否包含 undefined:', hasUndefined);
+
+    if (hasUndefined) {
+      console.error('❌ 发现 undefined 值，停止更新');
+      throw new Error('数据包含 undefined 值，无法更新到 Firestore');
+    }
+
     await updateDoc(taskRef, {
-      ...updates,
+      ...cleanUpdates,
       updatedAt: Timestamp.now(),
     });
   }
@@ -426,13 +529,13 @@ export class TaskService {
   async updateTaskStatus(taskId: string, status: Task['status']): Promise<void> {
     const taskRef = doc(this.db, 'tasks', taskId);
 
-    // 获取当前任务数据以同步里程碑状态
-    const taskDoc = await getDocs(query(collection(this.db, 'tasks'), where('__name__', '==', taskId), limit(1)));
-    if (taskDoc.empty) {
+    // 直接获取任务文档，避免复杂查询
+    const taskDoc = await getDoc(taskRef);
+    if (!taskDoc.exists()) {
       throw new Error('任务不存在');
     }
 
-    const taskData = taskDoc.docs[0].data() as Task;
+    const taskData = taskDoc.data() as Task;
     const updates: Partial<Task> = {
       status,
       updatedAt: Timestamp.now(),
@@ -507,12 +610,13 @@ export class TaskService {
 
   // 获取任务的里程碑列表
   async getTaskMilestones(taskId: string): Promise<Milestone[]> {
-    const taskDoc = await getDocs(query(collection(this.db, 'tasks'), where('__name__', '==', taskId), limit(1)));
-    if (taskDoc.empty) {
+    const taskRef = doc(this.db, 'tasks', taskId);
+    const taskDoc = await getDoc(taskRef);
+    if (!taskDoc.exists()) {
       throw new Error('任务不存在');
     }
 
-    const taskData = taskDoc.docs[0].data() as Task;
+    const taskData = taskDoc.data() as Task;
     return taskData.milestones || [];
   }
 
@@ -611,8 +715,6 @@ export class TaskService {
     return query(
       collection(this.db, 'tasks'),
       where('userId', '==', userId),
-      where('status', '!=', 'completed'),
-      orderBy('status'),
       orderBy('createdAt', 'desc')
     );
   }

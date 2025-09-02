@@ -74,6 +74,18 @@ export function useTasks(filters?: TaskFilters) {
     return unsubscribe;
   }, [user, filters]);
 
+  // 获取单个任务
+  const getTask = async (taskId: string): Promise<Task | null> => {
+    if (!user) return null;
+
+    try {
+      return await taskService.getTask(taskId);
+    } catch (error) {
+      console.error('获取任务失败:', error);
+      return null;
+    }
+  };
+
   // 创建任务
   const createTask = async (taskData: TaskCreateInput) => {
     if (!user) return;
@@ -329,6 +341,7 @@ export function useTasks(filters?: TaskFilters) {
     tasks,
     loading,
     error,
+    getTask,
     createTask,
     updateTask,
     updateTaskStatus,

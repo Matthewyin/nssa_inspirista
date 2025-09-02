@@ -158,14 +158,59 @@ export function TaskDetailView({
                 <FileText className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium text-sm">描述</span>
               </div>
-              <div className="text-sm text-muted-foreground whitespace-pre-wrap pl-6">
-                {task.description}
+              <div className="text-sm text-muted-foreground pl-6">
+                {/* 如果是AI生成的任务，解析并格式化显示 */}
+                {task.isAIGenerated ? (
+                  <div className="space-y-3">
+                    {/* 总体规划 */}
+                    <div>
+                      <div className="font-medium text-foreground mb-1">总体规划：</div>
+                      <div className="whitespace-pre-wrap">{task.description}</div>
+                    </div>
+
+                    {/* 里程碑计划 */}
+                    {task.milestones && task.milestones.length > 0 && (
+                      <div>
+                        <div className="font-medium text-foreground mb-2">里程碑计划：</div>
+                        <div className="space-y-2">
+                          {task.milestones.map((milestone, index) => (
+                            <div key={milestone.id} className="flex items-start gap-2">
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium min-w-fit">
+                                里程碑{index + 1}
+                              </span>
+                              <div className="flex-1">
+                                <div className="font-medium text-foreground">{milestone.title}</div>
+                                <div className="text-xs text-muted-foreground">{milestone.description}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 推荐标签 */}
+                    {task.tags && task.tags.length > 0 && (
+                      <div>
+                        <div className="font-medium text-foreground mb-1">推荐标签：</div>
+                        <div className="flex flex-wrap gap-1">
+                          {task.tags.map((tag, index) => (
+                            <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="whitespace-pre-wrap">{task.description}</div>
+                )}
               </div>
             </div>
           )}
 
-          {/* 标签 */}
-          {task.tags && task.tags.length > 0 && (
+          {/* 标签 - 只在非AI生成任务时显示，AI生成任务的标签已在描述中显示 */}
+          {!task.isAIGenerated && task.tags && task.tags.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Tag className="h-4 w-4 text-muted-foreground" />

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TaskEditDialog } from './task-edit-dialog';
 import { TaskDeleteDialog } from './task-delete-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +46,6 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
   const [isHovered, setIsHovered] = useState(false);
 
   // 对话框状态
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // 计算任务状态
@@ -151,7 +149,7 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+              <DropdownMenuItem onClick={() => router.push(`/tasks/${task.id}/edit`)}>
                 <Edit className="h-4 w-4 mr-2" />
                 编辑任务
               </DropdownMenuItem>
@@ -255,13 +253,6 @@ export function TaskCard({ task, onStatusChange, onEdit, onDelete, onMilestoneTo
         </div>
       </CardContent>
     </Card>
-
-    {/* 编辑对话框 */}
-    <TaskEditDialog
-      task={task}
-      open={editDialogOpen}
-      onOpenChange={setEditDialogOpen}
-    />
 
     {/* 删除确认对话框 */}
     <TaskDeleteDialog

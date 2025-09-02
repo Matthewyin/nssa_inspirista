@@ -32,7 +32,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { safeMilestoneTargetDate } from '@/lib/utils/date-utils';
+import { safeMilestoneTargetDate, safeToDate, safeFormatDate } from '@/lib/utils/date-utils';
 import type { Milestone } from '@/lib/types/tasks';
 
 interface MilestoneEditDialogProps {
@@ -285,7 +285,7 @@ export function MilestoneEditDialog({
                   <span className="font-medium">完成时间</span>
                 </div>
                 <div className="text-sm text-green-700 mt-1">
-                  {format(milestone.completedDate, 'yyyy年MM月dd日 HH:mm', { locale: zhCN })}
+                  {safeFormatDate(safeToDate(milestone.completedDate), 'yyyy年MM月dd日 HH:mm') || '无效日期'}
                 </div>
               </div>
             )}

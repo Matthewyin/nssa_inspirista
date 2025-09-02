@@ -42,6 +42,7 @@ export default function TaskDetailPage() {
     addMilestone,
     updateMilestone,
     deleteMilestone,
+    deleteTask,
     batchUpdateMilestoneStatus,
     batchDeleteMilestones
   } = useTasks();
@@ -134,6 +135,22 @@ export default function TaskDetailPage() {
     }
   };
 
+  // 处理删除任务
+  const handleDeleteTask = async () => {
+    if (!task) return;
+
+    const confirmed = window.confirm('确定要删除这个任务吗？此操作无法撤销。');
+    if (!confirmed) return;
+
+    try {
+      await deleteTask(task.id);
+      router.push('/tasks');
+    } catch (error) {
+      console.error('删除任务失败:', error);
+      alert('删除任务失败，请重试。');
+    }
+  };
+
   // 处理批量操作
   const handleBatchMilestoneToggle = async (milestoneIds: string[], isCompleted: boolean) => {
     if (!task) return;
@@ -204,11 +221,19 @@ export default function TaskDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(`/tasks/${task.id}/edit`)}
+          >
             <Edit className="h-4 w-4 mr-1" />
             编辑
           </Button>
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDeleteTask()}
+          >
             <Trash2 className="h-4 w-4 mr-1" />
             删除
           </Button>

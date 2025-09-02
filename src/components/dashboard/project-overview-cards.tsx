@@ -114,7 +114,11 @@ export function ProjectOverviewCards() {
 
   // 更新任务统计
   useEffect(() => {
-    if (taskStats && projectStats) {
+    if (taskStats && projectStats &&
+        (projectStats.tasks.total !== taskStats.totalTasks ||
+         projectStats.tasks.completed !== taskStats.completedTasks ||
+         projectStats.tasks.inProgress !== taskStats.inProgressTasks ||
+         projectStats.tasks.overdue !== taskStats.overdueTasks)) {
       setProjectStats(prev => ({
         ...prev!,
         tasks: {
@@ -125,7 +129,7 @@ export function ProjectOverviewCards() {
         }
       }));
     }
-  }, [taskStats, projectStats]);
+  }, [taskStats, projectStats?.tasks.total, projectStats?.tasks.completed, projectStats?.tasks.inProgress, projectStats?.tasks.overdue]);
 
   if (loading || taskStatsLoading) {
     return <ProjectOverviewCardsSkeleton />;

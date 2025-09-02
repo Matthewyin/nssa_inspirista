@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { safeToDate, safeFormatDate } from '@/lib/utils/date-utils';
 import type { Milestone } from '@/lib/types/tasks';
 
 interface MilestoneVirtualListProps {
@@ -278,7 +279,7 @@ export function MilestoneVirtualList({
                         )}>
                           <Calendar className="h-3 w-3" />
                           <span>
-                            {format(milestone.targetDate, 'MM/dd', { locale: zhCN })}
+                            {safeFormatDate(safeToDate(milestone.targetDate), 'MM/dd') || '无效日期'}
                           </span>
                         </div>
 

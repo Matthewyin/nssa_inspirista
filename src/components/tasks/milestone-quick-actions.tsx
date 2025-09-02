@@ -32,6 +32,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { safeToDate, safeFormatDate } from '@/lib/utils/date-utils';
 import type { Milestone } from '@/lib/types/tasks';
 
 interface MilestoneQuickActionsProps {
@@ -108,74 +109,73 @@ export function MilestoneQuickActions({
   const statusConfig = getStatusConfig();
 
   return (
-    <TooltipProvider>
-      <div className={cn("flex items-center gap-2", className)}>
-        {/* 完成状态按钮 */}
-        <Tooltip>
-          <TooltipTrigger asChild>
+    <div className={cn("flex items-center gap-2", className)}>
+      {/* 完成状态按钮 */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size={compact ? "sm" : "default"}
+            className={cn(
+              "h-8 w-8 p-0 rounded-full",
+              statusConfig.color,
+              isLoading && "opacity-50"
+            )}
+            onClick={handleToggleComplete}
+            disabled={isLoading || !onToggleComplete}
+          >
+            <statusConfig.icon className={cn("h-4 w-4", compact && "h-3 w-3")} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {milestone.isCompleted ? '标记为未完成' : '标记为已完成'}
+        </TooltipContent>
+      </Tooltip>
+
+      {/* 状态标签 */}
+      {!compact && (
+        <Badge
+          variant="outline"
+          className={cn("text-xs", statusConfig.bgColor, statusConfig.color)}
+        >
+          <statusConfig.icon className="h-3 w-3 mr-1" />
+          {statusConfig.label}
+        </Badge>
+      )}
+
+      {/* 时间信息 */}
+      <div className={cn("text-xs", statusConfig.color)}>
+        {milestone.isCompleted ? (
+          milestone.completedDate && (
+            <span>
+              {safeFormatDate(safeToDate(milestone.completedDate), 'MM/dd HH:mm') || '无效日期'}
+            </span>
+          )
+        ) : isOverdue ? (
+          <span>逾期 {Math.abs(daysUntilDue)} 天</span>
+        ) : isToday ? (
+          <span className="font-medium">今天截止</span>
+        ) : isTomorrow ? (
+          <span>明天截止</span>
+        ) : daysUntilDue > 0 ? (
+          <span>还有 {daysUntilDue} 天</span>
+        ) : (
+          <span>{Math.abs(daysUntilDue)} 天前</span>
+        )}
+      </div>
+
+      {/* 更多操作菜单 */}
+      {(onEdit || onDelete) && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              size={compact ? "sm" : "default"}
-              className={cn(
-                "h-8 w-8 p-0 rounded-full",
-                statusConfig.color,
-                isLoading && "opacity-50"
-              )}
-              onClick={handleToggleComplete}
-              disabled={isLoading || !onToggleComplete}
+              size="sm"
+              className="h-6 w-6 p-0"
             >
-              <statusConfig.icon className={cn("h-4 w-4", compact && "h-3 w-3")} />
+              <MoreHorizontal className="h-3 w-3" />
             </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {milestone.isCompleted ? '标记为未完成' : '标记为已完成'}
-          </TooltipContent>
-        </Tooltip>
-
-        {/* 状态标签 */}
-        {!compact && (
-          <Badge 
-            variant="outline" 
-            className={cn("text-xs", statusConfig.bgColor, statusConfig.color)}
-          >
-            <statusConfig.icon className="h-3 w-3 mr-1" />
-            {statusConfig.label}
-          </Badge>
-        )}
-
-        {/* 时间信息 */}
-        <div className={cn("text-xs", statusConfig.color)}>
-          {milestone.isCompleted ? (
-            milestone.completedDate && (
-              <span>
-                {format(milestone.completedDate, 'MM/dd HH:mm', { locale: zhCN })}
-              </span>
-            )
-          ) : isOverdue ? (
-            <span>逾期 {Math.abs(daysUntilDue)} 天</span>
-          ) : isToday ? (
-            <span className="font-medium">今天截止</span>
-          ) : isTomorrow ? (
-            <span>明天截止</span>
-          ) : daysUntilDue > 0 ? (
-            <span>还有 {daysUntilDue} 天</span>
-          ) : (
-            <span>{Math.abs(daysUntilDue)} 天前</span>
-          )}
-        </div>
-
-        {/* 更多操作菜单 */}
-        {(onEdit || onDelete) && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-              >
-                <MoreHorizontal className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
+          </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               {/* 快速操作 */}
               <DropdownMenuItem

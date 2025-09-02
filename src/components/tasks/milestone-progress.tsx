@@ -16,7 +16,10 @@ import {
   Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { useSafeMilestoneDates } from '@/hooks/use-safe-dates';
+import { safeToDate, safeFormatDate } from '@/lib/utils/date-utils';
 import type { Milestone } from '@/lib/types/tasks';
 
 interface MilestoneProgressProps {
@@ -212,7 +215,7 @@ export function MilestoneProgress({
                         <div className="flex items-center gap-1 text-green-600">
                           <CheckCircle2 className="h-3 w-3" />
                           <span>
-                            {format(milestone.completedDate, 'MM/dd HH:mm', { locale: zhCN })}
+                            {safeFormatDate(safeToDate(milestone.completedDate), 'MM/dd HH:mm') || '无效日期'}
                           </span>
                         </div>
                       )}
