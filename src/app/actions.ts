@@ -154,9 +154,30 @@ export async function refineNote(input: RefineNoteInput): Promise<RefineNoteOutp
         messages: [
           {
             role: 'user',
-            content: `You are an AI assistant designed to refine notes. Please organize, summarize, and categorize the following note content to improve its clarity and structure. Return only the refined note content without any additional formatting or explanation.
+            content: `你是一位专业的内容编辑和知识管理专家，擅长将零散的想法整理成结构化、有价值的内容。
 
-Note Content:
+## 优化目标
+- 提升内容的逻辑性和可读性
+- 挖掘深层价值和潜在应用
+- 增强实用性和可操作性
+- 保持原创思想的核心价值
+
+## 优化策略
+1. **结构重组**：按逻辑关系重新组织内容，形成清晰的层次结构
+2. **内容扩展**：基于核心观点，补充相关背景、应用场景、实施建议
+3. **语言优化**：使用更精准、生动的表达，提升可读性
+4. **价值挖掘**：识别并突出内容的独特价值和创新点
+5. **实用转化**：将抽象想法转化为具体可行的行动建议
+
+## 输出要求
+- 保持原始想法的核心精神和创新性
+- 结构清晰，逻辑连贯，层次分明
+- 语言简洁有力，避免冗余表达
+- 增加实用价值，提供可操作的建议
+- 字数适中，既充实又不冗长
+
+请对以下内容进行深度优化：
+
 ${noteContent}`,
           },
         ],
@@ -179,10 +200,30 @@ ${noteContent}`,
 
     const { output } = await ai.generate({
       model,
-      prompt: `You are an AI assistant designed to refine notes.
-Please organize, summarize, and categorize the following note content to improve its clarity and structure.
+      prompt: `你是一位专业的内容编辑和知识管理专家，擅长将零散的想法整理成结构化、有价值的内容。
 
-Note Content:
+## 优化目标
+- 提升内容的逻辑性和可读性
+- 挖掘深层价值和潜在应用
+- 增强实用性和可操作性
+- 保持原创思想的核心价值
+
+## 优化策略
+1. **结构重组**：按逻辑关系重新组织内容，形成清晰的层次结构
+2. **内容扩展**：基于核心观点，补充相关背景、应用场景、实施建议
+3. **语言优化**：使用更精准、生动的表达，提升可读性
+4. **价值挖掘**：识别并突出内容的独特价值和创新点
+5. **实用转化**：将抽象想法转化为具体可行的行动建议
+
+## 输出要求
+- 保持原始想法的核心精神和创新性
+- 结构清晰，逻辑连贯，层次分明
+- 语言简洁有力，避免冗余表达
+- 增加实用价值，提供可操作的建议
+- 字数适中，既充实又不冗长
+
+请对以下内容进行深度优化：
+
 ${noteContent}`,
       output: { schema: RefineNoteOutputSchema },
     });
@@ -207,9 +248,31 @@ export async function suggestTags(input: SuggestTagsInput): Promise<SuggestTagsO
         messages: [
           {
             role: 'user',
-            content: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note. Return only a JSON array of strings, for example: ["tag1", "tag2", "tag3"]
+            content: `你是一位专业的知识分类和标签专家，擅长从内容中提取核心概念和关键主题。
 
-Note Content:
+## 标签设计原则
+1. **准确性**：标签必须准确反映内容的核心主题
+2. **实用性**：便于后续检索和知识管理
+3. **层次性**：包含不同层次的概念（领域、方法、应用等）
+4. **简洁性**：使用简洁明了的词汇，避免冗长表达
+5. **一致性**：遵循统一的命名规范
+
+## 标签类型
+- **领域标签**：技术领域、学科分类、行业类别
+- **方法标签**：学习方法、工作方式、解决方案
+- **应用标签**：使用场景、目标人群、实际用途
+- **特征标签**：内容特点、难度级别、时间要求
+
+## 分析要求
+请深入分析以下内容，识别：
+- 核心主题和关键概念
+- 涉及的技能和知识领域
+- 适用的场景和人群
+- 内容的独特价值点
+
+基于分析结果，生成3-5个高质量标签。返回JSON格式：["标签1", "标签2", "标签3"]
+
+内容：
 ${noteContent}`,
           },
         ],
@@ -240,9 +303,31 @@ ${noteContent}`,
 
     const { output } = await ai.generate({
       model,
-      prompt: `Suggest 3-5 relevant tags for the following note content. The tags should reflect the main topics, themes, and keywords present in the note.
+      prompt: `你是一位专业的知识分类和标签专家，擅长从内容中提取核心概念和关键主题。
 
-Note Content:
+## 标签设计原则
+1. **准确性**：标签必须准确反映内容的核心主题
+2. **实用性**：便于后续检索和知识管理
+3. **层次性**：包含不同层次的概念（领域、方法、应用等）
+4. **简洁性**：使用简洁明了的词汇，避免冗长表达
+5. **一致性**：遵循统一的命名规范
+
+## 标签类型
+- **领域标签**：技术领域、学科分类、行业类别
+- **方法标签**：学习方法、工作方式、解决方案
+- **应用标签**：使用场景、目标人群、实际用途
+- **特征标签**：内容特点、难度级别、时间要求
+
+## 分析要求
+请深入分析以下内容，识别：
+- 核心主题和关键概念
+- 涉及的技能和知识领域
+- 适用的场景和人群
+- 内容的独特价值点
+
+基于分析结果，生成3-5个高质量标签。
+
+内容：
 ${noteContent}`,
       output: { schema: SuggestTagsOutputSchema },
     });

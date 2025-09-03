@@ -298,11 +298,20 @@ export class TaskService {
     const taskData = taskDoc.docs[0].data() as Task;
     const updatedMilestones = taskData.milestones.map(milestone => {
       if (milestone.id === milestoneId) {
-        return {
+        const updatedMilestone: Milestone = {
           ...milestone,
-          isCompleted,
-          completedDate: isCompleted ? new Date() : undefined
+          isCompleted
         };
+
+        // 只在完成时设置完成日期，否则删除该字段
+        if (isCompleted) {
+          updatedMilestone.completedDate = new Date();
+        } else {
+          // 删除 completedDate 字段而不是设置为 undefined
+          delete (updatedMilestone as any).completedDate;
+        }
+
+        return updatedMilestone;
       }
       return milestone;
     });
@@ -583,11 +592,20 @@ export class TaskService {
     const updatedMilestones = taskData.milestones.map(milestone => {
       const update = milestoneUpdates.find(u => u.id === milestone.id);
       if (update) {
-        return {
+        const updatedMilestone: Milestone = {
           ...milestone,
-          isCompleted: update.isCompleted,
-          completedDate: update.isCompleted ? (milestone.completedDate || new Date()) : undefined
+          isCompleted: update.isCompleted
         };
+
+        // 只在完成时设置完成日期
+        if (update.isCompleted) {
+          updatedMilestone.completedDate = milestone.completedDate || new Date();
+        } else {
+          // 删除 completedDate 字段而不是设置为 undefined
+          delete (updatedMilestone as any).completedDate;
+        }
+
+        return updatedMilestone;
       }
       return milestone;
     });
@@ -742,11 +760,20 @@ export class TaskService {
     const taskData = taskDoc.docs[0].data() as Task;
     const updatedMilestones = taskData.milestones.map(milestone => {
       if (milestoneIds.includes(milestone.id)) {
-        return {
+        const updatedMilestone: Milestone = {
           ...milestone,
-          isCompleted,
-          completedDate: isCompleted ? new Date() : undefined
+          isCompleted
         };
+
+        // 只在完成时设置完成日期
+        if (isCompleted) {
+          updatedMilestone.completedDate = new Date();
+        } else {
+          // 删除 completedDate 字段而不是设置为 undefined
+          delete (updatedMilestone as any).completedDate;
+        }
+
+        return updatedMilestone;
       }
       return milestone;
     });
@@ -768,13 +795,22 @@ export class TaskService {
       newStatus = 'todo';
     }
 
-    await updateDoc(taskRef, {
+    // 构建更新数据，避免 undefined 值
+    const updateData: any = {
       milestones: updatedMilestones,
       progress: newProgress,
       status: newStatus,
-      completedAt,
       updatedAt: Timestamp.now(),
-    });
+    };
+
+    // 只在有值时添加 completedAt
+    if (completedAt !== undefined) {
+      updateData.completedAt = completedAt;
+    }
+
+    console.log('🔍 批量更新里程碑状态 - 更新数据:', updateData);
+
+    await updateDoc(taskRef, updateData);
   }
 
   // 批量删除里程碑
@@ -800,7 +836,7 @@ export class TaskService {
 
     if (updatedMilestones.length === 0) {
       newStatus = 'todo';
-      completedAt = undefined;
+      // 不设置 completedAt，让它保持原值或删除
     } else if (allCompleted) {
       newStatus = 'completed';
       completedAt = Timestamp.now();
@@ -810,13 +846,22 @@ export class TaskService {
       newStatus = 'todo';
     }
 
-    await updateDoc(taskRef, {
+    // 构建更新数据，避免 undefined 值
+    const updateData: any = {
       milestones: updatedMilestones,
       progress: newProgress,
       status: newStatus,
-      completedAt,
       updatedAt: Timestamp.now(),
-    });
+    };
+
+    // 只在有值时添加 completedAt
+    if (completedAt !== undefined) {
+      updateData.completedAt = completedAt;
+    }
+
+    console.log('🔍 里程碑删除 - 更新数据:', updateData);
+
+    await updateDoc(taskRef, updateData);
   }
 
   // 重新排序里程碑
