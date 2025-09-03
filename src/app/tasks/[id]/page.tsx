@@ -50,18 +50,22 @@ export default function TaskDetailPage() {
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'milestones' | 'timeline'>('overview');
 
   const taskId = params.id as string;
 
   // 监听任务数据变化
   useEffect(() => {
-    if (!user || !taskId) return;
+    if (!user || !taskId || isDeleting) return;
 
     const taskRef = doc(db, 'tasks', taskId);
     const unsubscribe = onSnapshot(
       taskRef,
       (doc) => {
+        // 如果正在删除，忽略监听器更新
+        if (isDeleting) return;
+
         if (doc.exists()) {
           const taskData = doc.data() as Task;
           // 验证任务属于当前用户
@@ -71,19 +75,24 @@ export default function TaskDetailPage() {
             setError('无权访问此任务');
           }
         } else {
-          setError('任务不存在');
+          // 只有在不是删除状态时才显示"任务不存在"
+          if (!isDeleting) {
+            setError('任务不存在');
+          }
         }
         setLoading(false);
       },
       (error) => {
         console.error('获取任务详情失败:', error);
-        setError('获取任务详情失败');
+        if (!isDeleting) {
+          setError('获取任务详情失败');
+        }
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [user, taskId]);
+  }, [user, taskId, isDeleting]);
 
   // 处理任务状态变更
   const handleStatusChange = async (status: Task['status']) => {
@@ -143,10 +152,18 @@ export default function TaskDetailPage() {
     if (!confirmed) return;
 
     try {
-      await deleteTask(task.id);
+      // 设置删除状态，防止监听器触发错误页面
+      setIsDeleting(true);
+
+      // 立即跳转到任务列表，避免显示"任务不存在"页面
       router.push('/tasks');
+
+      // 在后台删除任务
+      await deleteTask(task.id);
     } catch (error) {
       console.error('删除任务失败:', error);
+      // 如果删除失败，重置状态并显示错误
+      setIsDeleting(false);
       alert('删除任务失败，请重试。');
     }
   };
@@ -177,6 +194,20 @@ export default function TaskDetailPage() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">加载任务详情...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果正在删除，显示删除中状态
+  if (isDeleting) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">正在删除任务...</p>
           </div>
         </div>
       </div>

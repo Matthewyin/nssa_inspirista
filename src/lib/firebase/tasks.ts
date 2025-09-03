@@ -536,6 +536,8 @@ export class TaskService {
 
   // 更新任务状态（支持里程碑状态同步）
   async updateTaskStatus(taskId: string, status: Task['status']): Promise<void> {
+    console.log('🔍 updateTaskStatus 开始 - taskId:', taskId, 'status:', status);
+
     const taskRef = doc(this.db, 'tasks', taskId);
 
     // 直接获取任务文档，避免复杂查询
@@ -545,38 +547,113 @@ export class TaskService {
     }
 
     const taskData = taskDoc.data() as Task;
-    const updates: Partial<Task> = {
+    console.log('🔍 当前任务数据:', {
+      id: taskData.id,
+      title: taskData.title,
+      status: taskData.status,
+      milestonesCount: taskData.milestones?.length || 0
+    });
+
+    const updates: any = {
       status,
       updatedAt: Timestamp.now(),
     };
 
     // 如果任务标记为完成，同时完成所有里程碑
     if (status === 'completed' && taskData.milestones) {
-      const updatedMilestones = taskData.milestones.map(milestone => ({
-        ...milestone,
-        isCompleted: true,
-        completedDate: milestone.completedDate || new Date()
-      }));
+      console.log('🔍 完成任务，更新里程碑');
+      const updatedMilestones = taskData.milestones.map(milestone => {
+        const completedMilestone: any = {
+          id: milestone.id,
+          title: milestone.title,
+          description: milestone.description || '',
+          isCompleted: true,
+          completedDate: milestone.completedDate || new Date(),
+          createdAt: milestone.createdAt
+        };
+
+        // 移除任何可能的 undefined 字段
+        Object.keys(completedMilestone).forEach(key => {
+          if (completedMilestone[key] === undefined) {
+            delete completedMilestone[key];
+          }
+        });
+
+        return completedMilestone;
+      });
 
       updates.milestones = updatedMilestones;
       updates.completedAt = Timestamp.now();
       updates.progress = 100;
+
+      console.log('🔍 完成状态更新数据:', { milestonesCount: updatedMilestones.length });
     }
 
     // 如果任务重置为待办，重置所有里程碑
     else if (status === 'todo' && taskData.milestones) {
-      const updatedMilestones = taskData.milestones.map(milestone => ({
-        ...milestone,
-        isCompleted: false,
-        completedDate: undefined
-      }));
+      console.log('🔍 重置任务为待办，重置里程碑');
+      const updatedMilestones = taskData.milestones.map(milestone => {
+        const resetMilestone: any = {
+          id: milestone.id,
+          title: milestone.title,
+          description: milestone.description || '',
+          isCompleted: false,
+          createdAt: milestone.createdAt
+        };
+
+        // 移除任何可能的 undefined 字段
+        Object.keys(resetMilestone).forEach(key => {
+          if (resetMilestone[key] === undefined) {
+            delete resetMilestone[key];
+          }
+        });
+
+        return resetMilestone;
+      });
 
       updates.milestones = updatedMilestones;
       updates.progress = 0;
-      updates.completedAt = undefined;
+
+      console.log('🔍 重置状态更新数据:', { milestonesCount: updatedMilestones.length });
     }
 
-    await updateDoc(taskRef, updates);
+    // 深度清理 updates 对象，移除所有 undefined 值
+    const deepClean = (obj: any): any => {
+      if (obj === null || obj === undefined) return null;
+      if (Array.isArray(obj)) {
+        return obj.map(deepClean).filter(item => item !== null && item !== undefined);
+      }
+      if (typeof obj === 'object' && obj.constructor === Object) {
+        const cleaned: any = {};
+        for (const [key, value] of Object.entries(obj)) {
+          const cleanedValue = deepClean(value);
+          if (cleanedValue !== null && cleanedValue !== undefined) {
+            cleaned[key] = cleanedValue;
+          }
+        }
+        return cleaned;
+      }
+      return obj;
+    };
+
+    const cleanUpdates = deepClean(updates);
+
+    console.log('🔍 updateTaskStatus - 原始更新数据:', JSON.stringify(updates, null, 2));
+    console.log('🔍 updateTaskStatus - 清理后更新数据:', JSON.stringify(cleanUpdates, null, 2));
+
+    // 检查是否还有 undefined 值
+    const hasUndefined = JSON.stringify(cleanUpdates).includes('undefined');
+    console.log('⚠️ updateTaskStatus - 是否包含 undefined:', hasUndefined);
+
+    if (hasUndefined) {
+      console.error('❌ updateTaskStatus - 发现 undefined 值，停止更新');
+      console.error('❌ 问题数据:', cleanUpdates);
+      throw new Error('updateTaskStatus: 数据包含 undefined 值，无法更新到 Firestore');
+    }
+
+    console.log('✅ updateTaskStatus - 准备发送到 Firestore');
+    await updateDoc(taskRef, cleanUpdates);
+    console.log('✅ updateTaskStatus - 更新完成');
   }
 
   // 批量更新里程碑状态
