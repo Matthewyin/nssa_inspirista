@@ -4,8 +4,6 @@
  * @fileOverview This file contains all the server actions for the application.
  */
 
-import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { app } from '@/lib/firebase-server';
 import {
@@ -22,14 +20,11 @@ import {
   DeleteNoteOutput,
   RefineNoteInput,
   RefineNoteOutput,
-  RefineNoteOutputSchema,
   SuggestTagsInput,
   SuggestTagsOutput,
-  SuggestTagsOutputSchema,
   ValidateApiKeyInput,
   ValidateApiKeyOutput,
 } from '@/lib/types';
-import { z } from 'genkit';
 
 // --- Note Database Actions ---
 
@@ -141,20 +136,7 @@ export async function deleteNote(input: DeleteNoteInput): Promise<DeleteNoteOutp
 export async function refineNote(input: RefineNoteInput): Promise<RefineNoteOutput> {
   const { apiKey, aiConfig, noteContent } = input;
 
-  if (aiConfig.provider === 'deepseek') {
-    // Handle DeepSeek API call directly
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: aiConfig.model,
-        messages: [
-          {
-            role: 'user',
-            content: `你是一位专业的内容编辑和知识管理专家，擅长将零散的想法整理成结构化、有价值的内容。
+  const systemPrompt = `你是一位专业的内容编辑和知识管理专家，擅长将零散的想法整理成结构化、有价值的内容。
 
 ## 优化目标
 - 提升内容的逻辑性和可读性
@@ -178,7 +160,22 @@ export async function refineNote(input: RefineNoteInput): Promise<RefineNoteOutp
 
 请对以下内容进行深度优化：
 
-${noteContent}`,
+${noteContent}`;
+
+  if (aiConfig.provider === 'deepseek') {
+    // Handle DeepSeek API call directly
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: aiConfig.model,
+        messages: [
+          {
+            role: 'user',
+            content: systemPrompt,
           },
         ],
         temperature: 0.7,
@@ -195,60 +192,44 @@ ${noteContent}`,
 
     return { refinedNote };
   } else {
-    // Use Genkit for Gemini
-    const model = googleAI.model(aiConfig.model, { apiKey });
-
-    const { output } = await ai.generate({
-      model,
-      prompt: `你是一位专业的内容编辑和知识管理专家，擅长将零散的想法整理成结构化、有价值的内容。
-
-## 优化目标
-- 提升内容的逻辑性和可读性
-- 挖掘深层价值和潜在应用
-- 增强实用性和可操作性
-- 保持原创思想的核心价值
-
-## 优化策略
-1. **结构重组**：按逻辑关系重新组织内容，形成清晰的层次结构
-2. **内容扩展**：基于核心观点，补充相关背景、应用场景、实施建议
-3. **语言优化**：使用更精准、生动的表达，提升可读性
-4. **价值挖掘**：识别并突出内容的独特价值和创新点
-5. **实用转化**：将抽象想法转化为具体可行的行动建议
-
-## 输出要求
-- 保持原始想法的核心精神和创新性
-- 结构清晰，逻辑连贯，层次分明
-- 语言简洁有力，避免冗余表达
-- 增加实用价值，提供可操作的建议
-- 字数适中，既充实又不冗长
-
-请对以下内容进行深度优化：
-
-${noteContent}`,
-      output: { schema: RefineNoteOutputSchema },
+    // Handle Gemini API call directly
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${aiConfig.model}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: systemPrompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2000,
+        }
+      }),
     });
 
-    return output!;
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const refinedNote = data.candidates?.[0]?.content?.parts?.[0]?.text || noteContent;
+
+    return { refinedNote };
   }
 }
 
 export async function suggestTags(input: SuggestTagsInput): Promise<SuggestTagsOutput> {
   const { apiKey, aiConfig, noteContent } = input;
 
-  if (aiConfig.provider === 'deepseek') {
-    // Handle DeepSeek API call directly
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: aiConfig.model,
-        messages: [
-          {
-            role: 'user',
-            content: `你是一位专业的知识分类和标签专家，擅长从内容中提取核心概念和关键主题。
+  const systemPrompt = `你是一位专业的知识分类和标签专家，擅长从内容中提取核心概念和关键主题。
 
 ## 标签设计原则
 1. **准确性**：标签必须准确反映内容的核心主题
@@ -273,7 +254,22 @@ export async function suggestTags(input: SuggestTagsInput): Promise<SuggestTagsO
 基于分析结果，生成3-5个高质量标签。返回JSON格式：["标签1", "标签2", "标签3"]
 
 内容：
-${noteContent}`,
+${noteContent}`;
+
+  if (aiConfig.provider === 'deepseek') {
+    // Handle DeepSeek API call directly
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: aiConfig.model,
+        messages: [
+          {
+            role: 'user',
+            content: systemPrompt,
           },
         ],
         temperature: 0.3,
@@ -298,41 +294,45 @@ ${noteContent}`,
       return { tags };
     }
   } else {
-    // Use Genkit for Gemini
-    const model = googleAI.model(aiConfig.model, { apiKey });
-
-    const { output } = await ai.generate({
-      model,
-      prompt: `你是一位专业的知识分类和标签专家，擅长从内容中提取核心概念和关键主题。
-
-## 标签设计原则
-1. **准确性**：标签必须准确反映内容的核心主题
-2. **实用性**：便于后续检索和知识管理
-3. **层次性**：包含不同层次的概念（领域、方法、应用等）
-4. **简洁性**：使用简洁明了的词汇，避免冗长表达
-5. **一致性**：遵循统一的命名规范
-
-## 标签类型
-- **领域标签**：技术领域、学科分类、行业类别
-- **方法标签**：学习方法、工作方式、解决方案
-- **应用标签**：使用场景、目标人群、实际用途
-- **特征标签**：内容特点、难度级别、时间要求
-
-## 分析要求
-请深入分析以下内容，识别：
-- 核心主题和关键概念
-- 涉及的技能和知识领域
-- 适用的场景和人群
-- 内容的独特价值点
-
-基于分析结果，生成3-5个高质量标签。
-
-内容：
-${noteContent}`,
-      output: { schema: SuggestTagsOutputSchema },
+    // Handle Gemini API call directly
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${aiConfig.model}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: systemPrompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 200,
+        }
+      }),
     });
 
-    return output!;
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+
+    try {
+      const tags = JSON.parse(content);
+      return { tags: Array.isArray(tags) ? tags : [] };
+    } catch (e) {
+      // Fallback: extract tags from text
+      const tagMatches = content.match(/"([^"]+)"/g);
+      const tags = tagMatches ? tagMatches.map((match: string) => match.replace(/"/g, '')) : [];
+      return { tags };
+    }
   }
 }
 
