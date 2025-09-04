@@ -340,17 +340,32 @@ export async function validateApiKey(input: ValidateApiKeyInput): Promise<Valida
   const { provider, apiKey } = input;
   try {
     if (provider === 'gemini') {
-      // Use new genkit with a simple validation call
-      const model = googleAI.model('gemini-2.5-flash', { apiKey });
-
-      await ai.generate({
-        model,
-        prompt: 'Hello',
-        output: { schema: z.string() },
+      // Use direct HTTP API call to validate Gemini API key
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: 'Hello'
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 10,
+          }
+        })
       });
 
-      // If the above call does not throw, the key is valid.
-      return { isValid: true };
+      if (response.ok) {
+        return { isValid: true };
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+        return { isValid: false, error: errorMessage };
+      }
     } else if (provider === 'deepseek') {
       // Validate DeepSeek API key
       const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
