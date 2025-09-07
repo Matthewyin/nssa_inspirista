@@ -15,6 +15,9 @@ function initializeFirebase() {
   if (app) return { app, auth, db }; // 已经初始化过了
 
   try {
+    // 检查是否使用模拟器
+    const useEmulator = process.env.NODE_ENV === 'development' && process.env.FIRESTORE_EMULATOR_HOST;
+
     const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (serviceAccountString) {
       const serviceAccount = JSON.parse(serviceAccountString);
@@ -30,6 +33,15 @@ function initializeFirebase() {
 
       auth = getFirebaseAuth(app);
       db = getFirebaseFirestore(app);
+
+      // 如果使用模拟器，连接到模拟器
+      if (useEmulator) {
+        console.log("Connecting to Firestore emulator...");
+        db.settings({
+          host: process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080',
+          ssl: false
+        });
+      }
     } else {
       // For development, try to initialize with project ID only
       const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
@@ -46,6 +58,16 @@ function initializeFirebase() {
           }
           auth = getFirebaseAuth(app);
           db = getFirebaseFirestore(app);
+
+          // 如果使用模拟器，连接到模拟器
+          if (useEmulator) {
+            console.log("Connecting to Firestore emulator...");
+            db.settings({
+              host: process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080',
+              ssl: false
+            });
+          }
+
           console.log("Firebase Admin SDK initialized with project ID only (development mode)");
         } catch (error) {
           console.error("Failed to initialize with project ID:", error);

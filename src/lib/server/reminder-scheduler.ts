@@ -138,8 +138,8 @@ async function logExecution(
       timeSlotId,
       status,
       executedAt: new Date(),
-      errorMessage,
-      responseStatus,
+      ...(errorMessage && { errorMessage }),
+      ...(responseStatus && { responseStatus }),
     };
     
     const database = db();
