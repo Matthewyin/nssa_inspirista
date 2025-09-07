@@ -7,19 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  CheckSquare, 
+import {
+  CheckSquare,
   Lightbulb,
   List,
   ArrowRight,
   Plus,
-  TrendingUp
+  TrendingUp,
+  Bell
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useLanguage } from '@/hooks/use-language';
+import { getReminderStats } from '@/lib/firebase/reminders';
 
 interface ProjectStats {
   notes: {
@@ -35,6 +37,11 @@ interface ProjectStats {
     completed: number;
     inProgress: number;
     overdue: number;
+  };
+  reminders: {
+    total: number;
+    active: number;
+    todayExecutions: number;
   };
 }
 
@@ -91,11 +98,19 @@ export function ProjectOverviewCards() {
 
         // 清单数据已经在上面的notes查询中一起获取了
 
+        // 获取提醒统计
+        const reminderStats = await getReminderStats(user.uid);
+
         // 初始化统计数据
         setProjectStats({
           notes: { total: 0, recent: 0 },
           checklists: { total: 0, completed: 0 },
-          tasks: { total: 0, completed: 0, inProgress: 0, overdue: 0 }
+          tasks: { total: 0, completed: 0, inProgress: 0, overdue: 0 },
+          reminders: {
+            total: reminderStats.total,
+            active: reminderStats.active,
+            todayExecutions: reminderStats.todayExecutions
+          }
         });
 
         setLoading(false);
@@ -174,11 +189,24 @@ export function ProjectOverviewCards() {
       actionText: t('nav.tasks'),
       badge: projectStats.tasks.overdue > 0 ? `${projectStats.tasks.overdue} ${t('tasks.dateFilters.overdue')}` : undefined,
       badgeVariant: 'destructive' as const
+    },
+    {
+      title: t('nav.reminders'),
+      icon: Bell,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-200',
+      total: projectStats.reminders.total,
+      subtitle: `${projectStats.reminders.active} 个活跃`,
+      href: '/reminders',
+      actionText: t('nav.reminders'),
+      badge: projectStats.reminders.todayExecutions > 0 ? `今日执行 ${projectStats.reminders.todayExecutions} 次` : undefined,
+      badgeVariant: 'default' as const
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {cards.map((card, index) => (
         <Card 
           key={index} 
@@ -232,11 +260,12 @@ function EmptyProjectOverview() {
   const { t } = useLanguage();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {[
         { title: t('nav.notes'), icon: Lightbulb, href: '/notes', color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
         { title: t('nav.checklist'), icon: List, href: '/checklist', color: 'text-green-600', bgColor: 'bg-green-50' },
-        { title: t('nav.tasks'), icon: CheckSquare, href: '/tasks', color: 'text-blue-600', bgColor: 'bg-blue-50' }
+        { title: t('nav.tasks'), icon: CheckSquare, href: '/tasks', color: 'text-blue-600', bgColor: 'bg-blue-50' },
+        { title: t('nav.reminders'), icon: Bell, href: '/reminders', color: 'text-orange-600', bgColor: 'bg-orange-50' }
       ].map((card, index) => (
         <Card key={index} className="transition-all duration-200 hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -265,8 +294,8 @@ function EmptyProjectOverview() {
 // 加载骨架屏
 function ProjectOverviewCardsSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {Array.from({ length: 3 }).map((_, i) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {Array.from({ length: 4 }).map((_, i) => (
         <Card key={i}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <Skeleton className="h-4 w-20" />
