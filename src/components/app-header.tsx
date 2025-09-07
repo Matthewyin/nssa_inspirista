@@ -26,6 +26,7 @@ export function AppHeader() {
         '/notes': t('titles.myNotes'),
         '/notes/new': t('titles.newNote'),
         '/checklist': t('titles.checklist'),
+        '/reminders': t('titles.reminders'),
         '/settings': t('titles.settings'),
     };
     return titles[pathname] || 'Inspirista';

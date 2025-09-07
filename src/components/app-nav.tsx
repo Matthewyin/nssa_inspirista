@@ -1,7 +1,7 @@
 
 'use client';
 import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarContent } from '@/components/ui/sidebar';
-import { LayoutDashboard, Lightbulb, List, CheckSquare, Settings, Star, Plus } from 'lucide-react';
+import { LayoutDashboard, Lightbulb, List, CheckSquare, Settings, Star, Plus, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
@@ -22,6 +22,7 @@ export function AppNav() {
     { href: '/notes', label: t('nav.notes'), icon: Lightbulb },
     { href: '/checklist', label: t('nav.checklist'), icon: List },
     { href: '/tasks', label: t('nav.tasks'), icon: CheckSquare },
+    { href: '/reminders', label: t('nav.reminders'), icon: Bell },
     { href: '/settings', label: t('nav.settings'), icon: Settings },
   ];
 
@@ -68,6 +69,14 @@ export function AppNav() {
                       <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <span>{t('nav.createTask')}</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/reminders/new" className="flex items-center gap-3 w-full cursor-pointer">
+                    <div className="p-1 rounded bg-orange-100 dark:bg-orange-900/30">
+                      <Bell className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <span>{t('nav.createReminder')}</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
