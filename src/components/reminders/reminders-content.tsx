@@ -118,13 +118,6 @@ export function RemindersContent() {
             <Upload className="h-4 w-4 mr-2" />
             导入/导出
           </Button>
-          
-          <Button asChild>
-            <Link href="/reminders/new">
-              <Plus className="h-4 w-4 mr-2" />
-              创建提醒
-            </Link>
-          </Button>
         </div>
       </div>
 
@@ -282,12 +275,13 @@ function EmptyReminders({
       <p className="text-muted-foreground mb-4">
         创建您的第一个提醒，开始自动化通知
       </p>
-      <Button asChild>
-        <Link href="/reminders/new">
-          <Plus className="h-4 w-4 mr-2" />
-          创建提醒
-        </Link>
-      </Button>
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <span>点击左上角的</span>
+        <div className="inline-flex items-center justify-center w-6 h-6 rounded bg-primary text-primary-foreground">
+          <Plus className="h-3 w-3" />
+        </div>
+        <span>按钮创建提醒</span>
+      </div>
     </div>
   );
 }
