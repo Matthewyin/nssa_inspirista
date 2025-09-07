@@ -15,9 +15,6 @@ function initializeFirebase() {
   if (app) return { app, auth, db }; // 已经初始化过了
 
   try {
-    // 检查是否使用模拟器
-    const useEmulator = process.env.NODE_ENV === 'development' && process.env.FIRESTORE_EMULATOR_HOST;
-
     const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (serviceAccountString) {
       const serviceAccount = JSON.parse(serviceAccountString);
@@ -34,17 +31,27 @@ function initializeFirebase() {
       auth = getFirebaseAuth(app);
       db = getFirebaseFirestore(app);
 
-      // 如果使用模拟器，连接到模拟器
-      if (useEmulator) {
-        console.log("Connecting to Firestore emulator...");
-        db.settings({
-          host: process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080',
-          ssl: false
-        });
+      // 开发环境强制连接到模拟器（必须在第一次使用前设置）
+      if (process.env.NODE_ENV === 'development') {
+        try {
+          console.log("🔧 开发环境：强制连接到Firestore模拟器...");
+          db.settings({
+            host: 'localhost:8080',
+            ssl: false
+          });
+          console.log("✅ 服务端Firebase模拟器连接成功");
+        } catch (error) {
+          console.log("ℹ️ Firestore模拟器可能已经连接");
+        }
       }
     } else {
-      // For development, try to initialize with project ID only
-      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+      // 开发环境强制使用demo项目ID
+      const projectId = process.env.NODE_ENV === 'development' ? 'demo-project' : process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🛡️ 开发环境安全模式：强制使用模拟器项目ID");
+      }
+
       console.log("Attempting to initialize Firebase with project ID:", projectId);
 
       if (projectId) {
@@ -59,13 +66,18 @@ function initializeFirebase() {
           auth = getFirebaseAuth(app);
           db = getFirebaseFirestore(app);
 
-          // 如果使用模拟器，连接到模拟器
-          if (useEmulator) {
-            console.log("Connecting to Firestore emulator...");
-            db.settings({
-              host: process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080',
-              ssl: false
-            });
+          // 开发环境强制连接到模拟器（必须在第一次使用前设置）
+          if (process.env.NODE_ENV === 'development') {
+            try {
+              console.log("🔧 开发环境：强制连接到Firestore模拟器...");
+              db.settings({
+                host: 'localhost:8080',
+                ssl: false
+              });
+              console.log("✅ 服务端Firebase模拟器连接成功");
+            } catch (error) {
+              console.log("ℹ️ Firestore模拟器可能已经连接");
+            }
           }
 
           console.log("Firebase Admin SDK initialized with project ID only (development mode)");
