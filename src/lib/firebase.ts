@@ -11,7 +11,7 @@ const isProduction = process.env.NODE_ENV === 'production' && process.env.NEXT_P
 
 // Firebase configuration - 开发环境强制使用模拟器配置
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-key',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyDemoKeyForEmulatorOnlyNotRealKey123456',
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'demo-project.firebaseapp.com',
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'demo-project.appspot.com',
@@ -53,11 +53,9 @@ if (isDevelopment) {
     console.log('🔧 强制连接到Firestore模拟器 (localhost:8080)...');
     connectFirestoreEmulator(db, 'localhost', 8080);
 
-    // 如果需要，也可以连接Auth模拟器
-    if (process.env.NEXT_PUBLIC_USE_AUTH_EMULATOR === 'true') {
-      console.log('🔧 连接到Auth模拟器 (localhost:9099)...');
-      connectAuthEmulator(auth, 'http://localhost:9099');
-    }
+    // 开发环境也连接Auth模拟器
+    console.log('🔧 连接到Auth模拟器 (localhost:9098)...');
+    connectAuthEmulator(auth, 'http://localhost:9098');
 
     console.log('✅ Firebase模拟器连接成功 - 开发环境安全模式');
   } catch (error) {
