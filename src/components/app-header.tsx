@@ -20,6 +20,9 @@ export function AppHeader() {
     if (pathname.startsWith('/notes/') && pathname !== '/notes/new') {
       return t('titles.editNote');
     }
+    if (pathname.startsWith('/reminders/') && pathname !== '/reminders') {
+      return t('titles.reminders');
+    }
     const titles: { [key: string]: string } = {
         '/': t('titles.dashboard'),
         '/tasks': t('titles.tasks'),
