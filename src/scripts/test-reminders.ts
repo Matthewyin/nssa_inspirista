@@ -2,13 +2,20 @@
 
 /**
  * 提醒功能测试脚本
- * 
+ *
  * 用法:
  * npx tsx src/scripts/test-reminders.ts create    # 创建测试提醒
  * npx tsx src/scripts/test-reminders.ts execute   # 执行测试提醒
  * npx tsx src/scripts/test-reminders.ts logs      # 查看执行日志
  * npx tsx src/scripts/test-reminders.ts cleanup   # 清理测试数据
  */
+
+// 加载环境变量
+import { config } from 'dotenv';
+config({ path: '.env.development' });
+
+console.log('Environment variables loaded:');
+console.log('NEXT_PUBLIC_FIREBASE_PROJECT_ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
 
 import { db } from '../lib/firebase-server';
 import { executeReminderNow } from '../lib/server/reminder-scheduler';
@@ -54,7 +61,11 @@ async function createTestReminder(): Promise<string> {
       nextRuns: [new Date(testTime)] as any
     };
     
-    const docRef = await db.collection('webhook_reminders').add(testReminder);
+    const database = db();
+    if (!database) {
+      throw new Error('Firebase database not initialized');
+    }
+    const docRef = await database.collection('webhook_reminders').add(testReminder);
     console.log('测试提醒创建成功，ID:', docRef.id);
     console.log('请等待2分钟查看执行结果，或者手动执行测试...');
     
@@ -78,7 +89,11 @@ async function executeTestReminder(reminderId: string): Promise<void> {
 
 async function checkExecutionLogs(reminderId?: string): Promise<void> {
   try {
-    let query = db.collection('reminder_execution_logs');
+    const database = db();
+    if (!database) {
+      throw new Error('Firebase database not initialized');
+    }
+    let query = database.collection('reminder_execution_logs');
     
     if (reminderId) {
       query = query.where('reminderId', '==', reminderId);
@@ -107,20 +122,25 @@ async function checkExecutionLogs(reminderId?: string): Promise<void> {
 async function cleanupTestData(): Promise<void> {
   try {
     console.log('清理测试数据...');
-    
+
+    const database = db();
+    if (!database) {
+      throw new Error('Firebase database not initialized');
+    }
+
     // 删除测试提醒
-    const remindersSnapshot = await db
+    const remindersSnapshot = await database
       .collection('webhook_reminders')
       .where('userId', '==', 'test-user-123')
       .get();
-    
-    const batch = db.batch();
+
+    const batch = database.batch();
     remindersSnapshot.docs.forEach(doc => {
       batch.delete(doc.ref);
     });
     
     // 删除测试执行日志
-    const logsSnapshot = await db
+    const logsSnapshot = await database
       .collection('reminder_execution_logs')
       .get();
     
@@ -141,7 +161,11 @@ async function cleanupTestData(): Promise<void> {
 
 async function listTestReminders(): Promise<void> {
   try {
-    const remindersSnapshot = await db
+    const database = db();
+    if (!database) {
+      throw new Error('Firebase database not initialized');
+    }
+    const remindersSnapshot = await database
       .collection('webhook_reminders')
       .where('userId', '==', 'test-user-123')
       .get();

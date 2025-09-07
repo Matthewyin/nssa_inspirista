@@ -25,7 +25,12 @@ export async function executeScheduledReminders(): Promise<void> {
     console.log(`当前时间: ${currentTime}, 星期: ${currentDay}`);
     
     // 查询需要执行的提醒
-    const remindersSnapshot = await db
+    const database = db();
+    if (!database) {
+      throw new Error('Firebase database not initialized');
+    }
+
+    const remindersSnapshot = await database
       .collection('webhook_reminders')
       .where('isActive', '==', true)
       .where('days', 'array-contains', currentDay)
@@ -137,7 +142,12 @@ async function logExecution(
       responseStatus,
     };
     
-    await db.collection('reminder_execution_logs').add(log);
+    const database = db();
+    if (!database) {
+      console.error('Firebase database not initialized');
+      return;
+    }
+    await database.collection('reminder_execution_logs').add(log);
     
   } catch (error) {
     console.error('记录执行日志失败:', error);
@@ -148,9 +158,15 @@ async function logExecution(
 // 更新执行计数
 async function updateExecutionCount(reminderId: string): Promise<void> {
   try {
-    const reminderRef = db.collection('webhook_reminders').doc(reminderId);
-    
-    await db.runTransaction(async (transaction) => {
+    const database = db();
+    if (!database) {
+      console.error('Firebase database not initialized');
+      return;
+    }
+
+    const reminderRef = database.collection('webhook_reminders').doc(reminderId);
+
+    await database.runTransaction(async (transaction) => {
       const reminderDoc = await transaction.get(reminderRef);
       
       if (reminderDoc.exists) {
@@ -172,7 +188,12 @@ async function updateExecutionCount(reminderId: string): Promise<void> {
 // 手动触发提醒执行（用于测试）
 export async function executeReminderNow(reminderId: string, timeSlotId?: string): Promise<void> {
   try {
-    const reminderDoc = await db.collection('webhook_reminders').doc(reminderId).get();
+    const database = db();
+    if (!database) {
+      throw new Error('Firebase database not initialized');
+    }
+
+    const reminderDoc = await database.collection('webhook_reminders').doc(reminderId).get();
     
     if (!reminderDoc.exists) {
       throw new Error('提醒不存在');
