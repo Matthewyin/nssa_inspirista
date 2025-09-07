@@ -162,7 +162,20 @@ export function ReminderCard({ reminder }: ReminderCardProps) {
   // 立即执行提醒
   const handleExecuteNow = async () => {
     try {
-      // 这里可以调用立即执行的API
+      const response = await fetch('/api/reminders/execute', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reminderId: reminder.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('执行失败');
+      }
+
       toast({
         title: '执行成功',
         description: '提醒已立即发送',

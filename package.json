@@ -12,7 +12,9 @@
     "env:prod": "node scripts/setup-env.js production",
     "dev:clean": "npm run env:dev && npm run dev",
     "build:prod": "npm run env:prod && npm run build",
-    "migrate:tasks": "tsx src/scripts/migrate-tasks.ts"
+    "migrate:tasks": "tsx src/scripts/migrate-tasks.ts",
+    "reminders:execute": "tsx src/scripts/execute-reminders.ts",
+    "reminders:test": "tsx src/scripts/execute-reminders.ts --reminder-id=test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
