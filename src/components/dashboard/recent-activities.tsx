@@ -2,17 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   CheckSquare,
   Lightbulb,
   List,
   Clock,
-  Calendar,
   Activity
 } from 'lucide-react';
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useActivities, type Activity as ActivityType, type ActivityType as ActivityTypeEnum } from '@/hooks/use-activities';
 import { useLanguage } from '@/hooks/use-language';
@@ -171,13 +168,12 @@ function EmptyActivities() {
       <p className="text-muted-foreground mb-4">
         {t('dashboard.noActivitiesDesc')}
       </p>
-      <div className="flex justify-center gap-2">
-        <Button size="sm" asChild>
-          <Link href="/tasks">{t('dashboard.createTask')}</Link>
-        </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/notes/new">{t('dashboard.recordInspiration')}</Link>
-        </Button>
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <span>点击左上角的</span>
+        <div className="inline-flex items-center justify-center w-6 h-6 rounded bg-primary text-primary-foreground">
+          <CheckSquare className="h-3 w-3" />
+        </div>
+        <span>按钮开始创建内容</span>
       </div>
     </div>
   );
