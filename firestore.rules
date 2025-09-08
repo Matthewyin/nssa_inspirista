@@ -17,7 +17,7 @@ service cloud.firestore {
       // Allow users to create tasks with their own userId
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
-
+ 
     // Task templates collection rules (for AI-generated templates)
     match /task_templates/{templateId} {
       // Allow all authenticated users to read templates
