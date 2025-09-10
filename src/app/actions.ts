@@ -4,8 +4,6 @@
  * @fileOverview This file contains all the server actions for the application.
  */
 
-import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { app } from '@/lib/firebase-server';
 import {
@@ -22,14 +20,11 @@ import {
   DeleteNoteOutput,
   RefineNoteInput,
   RefineNoteOutput,
-  RefineNoteOutputSchema,
   SuggestTagsInput,
   SuggestTagsOutput,
-  SuggestTagsOutputSchema,
   ValidateApiKeyInput,
   ValidateApiKeyOutput,
 } from '@/lib/types';
-import { z } from 'genkit';
 
 // --- Note Database Actions ---
 
@@ -195,12 +190,16 @@ ${noteContent}`,
 
     return { refinedNote };
   } else {
-    // Use Genkit for Gemini
-    const model = googleAI.model(aiConfig.model, { apiKey });
-
-    const { output } = await ai.generate({
-      model,
-      prompt: `你是一位专业的内容编辑和知识管理专家，擅长将零散的想法整理成结构化、有价值的内容。
+    // Use direct HTTP API call for Gemini
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${aiConfig.model}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `你是一位专业的内容编辑和知识管理专家，擅长将零散的想法整理成结构化、有价值的内容。
 
 ## 优化目标
 - 提升内容的逻辑性和可读性
@@ -224,11 +223,24 @@ ${noteContent}`,
 
 请对以下内容进行深度优化：
 
-${noteContent}`,
-      output: { schema: RefineNoteOutputSchema },
+${noteContent}`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2000,
+        }
+      })
     });
 
-    return output!;
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const refinedNote = data.candidates?.[0]?.content?.parts?.[0]?.text || noteContent;
+
+    return { refinedNote };
   }
 }
 
@@ -298,12 +310,16 @@ ${noteContent}`,
       return { tags };
     }
   } else {
-    // Use Genkit for Gemini
-    const model = googleAI.model(aiConfig.model, { apiKey });
-
-    const { output } = await ai.generate({
-      model,
-      prompt: `你是一位专业的知识分类和标签专家，擅长从内容中提取核心概念和关键主题。
+    // Use direct HTTP API call for Gemini
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${aiConfig.model}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `你是一位专业的知识分类和标签专家，擅长从内容中提取核心概念和关键主题。
 
 ## 标签设计原则
 1. **准确性**：标签必须准确反映内容的核心主题
@@ -325,14 +341,35 @@ ${noteContent}`,
 - 适用的场景和人群
 - 内容的独特价值点
 
-基于分析结果，生成3-5个高质量标签。
+基于分析结果，生成3-5个高质量标签。返回JSON格式：["标签1", "标签2", "标签3"]
 
 内容：
-${noteContent}`,
-      output: { schema: SuggestTagsOutputSchema },
+${noteContent}`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 200,
+        }
+      })
     });
 
-    return output!;
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+
+    try {
+      const tags = JSON.parse(content);
+      return { tags: Array.isArray(tags) ? tags : [] };
+    } catch (e) {
+      // Fallback: extract tags from text
+      const tagMatches = content.match(/"([^"]+)"/g);
+      const tags = tagMatches ? tagMatches.map((match: string) => match.replace(/"/g, '')) : [];
+      return { tags };
+    }
   }
 }
 
