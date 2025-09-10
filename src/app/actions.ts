@@ -177,7 +177,7 @@ ${noteContent}`,
           },
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 4096,
       }),
     });
 
@@ -228,7 +228,9 @@ ${noteContent}`
         }],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 2000,
+          maxOutputTokens: 4096,
+          topK: 40,
+          topP: 0.95,
         }
       })
     });
@@ -289,7 +291,7 @@ ${noteContent}`,
           },
         ],
         temperature: 0.3,
-        max_tokens: 200,
+        max_tokens: 500,
       }),
     });
 
@@ -349,7 +351,9 @@ ${noteContent}`
         }],
         generationConfig: {
           temperature: 0.3,
-          maxOutputTokens: 200,
+          maxOutputTokens: 500,
+          topK: 40,
+          topP: 0.95,
         }
       })
     });

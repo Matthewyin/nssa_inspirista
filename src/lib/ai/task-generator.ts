@@ -617,7 +617,7 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
             temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 4096,
           }
         })
       });
@@ -656,7 +656,7 @@ ${userGoals ? `用户目标：${userGoals.join(', ')}` : ''}
             }
           ],
           temperature: 0.7,
-          max_tokens: 2048
+          max_tokens: 4096
         })
       });
 
